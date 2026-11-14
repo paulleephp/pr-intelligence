@@ -1,6 +1,6 @@
 "use dynamic();";
 
-import { NextRequest } from "next/server";
+import { RequestLike } from "@/types/request";
 import { parsePRUrl } from "@/lib/url";
 import { analyzePR } from "@/lib/github";
 import {
@@ -13,8 +13,8 @@ import {
 } from "@/lib/response";
 import { ERROR_MESSAGES } from "@/lib/constants";
 
-export async function POST(request: NextRequest) {
-  let body;
+export async function POST(request: RequestLike) {
+  let body: unknown;
   try {
     body = await request.json();
   } catch (error) {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     return serverErrorResponse(ERROR_MESSAGES.INTERNAL_ERROR);
   }
 
-  const url = body.url?.trim() || "";
+  const url = (body as Record<string, unknown>).url?.toString().trim() || "";
   if (!url) {
     return badRequestResponse(ERROR_MESSAGES.NO_PR_URL);
   }
