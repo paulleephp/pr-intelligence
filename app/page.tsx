@@ -14,15 +14,6 @@ export default function Home() {
   const [changedFiles, setChangedFiles] = useState<ChangedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFormSubmit = async () => {
-    setLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
       <Header />
@@ -43,6 +34,7 @@ export default function Home() {
             url={url}
             setUrl={setUrl}
             loading={loading}
+            setLoading={setLoading}
             error={error}
             setPrMetadata={setPrMetadata}
             setChangedFiles={setChangedFiles}

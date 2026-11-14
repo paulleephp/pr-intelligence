@@ -8,6 +8,7 @@ interface PRFormProps {
   url: string;
   setUrl: Dispatch<SetStateAction<string>>;
   loading: boolean;
+  setLoading: Dispatch<SetStateAction<boolean>>;
   error: string | null;
   setPrMetadata: Dispatch<SetStateAction<PRMetadata | null>>;
   setChangedFiles: Dispatch<SetStateAction<ChangedFile[]>>;
@@ -18,6 +19,7 @@ export function PRForm({
   url,
   setUrl,
   loading,
+  setLoading,
   error,
   setPrMetadata,
   setChangedFiles,
@@ -28,6 +30,8 @@ export function PRForm({
     if (!url.trim()) return;
 
     setError(null);
+    setLoading(true);
+
     try {
       const response = await fetch("/api/pr", {
         method: "POST",
@@ -40,6 +44,8 @@ export function PRForm({
     } catch (err) {
       console.error("Form submission error:", err);
       setError("Failed to fetch PR data. Please check the GitHub URL.");
+    } finally {
+      setLoading(false);
     }
   };
 

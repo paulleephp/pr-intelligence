@@ -3,6 +3,7 @@
 import { PRMetadata, ChangedFile } from "@/types/github";
 import { PRInfoCard } from "./PRInfoCard";
 import { ChangedFilesCard } from "./ChangedFilesCard";
+import { PRResultsSkeleton } from "./PRResultsSkeleton";
 
 interface PRResultsProps {
   prMetadata: PRMetadata | null;
@@ -11,7 +12,11 @@ interface PRResultsProps {
 }
 
 export function PRResults({ prMetadata, changedFiles, loading }: PRResultsProps) {
-  if (!prMetadata || loading || changedFiles.length === 0) {
+  if (loading) {
+    return <PRResultsSkeleton />;
+  }
+
+  if (!prMetadata || changedFiles.length === 0) {
     return null;
   }
 
