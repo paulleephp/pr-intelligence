@@ -24,21 +24,21 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="flex min-h-screen flex-col bg-black text-white">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1">
-        <div className="text-center space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+      <main className="mx-auto max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="space-y-6 text-center">
+          <h1 className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
             Analyze GitHub Pull Requests
           </h1>
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
-            Automate PR review investigation. Understand what changed, identify risks,
-            and surface relevant tests with AI-powered analysis.
+          <p className="mx-auto max-w-2xl text-lg text-zinc-400">
+            Automate PR review investigation. Understand what changed, identify risks, and surface
+            relevant tests with AI-powered analysis.
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto mt-12">
+        <div className="mx-auto mt-12 max-w-3xl">
           <PRForm
             url={url}
             setUrl={setUrl}

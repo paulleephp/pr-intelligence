@@ -1,18 +1,12 @@
 # PR Intelligence
 
-## The problem: 
+## The problem:
 
 - Reviewing a pull request requires understanding of what changed, which parts
-of the codebase are affected, what tests are relevant, and whether there are
-potential risks. This is especially challenging if the codebase has long
-history and/or a lot of inner dependencies.
+  of the codebase are affected, what tests are relevant, and whether there are
+  potential risks. This is especially challenging if the codebase has long
+  history and/or a lot of inner dependencies.
 - This tool automates the initial investigation.
-
-A developer runs:
-
-```bash
-npx analyze https://github.com/owner/repo/pull/123
-```
 
 This tool will:
 
@@ -23,14 +17,15 @@ This tool will:
 5. Use an LLM to produce a structured review
 6. Generate a Markdown report with findings and recommendations.
 
-* The important distinction: the LLM doesn't do everything. Deterministic code handles fetching, parsing, validation, and analysis. The LLM handles tasks where reasoning and interpretation are useful.
+- The important distinction: the LLM doesn't do everything. Deterministic code handles fetching, parsing, validation, and analysis. The LLM handles tasks where reasoning and interpretation are useful.
 
 ## Architecture
+
 @TODO Miro link
 
 Review Orchestrator
 |
-LLM Provider      Deterministic Rules
+LLM Provider Deterministic Rules
 |
 Result Validator
 |
@@ -52,19 +47,19 @@ change Impact Analyzer
 
 ## Tech stack:
 
-|Component|	Technology|
-|--|--|
-Layer	Technology
-Frontend	Next.js App Router
-UI	React + TypeScript
-Styling	Tailwind CSS
-Backend	Node.js
-API	Next.js Route Handlers
-Analysis engine	TypeScript
-GitHub integration	Octokit
-LLM	OpenAI API
-Validation	Zod
-Database	PostgreSQL
-ORM	Prisma
-Testing	Vitest + Playwright
-CI/CD	GitHub Actions
+| Component                   | Technology |
+| --------------------------- | ---------- |
+| Layer Technology            |
+| Frontend Next.js App Router |
+| UI React + TypeScript       |
+| Styling Tailwind CSS        |
+| Backend Node.js             |
+| API Next.js Route Handlers  |
+| Analysis engine TypeScript  |
+| GitHub integration Octokit  |
+| LLM OpenAI API              |
+| Validation Zod              |
+| Database PostgreSQL         |
+| ORM Prisma                  |
+| Testing Vitest + Playwright |
+| CI/CD GitHub Actions        |

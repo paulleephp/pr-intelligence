@@ -1,4 +1,4 @@
-"use dynamic();"
+"use dynamic();";
 
 import { NextRequest } from "next/server";
 import { parsePRUrl } from "@/lib/url";

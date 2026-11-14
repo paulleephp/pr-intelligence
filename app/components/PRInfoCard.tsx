@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { PRMetadata } from "@/types/github";
 
 interface PRInfoCardProps {
@@ -11,27 +12,29 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
   const updatedDate = new Date(prMetadata.updatedAt).toLocaleDateString();
 
   return (
-    <div className="lg:col-span-1 space-y-4">
-      <div className="bg-zinc-900/30 backdrop-blur-sm border border-zinc-800 rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4 text-emerald-400">Pull Request</h2>
+    <div className="space-y-4 lg:col-span-1">
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm">
+        <h2 className="mb-4 text-xl font-semibold text-emerald-400">Pull Request</h2>
         <div className="space-y-3">
           <a
             href={prMetadata.html_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block group"
+            className="group block"
           >
-            <p className="text-xs text-zinc-500 mb-1">PR #{prMetadata.number}</p>
-            <h3 className="font-medium text-white group-hover:text-emerald-400 transition-colors">
+            <p className="mb-1 text-xs text-zinc-500">PR #{prMetadata.number}</p>
+            <h3 className="font-medium text-white transition-colors group-hover:text-emerald-400">
               {prMetadata.title}
             </h3>
           </a>
 
-          <div className="flex items-center gap-3 pt-2 border-t border-zinc-800">
-            <img
+          <div className="flex items-center gap-3 border-t border-zinc-800 pt-2">
+            <Image
               src={prMetadata.user.avatar_url}
               alt={prMetadata.user.login}
-              className="w-10 h-10 rounded-full"
+              width={40}
+              height={40}
+              className="rounded-full"
             />
             <div>
               <p className="text-sm text-zinc-300">
@@ -41,7 +44,7 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800">
+          <div className="grid grid-cols-2 gap-2 border-t border-zinc-800 pt-2">
             <div className="space-y-1">
               <p className="text-xs text-zinc-500">Created</p>
               <p className="text-sm text-zinc-300">{createdDate}</p>
@@ -54,12 +57,12 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
 
           {prMetadata.mergeable !== null && (
             <div
-              className={`pt-2 border-t border-zinc-800 flex items-center gap-2 text-sm ${
+              className={`flex items-center gap-2 border-t border-zinc-800 pt-2 text-sm ${
                 prMetadata.mergeable ? "text-emerald-400" : "text-red-400"
               }`}
             >
               <span
-                className={`w-2 h-2 rounded-full ${
+                className={`h-2 w-2 rounded-full ${
                   prMetadata.mergeable ? "bg-emerald-400" : "bg-red-400"
                 }`}
               />
@@ -70,11 +73,14 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
       </div>
 
       {prMetadata.labels && prMetadata.labels.length > 0 && (
-        <div className="bg-zinc-900/30 backdrop-blur-sm border border-zinc-800 rounded-lg p-4">
-          <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wide">Labels</p>
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 backdrop-blur-sm">
+          <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">Labels</p>
           <div className="flex flex-wrap gap-1.5">
             {prMetadata.labels.map((label, idx) => (
-              <span key={idx} className="px-2.5 py-1 text-xs rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300">
+              <span
+                key={idx}
+                className="rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300"
+              >
                 {label.name}
               </span>
             ))}

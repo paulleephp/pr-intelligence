@@ -16,8 +16,8 @@ export function PRResults({ prMetadata, changedFiles, loading }: PRResultsProps)
   }
 
   return (
-    <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="grid lg:grid-cols-3 gap-8">
+    <div className="animate-in fade-in slide-in-from-bottom-4 mt-12 duration-500">
+      <div className="grid gap-8 lg:grid-cols-3">
         <PRInfoCard prMetadata={prMetadata} />
         <ChangedFilesCard changedFiles={changedFiles} />
       </div>

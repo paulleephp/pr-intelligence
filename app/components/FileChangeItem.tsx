@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangedFile } from "@/types/github";
+import { PlusIcon, MinusIcon, ModifyIcon } from "./icons";
 
 interface FileChangeItemProps {
   file: ChangedFile;
@@ -20,37 +21,28 @@ export function FileChangeItem({ file }: FileChangeItemProps) {
   const statusStyle = STATUS_STYLES[file.status] || STATUS_STYLES.changed;
 
   return (
-    <div className="group flex items-start gap-3 p-3 rounded-lg bg-zinc-950/30 border border-zinc-800 hover:border-emerald-500/50 transition-all">
+    <div className="group flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-950/30 p-3 transition-all hover:border-emerald-500/50">
       <div className="flex-1">
-        <p className="text-sm text-zinc-300 font-mono group-hover:text-white">{file.filename}</p>
-        <div className="flex gap-4 mt-2">
+        <p className="font-mono text-sm text-zinc-300 group-hover:text-white">{file.filename}</p>
+        <div className="mt-2 flex gap-4">
           {file.status === "added" && (
-            <span className="inline-flex items-center text-emerald-500 text-xs">
-              <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              +{file.additions}
+            <span className="inline-flex items-center text-xs text-emerald-500">
+              <PlusIcon className="mr-1 h-3.5 w-3.5" />+{file.additions}
             </span>
           )}
           {file.status === "removed" && (
-            <span className="inline-flex items-center text-red-500 text-xs">
-              <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-              </svg>
-              -{file.deletions}
+            <span className="inline-flex items-center text-xs text-red-500">
+              <MinusIcon className="mr-1 h-3.5 w-3.5" />-{file.deletions}
             </span>
           )}
           {file.status === "modified" && (
-            <div className="inline-flex items-center text-orange-500 text-xs">
-              <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9H4V6h16zm-1 4H9v7h9V10z" />
-              </svg>
-              +{file.additions} -{file.deletions}
+            <div className="inline-flex items-center text-xs text-orange-500">
+              <ModifyIcon className="mr-1 h-3.5 w-3.5" />+{file.additions} -{file.deletions}
             </div>
           )}
         </div>
       </div>
-      <span className={`px-2 py-0.5 text-xs rounded border whitespace-nowrap ${statusStyle}`}>
+      <span className={`whitespace-nowrap rounded border px-2 py-0.5 text-xs ${statusStyle}`}>
         {file.status}
       </span>
     </div>
