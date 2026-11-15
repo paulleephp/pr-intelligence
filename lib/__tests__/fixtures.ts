@@ -2,6 +2,7 @@
  * Mock data for GitHub API tests
  * Organized by API endpoint response
  */
+import { HTTP_STATUS } from "../constants";
 
 export const octokit = {
   /**
@@ -11,7 +12,7 @@ export const octokit = {
     data: {
       number: 123,
       title: "Test PR",
-      state: "open" as const,
+      state: "open",
       user: {
         login: "testuser",
         avatar_url: "https://avatars.githubusercontent.com/u/123",
@@ -37,7 +38,7 @@ export const octokit = {
     data: {
       number: 1,
       title: "PR with labels",
-      state: "open" as const,
+      state: "open",
       user: {
         login: "user",
         avatar_url: "https://avatars.githubusercontent.com/u/1",
@@ -63,7 +64,7 @@ export const octokit = {
     data: {
       number: 1,
       title: "Test",
-      state: "open" as const,
+      state: "open",
       user: {
         login: "user",
         avatar_url: "https://avatars.githubusercontent.com/u/1",
@@ -133,11 +134,17 @@ export const octokit = {
  */
 export const errors = {
   notFound: {
-    response: { status: 404 },
+    response: { status: HTTP_STATUS.NOT_FOUND },
     message: "Not Found",
   },
+  rateLimitedForbidden: {
+    response: { status: HTTP_STATUS.FORBIDDEN },
+    message: "API rate limit exceeded",
+  },
   rateLimited: {
-    response: { status: 429 },
+    response: {
+      status: HTTP_STATUS.TOO_MANY_REQUESTS,
+    },
     message: "API rate limit exceeded",
   },
   networkError: new Error("Network error"),

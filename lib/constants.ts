@@ -1,6 +1,6 @@
 // Generic API constants and error messages
 
-// HTTP status codes
+// HTTP status codes @TODO replace with http-status-codes
 export const HTTP_STATUS = {
   OK: 200,
   BAD_REQUEST: 400,

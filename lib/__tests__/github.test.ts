@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, MockedFunction } from "vitest";
 import { fetchPRMetadata, fetchChangedFiles, analyzePR } from "@/lib/github";
 import { octokit, errors } from "./fixtures";
+import { HTTP_STATUS } from "../constants";
+import { mockOctokitFn, unauthenticatedHeader } from "@/app/__tests__/fixtures";
 
 /**
  * Declare mock functions at the top level with vi.hoisted()
@@ -9,7 +11,7 @@ import { octokit, errors } from "./fixtures";
  */
 const { mockOctokit, mockPullsGet, mockListFiles } = vi.hoisted(() => {
   return {
-    mockOctokit: vi.fn(() => ({
+    mockOctokit: vi.fn((): mockOctokitFn => ({
       pulls: {
         get: mockPullsGet,
         listFiles: mockListFiles,
@@ -41,7 +43,7 @@ describe("GitHub API Client", () => {
   });
 
   it("uses an unauthenticated GitHub client", () => {
-    expect(mockOctokit).toHaveBeenCalledWith();
+    expect(mockOctokit).toHaveBeenCalledWith(unauthenticatedHeader);
   });
 
   describe("fetchPRMetadata", () => {
@@ -120,8 +122,20 @@ describe("GitHub API Client", () => {
 
       expect("error" in result).toBe(true);
       if ("error" in result) {
-        expect(result.status).toBe(404);
+        expect(result.status).toBe(HTTP_STATUS.NOT_FOUND);
         expect(result.error).toContain("not found");
+      }
+    });
+
+    it("should return 403 error for rate limit", async () => {
+      mockPullsGet.mockRejectedValueOnce(errors.rateLimitedForbidden);
+
+      const result = await analyzePR("owner", "repo", 123);
+
+      expect("error" in result).toBe(true);
+      if ("error" in result) {
+        expect(result.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(result.error).toContain("rate limit");
       }
     });
 
@@ -132,7 +146,7 @@ describe("GitHub API Client", () => {
 
       expect("error" in result).toBe(true);
       if ("error" in result) {
-        expect(result.status).toBe(429);
+        expect(result.status).toBe(HTTP_STATUS.TOO_MANY_REQUESTS);
         expect(result.error).toContain("rate limit");
       }
     });
@@ -144,7 +158,7 @@ describe("GitHub API Client", () => {
 
       expect("error" in result).toBe(true);
       if ("error" in result) {
-        expect(result.status).toBe(500);
+        expect(result.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
       }
     });
   });

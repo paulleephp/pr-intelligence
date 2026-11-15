@@ -1,3 +1,7 @@
+export interface GenericResponse<T> {
+  data: T;
+}
+
 export interface GitHubUser {
   login: string;
   avatar_url: string;
@@ -12,7 +16,7 @@ export interface PRLabel {
 export interface PRMetadata {
   number: number;
   title: string;
-  state: "open" | "closed";
+  state: PRStatus;
   user: GitHubUser;
   createdAt: string;
   updatedAt: string;
@@ -23,12 +27,17 @@ export interface PRMetadata {
   html_url: string;
 }
 
+export type PRStatus = "open" | "closed";
+
 export interface ChangedFile {
   filename: string;
-  status: "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "deleted";
+  status: PRFileStatus;
   additions: number;
   deletions: number;
 }
+
+export type PRFileStatus =
+  "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "deleted" | "unchanged";
 
 export interface PRAnalysisResponse {
   prMetadata: PRMetadata;
@@ -37,5 +46,5 @@ export interface PRAnalysisResponse {
 
 export interface PRFetchError {
   status: number;
-  message: string;
+  error: string;
 }

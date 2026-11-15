@@ -9,6 +9,7 @@ export const GITHUB_ERROR_MESSAGES = {
 } as const;
 
 export const GITHUB_HTTP_STATUS = {
+  FORBIDDEN: 403,
   NOT_FOUND: 404,
   RATE_LIMITED: 429,
 } as const;
