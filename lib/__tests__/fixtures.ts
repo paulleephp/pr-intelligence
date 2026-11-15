@@ -52,7 +52,10 @@ export const octokit = {
         { name: "enhancement", color: "00ff00" },
       ],
       head: { repo: { url: "https://api.github.com/repos/user/repo" } },
-      base: { repo: { url: "https://api.github.com/repos/owner/repo" }, ref: "main" },
+      base: {
+        repo: { url: "https://api.github.com/repos/owner/repo" },
+        ref: "main",
+      },
       html_url: "https://github.com/owner/repo/pull/1",
     },
   },
@@ -75,7 +78,10 @@ export const octokit = {
       mergeable: null,
       labels: null,
       head: { repo: { url: "https://api.github.com/repos/user/repo" } },
-      base: { repo: { url: "https://api.github.com/repos/owner/repo" }, ref: "main" },
+      base: {
+        repo: { url: "https://api.github.com/repos/owner/repo" },
+        ref: "main",
+      },
       html_url: "https://github.com/owner/repo/pull/1",
     },
   },

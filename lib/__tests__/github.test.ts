@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach, MockedFunction } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  MockedFunction,
+} from "vitest";
 import { fetchPRMetadata, fetchChangedFiles, analyzePR } from "@/lib/github";
 import { octokit, errors } from "./fixtures";
 import { HTTP_STATUS } from "../constants";
@@ -11,12 +19,14 @@ import { mockOctokitFn, unauthenticatedHeader } from "@/app/__tests__/fixtures";
  */
 const { mockOctokit, mockPullsGet, mockListFiles } = vi.hoisted(() => {
   return {
-    mockOctokit: vi.fn((): mockOctokitFn => ({
-      pulls: {
-        get: mockPullsGet,
-        listFiles: mockListFiles,
-      },
-    })),
+    mockOctokit: vi.fn(
+      (): mockOctokitFn => ({
+        pulls: {
+          get: mockPullsGet,
+          listFiles: mockListFiles,
+        },
+      }),
+    ),
     mockPullsGet: vi.fn(),
     mockListFiles: vi.fn(),
   };

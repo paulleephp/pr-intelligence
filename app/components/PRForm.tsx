@@ -40,7 +40,11 @@ export function PRForm({
       });
       const data = await response.json();
       if (!response.ok) {
-        setError(typeof data.error === "string" ? data.error : "Failed to fetch PR data.");
+        setError(
+          typeof data.error === "string"
+            ? data.error
+            : "Failed to fetch PR data.",
+        );
         setPrMetadata(null);
         setChangedFiles([]);
         return;
@@ -64,7 +68,9 @@ export function PRForm({
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://github.com/owner/repo/pull/123"
           className={`w-full rounded-lg border-2 bg-zinc-900/50 px-4 py-3 text-lg text-white placeholder-zinc-500 backdrop-blur-sm transition-colors focus:border-emerald-500 focus:outline-none ${
-            loading || (url && !error) ? "border-emerald-500" : "border-zinc-700"
+            loading || (url && !error)
+              ? "border-emerald-500"
+              : "border-zinc-700"
           }`}
           disabled={loading}
         />

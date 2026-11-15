@@ -8,8 +8,12 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-emerald-500">🚀 PR Intelligence</span>
-            <span className="hidden text-xs text-zinc-500 sm:inline">GitHub PR Analysis Tool</span>
+            <span className="text-2xl font-bold text-emerald-500">
+              🚀 PR Intelligence
+            </span>
+            <span className="hidden text-xs text-zinc-500 sm:inline">
+              GitHub PR Analysis Tool
+            </span>
           </div>
           <nav className="flex items-center gap-6">
             <Link

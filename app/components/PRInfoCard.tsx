@@ -14,7 +14,9 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
   return (
     <div className="space-y-4 lg:col-span-1">
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm">
-        <h2 className="mb-4 text-xl font-semibold text-emerald-400">Pull Request</h2>
+        <h2 className="mb-4 text-xl font-semibold text-emerald-400">
+          Pull Request
+        </h2>
         <div className="space-y-3">
           <a
             href={prMetadata.html_url}
@@ -22,7 +24,9 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
             rel="noopener noreferrer"
             className="group block"
           >
-            <p className="mb-1 text-xs text-zinc-500">PR #{prMetadata.number}</p>
+            <p className="mb-1 text-xs text-zinc-500">
+              PR #{prMetadata.number}
+            </p>
             <h3 className="font-medium text-white transition-colors group-hover:text-emerald-400">
               {prMetadata.title}
             </h3>
@@ -40,7 +44,9 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
               <p className="text-sm text-zinc-300">
                 {prMetadata.state === "open" ? "Opened" : "Closed"}
               </p>
-              <p className="text-xs text-zinc-500">by @{prMetadata.user.login}</p>
+              <p className="text-xs text-zinc-500">
+                by @{prMetadata.user.login}
+              </p>
             </div>
           </div>
 
@@ -74,7 +80,9 @@ export function PRInfoCard({ prMetadata }: PRInfoCardProps) {
 
       {prMetadata.labels && prMetadata.labels.length > 0 && (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 backdrop-blur-sm">
-          <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">Labels</p>
+          <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">
+            Labels
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {prMetadata.labels.map((label, idx) => (
               <span

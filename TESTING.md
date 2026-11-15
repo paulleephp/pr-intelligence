@@ -60,8 +60,16 @@ Extract large mocks to `fixtures.ts` for reusability:
 ```typescript
 // lib/__tests__/fixtures.ts
 export const octokit = {
-  pullsGetSuccess: { data: {/* ... */} },
-  pullsGetWithLabels: { data: {/* ... */} },
+  pullsGetSuccess: {
+    data: {
+      /* ... */
+    },
+  },
+  pullsGetWithLabels: {
+    data: {
+      /* ... */
+    },
+  },
 };
 export const errors = {
   notFound: { response: { status: 404 } },

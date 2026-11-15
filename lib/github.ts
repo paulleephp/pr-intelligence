@@ -1,6 +1,10 @@
 import { Octokit } from "@octokit/rest";
 import { RequestError } from "@octokit/request-error";
-import { GITHUB_API_VERSION, GITHUB_ERROR_MESSAGES, GITHUB_HTTP_STATUS } from "./github-constants";
+import {
+  GITHUB_API_VERSION,
+  GITHUB_ERROR_MESSAGES,
+  GITHUB_HTTP_STATUS,
+} from "./github-constants";
 import {
   PRMetadata,
   ChangedFile,
@@ -29,7 +33,7 @@ const rateLimitErrorCodes: number[] = [
 export async function fetchPRMetadata(
   owner: string,
   repo: string,
-  prNumber: number
+  prNumber: number,
 ): Promise<PRMetadata> {
   const response = await githubClient.pulls.get({
     owner,
@@ -68,7 +72,7 @@ export async function fetchPRMetadata(
 export async function fetchChangedFiles(
   owner: string,
   repo: string,
-  prNumber: number
+  prNumber: number,
 ): Promise<ChangedFile[]> {
   // @TODO assign type from Octokit
   const filesResponse = await githubClient.pulls.listFiles({
@@ -77,12 +81,14 @@ export async function fetchChangedFiles(
     pull_number: prNumber,
   });
 
-  const transformedFiles: ChangedFile[] = filesResponse.data.map((file: ChangedFile) => ({
-    filename: file.filename,
-    status: file.status,
-    additions: file.additions ?? 0,
-    deletions: file.deletions ?? 0,
-  }));
+  const transformedFiles: ChangedFile[] = filesResponse.data.map(
+    (file: ChangedFile) => ({
+      filename: file.filename,
+      status: file.status,
+      additions: file.additions ?? 0,
+      deletions: file.deletions ?? 0,
+    }),
+  );
 
   return transformedFiles;
 }
@@ -90,7 +96,7 @@ export async function fetchChangedFiles(
 export async function analyzePR(
   owner: string,
   repo: string,
-  prNumber: number
+  prNumber: number,
 ): Promise<GenericResponse<PRAnalysisResponse> | PRFetchError> {
   try {
     const prMetadata = await fetchPRMetadata(owner, repo, prNumber);
@@ -106,7 +112,10 @@ export async function analyzePR(
     const err = error as RequestError;
 
     // falsy value safety, if attribute value is "", 0, or null
-    if ("response" in err && err.response?.status === GITHUB_HTTP_STATUS.NOT_FOUND) {
+    if (
+      "response" in err &&
+      err.response?.status === GITHUB_HTTP_STATUS.NOT_FOUND
+    ) {
       console.error("PR not found:", error);
       return {
         error: GITHUB_ERROR_MESSAGES.PR_NOT_FOUND,

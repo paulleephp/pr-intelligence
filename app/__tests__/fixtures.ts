@@ -26,7 +26,10 @@ export const mockPRMetadataSuccess = {
   mergeable: true,
   labels: [],
   head: { repo: { url: "https://api.github.com/repos/user/repo" } },
-  base: { repo: { url: "https://api.github.com/repos/owner/repo" }, ref: "main" },
+  base: {
+    repo: { url: "https://api.github.com/repos/owner/repo" },
+    ref: "main",
+  },
   html_url: "https://github.com/owner/repo/pull/123",
 };
 
@@ -72,7 +75,8 @@ export const mockErrorResponses = {
     status: 404,
   },
   rateLimited: {
-    error: "GitHub rate limit exceeded or invalid token. Check your GITHUB_TOKEN.",
+    error:
+      "GitHub rate limit exceeded or invalid token. Check your GITHUB_TOKEN.",
     status: 429,
   },
   internalError: {

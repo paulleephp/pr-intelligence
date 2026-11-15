@@ -16,7 +16,9 @@ export function ChangedFilesCard({ changedFiles }: ChangedFilesCardProps) {
         </h2>
 
         {changedFiles.length === 0 ? (
-          <div className="py-8 text-center text-zinc-500">No changed files found</div>
+          <div className="py-8 text-center text-zinc-500">
+            No changed files found
+          </div>
         ) : (
           <div className="space-y-3">
             {changedFiles.map((file, idx) => (

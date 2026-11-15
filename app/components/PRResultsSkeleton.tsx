@@ -24,7 +24,11 @@ export function PRResultsSkeleton() {
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i}>
-                <Skeleton width="40%" style={{ marginBottom: "0.5rem" }} height={16} />
+                <Skeleton
+                  width="40%"
+                  style={{ marginBottom: "0.5rem" }}
+                  height={16}
+                />
                 <Skeleton width="80%" height={20} />
               </div>
             ))}

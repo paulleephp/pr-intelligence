@@ -79,7 +79,9 @@ describe("POST /api/pr", () => {
 
   it("should return 500 for internal errors", async () => {
     const { analyzePR } = await import("@/lib/github");
-    vi.mocked(analyzePR).mockResolvedValueOnce(mockErrorResponses.internalError);
+    vi.mocked(analyzePR).mockResolvedValueOnce(
+      mockErrorResponses.internalError,
+    );
 
     const request = createMockRequest(mockRequestBodies.validPR);
     const response = await POST(request);
@@ -105,7 +107,9 @@ describe("POST /api/pr", () => {
 
   it("should trim whitespace from URL", async () => {
     const { analyzePR } = await import("@/lib/github");
-    vi.mocked(analyzePR).mockResolvedValueOnce({ data: mockPRAnalysisNoChanges });
+    vi.mocked(analyzePR).mockResolvedValueOnce({
+      data: mockPRAnalysisNoChanges,
+    });
 
     const request = createMockRequest(mockRequestBodies.urlWithWhitespace);
     const response = await POST(request);

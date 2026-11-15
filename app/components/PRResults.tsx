@@ -11,7 +11,11 @@ interface PRResultsProps {
   loading: boolean;
 }
 
-export function PRResults({ prMetadata, changedFiles, loading }: PRResultsProps) {
+export function PRResults({
+  prMetadata,
+  changedFiles,
+  loading,
+}: PRResultsProps) {
   if (loading) {
     return <PRResultsSkeleton />;
   }

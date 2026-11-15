@@ -30,6 +30,7 @@
 - Generic errors in `lib/constants.ts` under `ERROR_MESSAGES`
 - Service-specific errors in `lib/{service}-constants.ts` under `{SERVICE}_ERROR_MESSAGES`
 - Example:
+
   ```typescript
   // lib/constants.ts
   export const ERROR_MESSAGES = {
@@ -55,12 +56,14 @@
 - **Never call `.map()`, `.filter()`, or other transformations inside data object construction**
 - Always precompute values as variables first, then reference them
 - Bad:
+
   ```typescript
   return {
     labels: (data ?? []).map((label) => ({ name: label.name })),
   };
   ```
 - Good:
+
   ```typescript
   const labels = (data ?? []).map((label) => ({ name: label.name }));
   return { labels };
@@ -85,6 +88,7 @@
 - Flatten error handling using early returns and conditional branching
 - Create wrapper functions to handle and transform errors
 - Bad:
+
   ```typescript
   try {
     try {
@@ -93,6 +97,7 @@
   } catch (error) { ... }
   ```
 - Good:
+
   ```typescript
   try {
     body = await request.json();

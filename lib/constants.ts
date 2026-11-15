@@ -15,10 +15,12 @@ export const HTTP_STATUS = {
 export const ERROR_MESSAGES = {
   NO_PR_URL: "No PR URL provided",
   INVALID_URL_FORMAT: "Invalid GitHub URL",
-  INVALID_PR_URL: "Invalid GitHub PR URL. Expected format: https://github.com/owner/repo/pull/123",
+  INVALID_PR_URL:
+    "Invalid GitHub PR URL. Expected format: https://github.com/owner/repo/pull/123",
   INTERNAL_ERROR: "Internal server error. Please try again later.",
   POST_EXPECTED: "POST endpoint expected for PR analysis",
 } as const;
 
 // PR URL validation
-export const PR_URL_REGEX = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:\?([^#]*))?(?:#.*)?$/;
+export const PR_URL_REGEX =
+  /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:\?([^#]*))?(?:#.*)?$/;

@@ -37,7 +37,14 @@ export interface ChangedFile {
 }
 
 export type PRFileStatus =
-  "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "deleted" | "unchanged";
+  | "added"
+  | "removed"
+  | "modified"
+  | "renamed"
+  | "copied"
+  | "changed"
+  | "deleted"
+  | "unchanged";
 
 export interface PRAnalysisResponse {
   prMetadata: PRMetadata;
