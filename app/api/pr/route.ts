@@ -22,7 +22,13 @@ export async function POST(request: RequestLike) {
     return serverErrorResponse(ERROR_MESSAGES.INTERNAL_ERROR);
   }
 
-  const url = (body as Record<string, unknown>).url?.toString().trim() || "";
+  if (typeof body !== "object" || body === null || !("url" in body)) {
+    return badRequestResponse(ERROR_MESSAGES.NO_PR_URL);
+  }
+  if (typeof body.url !== "string") {
+    return badRequestResponse(ERROR_MESSAGES.INVALID_PR_URL);
+  }
+  const url = body.url.trim();
   if (!url) {
     return badRequestResponse(ERROR_MESSAGES.NO_PR_URL);
   }
