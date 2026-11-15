@@ -39,6 +39,12 @@ export function PRForm({
         body: JSON.stringify({ url }),
       });
       const data = await response.json();
+      if (!response.ok) {
+        setError(typeof data.error === "string" ? data.error : "Failed to fetch PR data.");
+        setPrMetadata(null);
+        setChangedFiles([]);
+        return;
+      }
       setPrMetadata(data.prMetadata);
       setChangedFiles(data.changedFiles || []);
     } catch (err) {
