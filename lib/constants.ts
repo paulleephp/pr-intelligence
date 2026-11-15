@@ -21,4 +21,4 @@ export const ERROR_MESSAGES = {
 } as const;
 
 // PR URL validation
-export const PR_URL_REGEX = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:\?([^#]*))?$/;
+export const PR_URL_REGEX = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:\?([^#]*))?(?:#.*)?$/;
