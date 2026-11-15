@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PR Intelligence
 
-## Getting Started
+## The problem:
 
-First, run the development server:
+- Reviewing a pull request requires understanding of what changed, which parts
+  of the codebase are affected, what tests are relevant, and whether there are
+  potential risks. This is especially challenging if the codebase has long
+  history and/or a lot of inner dependencies.
+- This tool automates the initial investigation.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+This tool will:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Fetch PR metadata and changed files.
+2. Analyze the diff.
+3. Identify potentially affected modules
+4. Determine which tests might be relevant
+5. Use an LLM to produce a structured review
+6. Generate a Markdown report with findings and recommendations.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- The important distinction: the LLM doesn't do everything. Deterministic code handles fetching, parsing, validation, and analysis. The LLM handles tasks where reasoning and interpretation are useful.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture
 
-## Learn More
+@TODO Miro link
 
-To learn more about Next.js, take a look at the following resources:
+Review Orchestrator
+|
+LLM Provider Deterministic Rules
+|
+Result Validator
+|
+Database
+|
+Nextjs Frontend
+|
+Next.js API Routes
+|
+node.js Analysis Service
+|
+Github API Client
+|
+PR Data collector
+|
+Diff Analyzer
+|
+change Impact Analyzer
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech stack:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Component                   | Technology |
+| --------------------------- | ---------- |
+| Layer Technology            |
+| Frontend Next.js App Router |
+| UI React + TypeScript       |
+| Styling Tailwind CSS        |
+| Backend Node.js             |
+| API Next.js Route Handlers  |
+| Analysis engine TypeScript  |
+| GitHub integration Octokit  |
+| LLM OpenAI API              |
+| Validation Zod              |
+| Database PostgreSQL         |
+| ORM Prisma                  |
+| Testing Vitest + Playwright |
+| CI/CD GitHub Actions        |
