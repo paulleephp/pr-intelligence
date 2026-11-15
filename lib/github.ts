@@ -2,9 +2,7 @@ import { Octokit } from "@octokit/rest";
 import { GITHUB_API_VERSION, GITHUB_ERROR_MESSAGES, GITHUB_HTTP_STATUS } from "./github-constants";
 import { PRMetadata, ChangedFile, PRAnalysisResponse, PRLabel } from "@/types/github";
 
-const githubClient = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-});
+const githubClient = new Octokit();
 
 export async function fetchPRMetadata(
   owner: string,

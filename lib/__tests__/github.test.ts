@@ -7,8 +7,14 @@ import { octokit, errors } from "./fixtures";
  * This runs before vi.mock() executes, avoiding closure issues
  * No casting needed - fully typed
  */
-const { mockPullsGet, mockListFiles } = vi.hoisted(() => {
+const { mockOctokit, mockPullsGet, mockListFiles } = vi.hoisted(() => {
   return {
+    mockOctokit: vi.fn(() => ({
+      pulls: {
+        get: mockPullsGet,
+        listFiles: mockListFiles,
+      },
+    })),
     mockPullsGet: vi.fn(),
     mockListFiles: vi.fn(),
   };
@@ -17,12 +23,7 @@ const { mockPullsGet, mockListFiles } = vi.hoisted(() => {
 // Mock Octokit using the hoisted mock functions
 vi.mock("@octokit/rest", () => {
   return {
-    Octokit: vi.fn(() => ({
-      pulls: {
-        get: mockPullsGet,
-        listFiles: mockListFiles,
-      },
-    })),
+    Octokit: mockOctokit,
     mockPullsGet,
     mockListFiles,
   };
@@ -30,11 +31,17 @@ vi.mock("@octokit/rest", () => {
 
 describe("GitHub API Client", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockPullsGet.mockClear();
+    mockListFiles.mockClear();
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    mockPullsGet.mockReset();
+    mockListFiles.mockReset();
+  });
+
+  it("uses an unauthenticated GitHub client", () => {
+    expect(mockOctokit).toHaveBeenCalledWith();
   });
 
   describe("fetchPRMetadata", () => {
