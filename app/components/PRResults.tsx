@@ -16,7 +16,7 @@ export function PRResults({ prMetadata, changedFiles, loading }: PRResultsProps)
     return <PRResultsSkeleton />;
   }
 
-  if (!prMetadata || changedFiles.length === 0) {
+  if (!prMetadata) {
     return null;
   }
 
