@@ -7,3 +7,5 @@
 - Reflection (Evaluator-Optimizer). The agent writes code, runs compilers or test suites, inspects the error logs, and iteratively refines its own output until quality checks pass.
 - Tool Use (CodeAct). Instead of only outputting static text, the agent interacts with its environment by executing terminal commands, querying databases, and running scripts to observe real system states.
 - Planning (Plan-Execute-Verify). The agent decomposes a complex feature request into a step-by-step specification, executes file changes sequentially, and verifies each milestone before proceeding.
+- No comments. Just write type definitions which will replace comments
+- Do not write to .md file. Work on something. Call it a day.
