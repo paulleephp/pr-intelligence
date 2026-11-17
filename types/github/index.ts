@@ -34,6 +34,7 @@ export interface ChangedFile {
   status: PRFileStatus;
   additions: number;
   deletions: number;
+  patch: string
 }
 
 export type PRFileStatus =

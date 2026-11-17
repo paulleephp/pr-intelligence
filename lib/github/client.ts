@@ -1,12 +1,10 @@
 import { Octokit } from "@octokit/rest";
 import type {
   ChangedFile,
-  PRAnalysisResponse,
   PRLabel,
   PRMetadata,
 } from "@/types/github";
-import { HTTP_STATUS } from "../constants";
-import { GITHUB_API_VERSION, GITHUB_ERROR_MESSAGES } from "./constants";
+import { GITHUB_API_VERSION } from "./constants";
 
 const githubClient = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -67,40 +65,9 @@ export async function fetchChangedFiles(
     status: file.status as ChangedFile["status"],
     additions: file.additions ?? 0,
     deletions: file.deletions ?? 0,
+    patch: file.patch ?? ""
   }));
 
   return transformedFiles;
 }
 
-export async function analyzePR(
-  owner: string,
-  repo: string,
-  prNumber: number,
-): Promise<{ data: PRAnalysisResponse } | { error: string; status: number }> {
-  try {
-    const prMetadata = await fetchPRMetadata(owner, repo, prNumber);
-    const changedFiles = await fetchChangedFiles(owner, repo, prNumber);
-
-    return {
-      data: {
-        prMetadata,
-        changedFiles,
-      },
-    };
-  } catch (error: unknown) {
-    const err = error as { response?: { status: number } } | Error;
-
-    if ("response" in err && err.response?.status === HTTP_STATUS.NOT_FOUND) {
-      console.error("PR not found:", error);
-      return { error: GITHUB_ERROR_MESSAGES.PR_NOT_FOUND, status: 404 };
-    }
-
-    if ("response" in err && err.response?.status === HTTP_STATUS.TOO_MANY_REQUESTS) {
-      console.error("Rate limit exceeded:", error);
-      return { error: GITHUB_ERROR_MESSAGES.RATE_LIMIT, status: 429 };
-    }
-
-    console.error("Failed to fetch PR data:", error);
-    return { error: GITHUB_ERROR_MESSAGES.FETCH_FAILED, status: 500 };
-  }
-}

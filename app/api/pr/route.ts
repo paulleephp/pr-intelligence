@@ -1,7 +1,7 @@
 "use dynamic();";
 
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { analyzePR } from "@/lib/github/client";
+import { getPRMetadata } from "@/lib/github/pr-metadata";
 import {
   badRequestResponse,
   methodNotAllowedResponse,
@@ -39,7 +39,7 @@ export async function POST(request: RequestLike) {
   }
 
   const { owner, repo, prNumber } = parsed;
-  const result = await analyzePR(owner, repo, prNumber);
+  const result = await getPRMetadata(owner, repo, prNumber);
 
   if ("error" in result) {
     if (result.status === 404) {
