@@ -43,8 +43,8 @@ export type PRFileStatus =
   | "renamed"
   | "copied"
   | "changed"
-  | "deleted"
-  | "unchanged";
+  | "deleted";
+  // | "unchanged";
 
 export interface PRAnalysisResponse {
   prMetadata: PRMetadata;
@@ -54,4 +54,9 @@ export interface PRAnalysisResponse {
 export interface PRFetchError {
   status: number;
   error: string;
+}
+
+export interface PRMetadataResponse {
+  prMetadata: unknown;
+  changedFiles: unknown[];
 }

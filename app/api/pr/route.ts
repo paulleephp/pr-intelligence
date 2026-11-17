@@ -1,17 +1,17 @@
 "use dynamic();";
 
-import { RequestLike } from "@/types/request";
-import { parsePRUrl } from "@/lib/url";
-import { analyzePR } from "@/lib/github";
+import { ERROR_MESSAGES } from "@/lib/constants";
+import { analyzePR } from "@/lib/github/client";
 import {
   badRequestResponse,
+  methodNotAllowedResponse,
   notFoundResponse,
   rateLimitResponse,
   serverErrorResponse,
-  methodNotAllowedResponse,
   successResponse,
 } from "@/lib/response";
-import { ERROR_MESSAGES } from "@/lib/constants";
+import { parsePRUrl } from "@/lib/url";
+import type { RequestLike } from "@/types/request";
 
 export async function POST(request: RequestLike) {
   let body: unknown;
