@@ -1,6 +1,6 @@
+import type { Mock, MockedFunction } from "vitest";
 import { GITHUB_API_VERSION } from "@/lib/github-constants";
-import { PRAnalysisResponse } from "@/types/github";
-import { Mock, MockedFunction } from "vitest";
+import type { PRAnalysisResponse } from "@/types/github/octokit";
 
 export type mockOctokitFn = {
   pulls: {
@@ -75,8 +75,7 @@ export const mockErrorResponses = {
     status: 404,
   },
   rateLimited: {
-    error:
-      "GitHub rate limit exceeded or invalid token. Check your GITHUB_TOKEN.",
+    error: "GitHub rate limit exceeded or invalid token. Check your GITHUB_TOKEN.",
     status: 429,
   },
   internalError: {

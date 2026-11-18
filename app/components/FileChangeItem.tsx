@@ -1,7 +1,7 @@
 "use client";
 
-import { ChangedFile } from "@/types/github";
-import { PlusIcon, MinusIcon, ModifyIcon } from "./icons";
+import type { ChangedFile } from "@/types/github/octokit";
+import { MinusIcon, ModifyIcon, PlusIcon } from "./icons";
 
 interface FileChangeItemProps {
   file: ChangedFile;
@@ -23,9 +23,7 @@ export function FileChangeItem({ file }: FileChangeItemProps) {
   return (
     <div className="group flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-950/30 p-3 transition-all hover:border-emerald-500/50">
       <div className="flex-1">
-        <p className="font-mono text-sm text-zinc-300 group-hover:text-white">
-          {file.filename}
-        </p>
+        <p className="font-mono text-sm text-zinc-300 group-hover:text-white">{file.filename}</p>
         <div className="mt-2 flex gap-4">
           {file.status === "added" && (
             <span className="inline-flex items-center text-xs text-emerald-500">
@@ -39,15 +37,12 @@ export function FileChangeItem({ file }: FileChangeItemProps) {
           )}
           {file.status === "modified" && (
             <div className="inline-flex items-center text-xs text-orange-500">
-              <ModifyIcon className="mr-1 h-3.5 w-3.5" />+{file.additions} -
-              {file.deletions}
+              <ModifyIcon className="mr-1 h-3.5 w-3.5" />+{file.additions} -{file.deletions}
             </div>
           )}
         </div>
       </div>
-      <span
-        className={`whitespace-nowrap rounded border px-2 py-0.5 text-xs ${statusStyle}`}
-      >
+      <span className={`whitespace-nowrap rounded border px-2 py-0.5 text-xs ${statusStyle}`}>
         {file.status}
       </span>
     </div>

@@ -1,6 +1,4 @@
-/**
- * GitHub-specific constants
- */
+export const GITHUB_API_VERSION = "2026-03-10";
 
 export const PR_STATUS_MAP = {
   OPEN: "open",

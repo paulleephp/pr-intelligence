@@ -1,17 +1,12 @@
-export interface GenericResponse<T> {
-  data: T;
-}
-
-export interface GitHubUser {
-  login: string;
-  avatar_url: string;
-  html_url: string;
-}
+import type { Pattern } from "../diff/pattern";
+import type { GitHubUser } from "../github/octokit";
 
 export interface PRLabel {
   name: string;
   color: string;
 }
+
+export type PRStatus = "open" | "closed";
 
 export interface PRMetadata {
   number: number;
@@ -27,16 +22,6 @@ export interface PRMetadata {
   html_url: string;
 }
 
-export type PRStatus = "open" | "closed";
-
-export interface ChangedFile {
-  filename: string;
-  status: PRFileStatus;
-  additions: number;
-  deletions: number;
-  patch: string
-}
-
 export type PRFileStatus =
   | "added"
   | "removed"
@@ -45,19 +30,29 @@ export type PRFileStatus =
   | "copied"
   | "changed"
   | "deleted";
-  // | "unchanged";
+// | "unchanged";
 
 export interface PRAnalysisResponse {
   prMetadata: PRMetadata;
   changedFiles: ChangedFile[] | null;
+  analysis: PRAnalysis;
 }
 
-export interface PRFetchError {
-  status: number;
-  error: string;
-}
+// @TODO just secret analysis now
+export type PRAnalysis = {
+  secretDetection: {
+    filename: string;
+    secret: Pattern[];
+    apiKey: Pattern[];
+    password: Pattern[];
+    ssh: Pattern[];
+  };
+};
 
-export interface PRMetadataResponse {
-  prMetadata: unknown;
-  changedFiles: unknown[];
+export interface ChangedFile {
+  filename: string;
+  status: PRFileStatus;
+  additions: number;
+  deletions: number;
+  patch: string;
 }

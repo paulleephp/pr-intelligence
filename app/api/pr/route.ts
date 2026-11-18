@@ -1,7 +1,7 @@
 "use dynamic();";
 
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { getPRMetadata } from "@/lib/github/pr-metadata";
+import { getPRMetadata } from "@/lib/github/pr-metadata/get";
 import {
   badRequestResponse,
   methodNotAllowedResponse,

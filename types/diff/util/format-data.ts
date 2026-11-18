@@ -1,5 +1,5 @@
 interface GenericArgs {
-  file: string;
+  filename: string;
 };
 
 export type ApiArgs = GenericArgs & {
@@ -10,8 +10,8 @@ export type PassArgs = GenericArgs & {
 };
 export type SshArgs = GenericArgs;
 
-export type FormatDataArgs {
+export type FormatDataArgs = {
   ruleId: string;
-  file: string;
+  filename: string;
   message: string;
 };

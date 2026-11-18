@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PRMetadata, ChangedFile } from "@/types/github";
-import { Header } from "./components/Header";
+import type { ChangedFile, PRMetadata } from "@/types/github/octokit";
 import { Footer } from "./components/Footer";
+import { Header } from "./components/Header";
 import { PRForm } from "./components/PRForm";
 import { PRResults } from "./components/PRResults";
 
@@ -24,8 +24,8 @@ export default function Home() {
             Analyze GitHub Pull Requests
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-zinc-400">
-            Automate PR review investigation. Understand what changed, identify
-            risks, and surface relevant tests with AI-powered analysis.
+            Automate PR review investigation. Understand what changed, identify risks, and surface
+            relevant tests with AI-powered analysis.
           </p>
         </div>
 
@@ -42,11 +42,7 @@ export default function Home() {
           />
         </div>
 
-        <PRResults
-          prMetadata={prMetadata}
-          changedFiles={changedFiles}
-          loading={loading}
-        />
+        <PRResults prMetadata={prMetadata} changedFiles={changedFiles} loading={loading} />
       </main>
 
       <Footer />

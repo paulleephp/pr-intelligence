@@ -1,5 +1,6 @@
 import { HTTP_STATUS } from "@/lib/constants";
-import type { PRAnalysisResponse } from "@/types/github";
+import { analyzeDiff } from "@/lib/diff-analysis/core";
+import type { PRAnalysisResponse } from "@/types/pr/metadata";
 import { fetchChangedFiles, fetchPRMetadata } from "../client";
 import { GITHUB_ERROR_MESSAGES } from "../constants";
 
@@ -11,11 +12,13 @@ export async function getPRMetadata(
   try {
     const prMetadata = await fetchPRMetadata(owner, repo, prNumber);
     const changedFiles = await fetchChangedFiles(owner, repo, prNumber);
+    const analysis = await analyzeDiff(changedFiles);
 
     return {
       data: {
         prMetadata,
         changedFiles,
+        analysis,
       },
     };
   } catch (error: unknown) {

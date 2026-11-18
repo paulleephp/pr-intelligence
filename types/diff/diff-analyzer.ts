@@ -2,9 +2,6 @@ import type { FileStatus } from "@/lib/diff-analysis";
 import type { FindingSeverity } from "@/lib/diff-analysis/util/risk-scoring";
 import type { Finding } from "@/lib/diff-analyzer";
 
-/**
- * Entry in a diff
- */
 export interface DiffEntry {
   file: string;
   status: FileStatus;
@@ -12,9 +9,6 @@ export interface DiffEntry {
   deletions: number;
 }
 
-/**
- * Statistics result interface
- */
 export interface StatisticsResult {
   stats: Record<string, number>;
   summary: {
@@ -24,18 +18,12 @@ export interface StatisticsResult {
   };
 }
 
-/**
- * Unified diff format
- */
 export interface UnifiedDiff {
   additions: string[];
   removals: string[];
   context: string[];
 }
 
-/**
- * Analysis result interface
- */
 export interface AnalysisResult {
   files: DiffEntry[];
   stats: StatisticsResult;
@@ -45,9 +33,6 @@ export interface AnalysisResult {
   confidence: number;
 }
 
-/**
- * Risk assessment result
- */
 export interface RiskAssessment {
   findings: Finding[];
   overallRisk: FindingSeverity;
@@ -64,6 +49,19 @@ export interface RiskAssessment {
   };
 }
 
+export interface DiffAnalysis {
+  files: Array<{ file: string; status: FileStatus }>;
+  stats: { 
+    files_added: number;
+    files_removed: number;
+    lines_added: number;
+    lines_removed: number;
+    total_files: number;
+  };
+  findings: readonly Finding[];
+  riskScore: number;
+}
+
 /**
  * Change type
  */
@@ -73,3 +71,35 @@ export type ChangeType = "added" | "removed" | "modified";
  * Secret category type
  */
 export type SecretCategory = "api_key" | "password" | "ssh_key" | "private_key" | "auth";
+
+export type FileCategory =
+  | "code"
+  | "test"
+  | "docs"
+  | "config"
+  | "dependency"
+  | "build"
+  | "infrastructure";
+
+export interface Finding {
+  ruleId: string;
+  severity: "low" | "medium" | "high" | "critical";
+  file: string;
+  message: string;
+  evidence?: string;
+}
+
+export interface AnalysisResult {
+  files: Array<{ file: string; status: "added" | "removed" | "modified" | "renamed" }>;
+  stats: {
+    files_added: number;
+    files_removed: number;
+    lines_added: number;
+    lines_removed: number;
+    total_files: number;
+  };
+  findings: Finding[];
+  riskScore: number;
+  riskLabel: "low" | "medium" | "high" | "critical";
+  confidence: number;
+}

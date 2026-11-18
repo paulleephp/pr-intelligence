@@ -1,8 +1,8 @@
 "use client";
 
-import { PRMetadata, ChangedFile } from "@/types/github";
-import { PRInfoCard } from "./PRInfoCard";
+import type { ChangedFile, PRMetadata } from "@/types/github/octokit";
 import { ChangedFilesCard } from "./ChangedFilesCard";
+import { PRInfoCard } from "./PRInfoCard";
 import { PRResultsSkeleton } from "./PRResultsSkeleton";
 
 interface PRResultsProps {
@@ -11,11 +11,7 @@ interface PRResultsProps {
   loading: boolean;
 }
 
-export function PRResults({
-  prMetadata,
-  changedFiles,
-  loading,
-}: PRResultsProps) {
+export function PRResults({ prMetadata, changedFiles, loading }: PRResultsProps) {
   if (loading) {
     return <PRResultsSkeleton />;
   }

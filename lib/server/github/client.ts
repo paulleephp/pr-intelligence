@@ -1,9 +1,6 @@
 import { Octokit } from "@octokit/rest";
-import type {
-  ChangedFile,
-  PRLabel,
-  PRMetadata,
-} from "@/types/github";
+import type {} from "@/types/github/octokit";
+import type { ChangedFile, PRLabel, PRMetadata } from "@/types/pr/metadata";
 import { GITHUB_API_VERSION } from "./constants";
 
 const githubClient = new Octokit({
@@ -65,9 +62,8 @@ export async function fetchChangedFiles(
     status: file.status as ChangedFile["status"],
     additions: file.additions ?? 0,
     deletions: file.deletions ?? 0,
-    patch: file.patch ?? ""
+    patch: file.patch ?? "",
   }));
 
   return transformedFiles;
 }
-
