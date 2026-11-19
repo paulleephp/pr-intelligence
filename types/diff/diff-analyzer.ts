@@ -18,12 +18,6 @@ export interface StatisticsResult {
   };
 }
 
-export interface UnifiedDiff {
-  additions: string[];
-  removals: string[];
-  context: string[];
-}
-
 export interface AnalysisResult {
   files: DiffEntry[];
   stats: StatisticsResult;
@@ -80,26 +74,3 @@ export type FileCategory =
   | "dependency"
   | "build"
   | "infrastructure";
-
-export interface Finding {
-  ruleId: string;
-  severity: "low" | "medium" | "high" | "critical";
-  file: string;
-  message: string;
-  evidence?: string;
-}
-
-export interface AnalysisResult {
-  files: Array<{ file: string; status: "added" | "removed" | "modified" | "renamed" }>;
-  stats: {
-    files_added: number;
-    files_removed: number;
-    lines_added: number;
-    lines_removed: number;
-    total_files: number;
-  };
-  findings: Finding[];
-  riskScore: number;
-  riskLabel: "low" | "medium" | "high" | "critical";
-  confidence: number;
-}

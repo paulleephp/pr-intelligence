@@ -1,5 +1,5 @@
 import { HTTP_STATUS } from "@/lib/constants";
-import { analyzeDiff } from "@/lib/diff-analysis/core";
+import { analyzeDiff } from "@/lib/server/diff/core";
 import type { PRAnalysisResponse } from "@/types/pr/metadata";
 import { fetchChangedFiles, fetchPRMetadata } from "../client";
 import { GITHUB_ERROR_MESSAGES } from "../constants";

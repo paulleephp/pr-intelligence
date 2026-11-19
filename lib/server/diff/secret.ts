@@ -1,6 +1,12 @@
 import type { DiffHunks } from "@/types/diff/hunk";
 import type { Pattern } from "@/types/diff/pattern";
-import type { GetHandlerFn, GetRiskyPatternsArg, SecretScan } from "@/types/diff/secret";
+import type {
+  DetectRiskyPatternsArg,
+  GetHandlerFn,
+  GetSecretReportArg,
+  SecretScan,
+} from "@/types/diff/secret";
+import type { SecretAnalysis } from "@/types/pr/metadata";
 import {
   API_KEY_PATTERNS,
   LOW_RISK_PATTERNS,
@@ -28,7 +34,7 @@ const scansMap: Record<string, Array<string>> = {
   apiKey: API_KEY_PATTERNS,
 };
 
-export const checkForSecrets = ({ hunks, filename }: { hunks: DiffHunks; filename: string }) => ({
+export const getSecretsReport = ({ hunks, filename }: GetSecretReportArg): SecretAnalysis => ({
   filename,
   secret: detectSecrets(hunks, filename),
   apiKey: detectAPIKeys(hunks, filename),
@@ -36,27 +42,26 @@ export const checkForSecrets = ({ hunks, filename }: { hunks: DiffHunks; filenam
   ssh: detectSSHKeys(hunks, filename),
 });
 
-export const detectSecrets = (hunks: DiffHunks, filename: string): Pattern[] =>
-  getRiskyPatterns({ hunks, filename, type: "secret" });
+export const detectSecrets = (hunks: DiffHunks, filename: string): Pattern | null =>
+  detectRiskyPatterns({ hunks, filename, type: "secret" });
 
-export const detectAPIKeys = (hunks: DiffHunks, filename: string): Pattern[] =>
-  getRiskyPatterns({ hunks, filename, type: "apiKey" });
+export const detectAPIKeys = (hunks: DiffHunks, filename: string): Pattern | null =>
+  detectRiskyPatterns({ hunks, filename, type: "apiKey" });
 
-export const detectPasswords = (hunks: DiffHunks, filename: string): Pattern[] =>
-  getRiskyPatterns({ hunks, filename, type: "password" });
+export const detectPasswords = (hunks: DiffHunks, filename: string): Pattern | null =>
+  detectRiskyPatterns({ hunks, filename, type: "password" });
 
-export const detectSSHKeys = (hunks: DiffHunks, filename: string): Pattern[] =>
-  getRiskyPatterns({ hunks, filename, type: "ssh" });
+export const detectSSHKeys = (hunks: DiffHunks, filename: string): Pattern | null =>
+  detectRiskyPatterns({ hunks, filename, type: "ssh" });
 
-const getRiskyPatterns = ({ hunks, filename, type }: GetRiskyPatternsArg) => {
-  const riskyPatterns: Pattern[] = [];
+const detectRiskyPatterns = ({ hunks, filename, type }: DetectRiskyPatternsArg) => {
   const formatFn = dataFnMap[type];
 
   for (const rawString of hunks.added) {
     const string = rawString.toLowerCase();
 
     if (LOW_RISK_PATTERNS.some((p) => string.includes(p))) {
-      continue;
+      return null;
     }
 
     if (type === "secret") {
@@ -64,20 +69,18 @@ const getRiskyPatterns = ({ hunks, filename, type }: GetRiskyPatternsArg) => {
 
       for (const scan of scans) {
         if (scan.regex?.test(string)) {
-          riskyPatterns.push(formatFn({ filename, pattern: scan.name }));
-          break;
+          return formatFn({ filename, pattern: scan.name });
         }
       }
     } else {
       const scans: Array<string> = scansMap[type];
       for (const scan of scans) {
         if (string.includes(scan)) {
-          riskyPatterns.push(formatFn({ filename, pattern: scan }));
-          break;
+          return formatFn({ filename, pattern: scan });
         }
       }
     }
   }
 
-  return riskyPatterns;
+  return null;
 };

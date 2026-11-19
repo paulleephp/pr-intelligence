@@ -15,10 +15,10 @@ export const SEVERITY_LABELS: Record<PatternSeverity, string> = {
   critical: "Critical Risk",
 } as const;
 
-export enum SEVERITY_LEVELS {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
+export enum SeverityLevels {
+  Low = "low",
+  Medium = "medium",
+  High = "high",
 }
 
 export const HIGH_PRIORITY_FILES: Array<string> = [

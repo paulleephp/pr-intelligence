@@ -1,11 +1,4 @@
-/**
- * File status in a diff
- */
-export type FileStatus = "added" | "removed" | "modified" | "renamed";
 
-/**
- * File category type
- */
 export type FileCategory = 
   | "code"
   | "test"
@@ -15,3 +8,12 @@ export type FileCategory =
   | "build"
   | "infrastructure";
 
+export type PRFileStatus =
+  | "added"
+  | "removed"
+  | "modified"
+  | "renamed"
+  | "copied"
+  | "changed"
+  | "deleted";
+  

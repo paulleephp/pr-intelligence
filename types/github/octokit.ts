@@ -18,4 +18,3 @@ export interface PRMetadataResponse {
   changedFiles: unknown[];
 }
 
-export type FileStatus = "added" | "removed" | "modified" | "renamed";
