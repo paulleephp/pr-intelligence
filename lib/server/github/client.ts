@@ -17,7 +17,6 @@ export async function fetchPRMetadata(
     owner,
     repo,
     pull_number: prNumber,
-    headers: { "X-GitHub-Api-Version": GITHUB_API_VERSION },
   });
 
   const prData = response.data;
