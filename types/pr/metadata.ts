@@ -1,5 +1,6 @@
 import type { PRFileStatus } from "../diff/file";
 import type { Pattern } from "../diff/pattern";
+import type { PrChangeSummary } from "../diff/summary";
 import type { GitHubUser } from "../github/octokit";
 export interface PRLabel {
   name: string;
@@ -22,9 +23,12 @@ export interface PRMetadata {
   html_url: string;
 }
 
-export interface PRAnalysisResponse {
+export interface PRMetadataResponse {
   prMetadata: PRMetadata;
+}
+export interface PRAnalysisResponse {
   changedFiles: ChangedFile[] | null;
+  prChangeSummary: PrChangeSummary;
   analysis: PRAnalysis;
 }
 

@@ -1,6 +1,6 @@
 import { HTTP_STATUS } from "@/lib/constants";
-import { analyzeDiff } from "@/lib/server/diff/core";
-import type { PRAnalysisResponse } from "@/types/pr/metadata";
+import { analyzeDiff, summarizePr } from "@/lib/server/diff/core";
+import type { ChangedFile, PRAnalysisResponse, PRMetadataResponse } from "@/types/pr/metadata";
 import { fetchChangedFiles, fetchPRMetadata } from "../client";
 import { GITHUB_ERROR_MESSAGES } from "../constants";
 
@@ -8,17 +8,13 @@ export async function getPRMetadata(
   owner: string,
   repo: string,
   prNumber: number,
-): Promise<{ data: PRAnalysisResponse } | { error: string; status: number }> {
+): Promise<{ data: PRMetadataResponse } | { error: string; status: number }> {
   try {
     const prMetadata = await fetchPRMetadata(owner, repo, prNumber);
-    const changedFiles = await fetchChangedFiles(owner, repo, prNumber);
-    const analysis = await analyzeDiff(changedFiles);
 
     return {
       data: {
         prMetadata,
-        changedFiles,
-        analysis,
       },
     };
   } catch (error: unknown) {
@@ -37,4 +33,20 @@ export async function getPRMetadata(
     console.error("Failed to fetch PR data:", error);
     return { error: GITHUB_ERROR_MESSAGES.FETCH_FAILED, status: 500 };
   }
+}
+
+export async function getFullPRAnalysis(
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<PRAnalysisResponse> {
+  const changedFiles: ChangedFile[] = await fetchChangedFiles(owner, repo, prNumber)
+  const prChangeSummary = summarizePr(changedFiles)
+  const analysis = analyzeDiff(changedFiles);
+
+  return {
+    changedFiles,
+    prChangeSummary,
+    analysis,
+  };
 }

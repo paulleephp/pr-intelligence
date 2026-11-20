@@ -3,24 +3,26 @@ import type { Pattern } from "@/types/diff/pattern";
 import { PRFileStatus } from "./constants/file";
 import { SeverityLevels } from "./constants/patterns";
 
-const AUTH_PATHS = ["/auth", "/login", "/session"];
-const CI_PATTERNS = [".github/workflows/", "Dockerfile"];
-const POTENTIAL_CONFIG_CHANGES = [".env", "tsconfig.json", "dockerfile", "package.json"];
+// Authentication + Authorization
+const AUTH_PATHS = ["/auth", "/login", "/session", "/permission", "/access-control", "/rbac"];
+const CI_PATHS = [".github/workflows/", "Dockerfile", "docker-compose"];
+const POTENTIAL_CONFIG_CHANGES = [".env", ".config", "tsconfig.json", "dockerfile", "package.json", "package-lock.json"];
+const SECURITY_PATHS = ["/security", "/crypto", "/encryption"];
+const INFRA_PATHS = ["terraform/", "k8s/", "helm/"]
 
 export const getCategoryReport = ({ filename: rawFilename, status }: CategorizerArg) => {
   const filename = rawFilename.toLowerCase()
-  const result: Pattern[] | null = []
-
-  const idCheck = detectConfigChanges({ filename, status });
-  if (idCheck) result.push(idCheck)
-  const authCheck = detectAuthChanges({ filename, status });
-  if (authCheck) result.push(authCheck)
-  const ciCheck = detectCIChanges({ filename, status });
-  if (ciCheck) result.push(ciCheck)
-  const testChanges = detectTestChanges({filename, status})
-  if (testChanges) result.push(testChanges)
-
-  return result
+  
+  const detections = [
+    detectConfigChanges({ filename, status }),
+    detectAuthChanges({ filename, status }),
+    detectCIChanges({ filename, status }),
+    detectSecurityChanges({ filename, status }),
+    detectInfraChanges({ filename, status }),
+    detectTestChanges({filename, status}),
+  ]
+  
+  return detections.filter(Boolean)
 };
 
 export const detectConfigChanges = ({
@@ -46,7 +48,7 @@ export const detectAuthChanges = ({filename, status}: CategorizerArg): Pattern |
   if ((status === PRFileStatus.Modified || status === PRFileStatus.Removed) && 
     AUTH_PATHS.some((p) => filename.includes(p))) {
     return {
-      ruleId: "R006",
+      ruleId: "R001",
       severity: SeverityLevels.Medium,
       filename,
       message: "Potential auth change detected",
@@ -57,7 +59,7 @@ export const detectAuthChanges = ({filename, status}: CategorizerArg): Pattern |
 }
 
 export const detectCIChanges = ({filename, status}: CategorizerArg): Pattern | null => {
-  if (status === PRFileStatus.Modified && CI_PATTERNS.some((p) => filename.includes(p))) {
+  if (status === PRFileStatus.Modified && CI_PATHS.some((p) => filename.includes(p))) {
     return {
       ruleId: "R006",
       severity: SeverityLevels.Medium,
@@ -69,10 +71,41 @@ export const detectCIChanges = ({filename, status}: CategorizerArg): Pattern | n
   return null;
 }
 
+export const detectSecurityChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
+  if (
+    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
+    SECURITY_PATHS.some((p) => filename.includes(p))
+  ) {
+    return {
+      ruleId: "R010",
+      severity: SeverityLevels.High,
+      filename,
+      message: "Security change detected",
+    };
+  }
+
+  return null;
+}
+
+export const detectInfraChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
+  if (
+    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) && 
+    INFRA_PATHS.some((p) => filename.includes(p))) {
+    return {
+      ruleId: "R011",
+      severity: SeverityLevels.High,
+      filename,
+      message: "Infrastructure change detected",
+    };
+  }
+
+  return null;
+}
+
 export const detectTestChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
   if (status === PRFileStatus.Removed) {
     return {
-      ruleId: "R010",
+      ruleId: "R012",
       severity: SeverityLevels.Medium,
       filename,
       message: "Test removal detected",

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchPRMetadata } from "@/lib/github/client";
+import { getFullPRAnalysis } from "@/lib/server/github/pr-metadata/get";
 import { errorResponse } from "@/lib/response";
 
 interface PRRequest {
@@ -25,17 +25,18 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    // Fetch metadata and diff content
-    const [metadata, diffData] = await Promise.all([
-      fetchPRMetadata(parsed.owner, parsed.repo, parsed.prNumber),
-      _fetchDiff(parsed.owner, parsed.repo, parsed.prNumber),
-    ]);
+    // Fetch full PR analysis (metadata + changed files + analysis)
+    const { prMetadata, changedFiles, analysis } = await getFullPRAnalysis(
+      parsed.owner,
+      parsed.repo,
+      parsed.prNumber,
+    );
 
-    if (!metadata || !metadata.changedFiles) {
+    if (!prMetadata || !changedFiles) {
       return errorResponse("Failed to analyze PR", 500);
     }
 
-    const analysis = _analyzeDiff(metadata);
+    const resultAnalysis = analysis;
 
     return NextResponse.json({
       stats: analysis.stats,
