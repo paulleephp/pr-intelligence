@@ -1,4 +1,4 @@
-import { Octokit } from "@octokit/rest";
+import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 import type {} from "@/types/github/octokit";
 import type { ChangedFile, PRLabel, PRMetadata } from "@/types/pr/metadata";
 import { GITHUB_API_VERSION } from "./constants";
@@ -13,11 +13,12 @@ export async function fetchPRMetadata(
   repo: string,
   prNumber: number,
 ): Promise<PRMetadata> {
-  const response = await githubClient.pulls.get({
-    owner,
-    repo,
-    pull_number: prNumber,
-  });
+  const response: RestEndpointMethodTypes["pulls"]["get"]["response"] =
+    await githubClient.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
 
   const prData = response.data;
   const rawLabels = prData.labels ?? [];
@@ -50,7 +51,7 @@ export async function fetchChangedFiles(
   repo: string,
   prNumber: number,
 ): Promise<ChangedFile[]> {
-  const filesResponse = await githubClient.pulls.listFiles({
+  const filesResponse: RestEndpointMethodTypes["pulls"]["listFiles"]["response"] = await githubClient.pulls.listFiles({
     owner,
     repo,
     pull_number: prNumber,
