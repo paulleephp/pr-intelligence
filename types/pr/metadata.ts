@@ -1,7 +1,7 @@
-import type { PRFileStatus } from "../diff/file";
 import type { Pattern } from "../diff/pattern";
 import type { PrChangeSummary } from "../diff/summary";
 import type { GitHubUser } from "../github/octokit";
+
 export interface PRLabel {
   name: string;
   color: string;
@@ -23,15 +23,9 @@ export interface PRMetadata {
   html_url: string;
 }
 
-export interface PRAnalysisResponse {
-  changedFiles: ChangedFile[] | null;
-  prChangeSummary: PrChangeSummary;
-  analysis: PRAnalysis;
-}
-
 export interface ChangedFile {
   filename: string;
-  status: PRFileStatus;
+  status: string;
   additions: number;
   deletions: number;
   patch: string;
@@ -44,9 +38,17 @@ export interface SecretAnalysis {
   password: Pattern | null;
   ssh: Pattern | null;
 }
+
+export interface CodeAnalysis {
+  authPatterns: Array<{ patternId: string; message: string }>;
+  passwordHashingPatterns: Array<{ patternId: string; message: string }>;
+  cryptoAlgoPatterns: Array<{ patternId: string; message: string }>;
+}
+
 export interface PRAnalysis {
   secret: Array<SecretAnalysis>;
-  category: any; //@todo
+  category: any; // TODO
+  code: CodeAnalysis;
 }
 
 export interface ErrorResponse {

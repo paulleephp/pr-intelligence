@@ -1,10 +1,10 @@
-import type { FileStatus } from "@/lib/diff-analysis";
-import type { FindingSeverity } from "@/lib/diff-analysis/util/risk-scoring";
-import type { Finding } from "@/lib/diff-analyzer";
+// Types used here are imported from their respective type definition files.
+import { PRFileStatus } from "./file";
+import type { Pattern, PatternSeverity } from "./pattern";
 
 export interface DiffEntry {
   file: string;
-  status: FileStatus;
+  status: PRFileStatus;
   additions: number;
   deletions: number;
 }
@@ -21,15 +21,15 @@ export interface StatisticsResult {
 export interface AnalysisResult {
   files: DiffEntry[];
   stats: StatisticsResult;
-  findings: Finding[];
+  findings: Pattern[];
   riskScore: number;
-  riskLabel: FindingSeverity;
+  riskLabel: PatternSeverity;
   confidence: number;
 }
 
 export interface RiskAssessment {
-  findings: Finding[];
-  overallRisk: FindingSeverity;
+  findings: Pattern[];
+  overallRisk: PatternSeverity;
   confidence: number;
   ruleBreakdown: Record<string, number>;
   summary: {
@@ -44,7 +44,7 @@ export interface RiskAssessment {
 }
 
 export interface DiffAnalysis {
-  files: Array<{ file: string; status: FileStatus }>;
+  files: Array<{ file: string; status: PRFileStatus }>;
   stats: { 
     files_added: number;
     files_removed: number;
@@ -52,7 +52,7 @@ export interface DiffAnalysis {
     lines_removed: number;
     total_files: number;
   };
-  findings: readonly Finding[];
+  findings: readonly Pattern[];
   riskScore: number;
 }
 

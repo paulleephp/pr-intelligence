@@ -39,4 +39,16 @@ export const RISK_RULES = {
     condition: "Test files removed",
     severity: "medium" as const,
   },
+  R011: {
+    condition: "Infrastructure changes",
+    severity: "medium" as const,
+  },
+  R012: {
+    condition: "Crypto algo changed",
+    severity: "high" as const,
+  },
+  R013: {
+    condition: "Password hashing changed",
+    severity: "high" as const,
+  },
 } as const;
