@@ -1,16 +1,17 @@
 "use dynamic();";
 
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { getPRMetadata } from "@/lib/github/pr-metadata/get";
-import {
-  badRequestResponse,
-  methodNotAllowedResponse,
-  notFoundResponse,
-  rateLimitResponse,
-  serverErrorResponse,
-  successResponse,
-} from "@/lib/response";
-import { parsePRUrl } from "@/lib/url";
+import { getPRMetadata } from "@/lib/server/github/pr-metadata/get";
+import { 
+  badRequestResponse, 
+  methodNotAllowedResponse, 
+  notFoundResponse, 
+  rateLimitResponse, 
+  serverErrorResponse, 
+  successResponse 
+} from "@/lib/server/response";
+import { parsePRUrl } from "@/lib/server/url";
+
 import type { RequestLike } from "@/types/request";
 
 export async function POST(request: RequestLike) {
