@@ -43,9 +43,9 @@ export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
 }
 
 export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
-  const secretReports: Array<PRAnalysis["secret"]> = [];
-  const categoryReports: Array<PRAnalysis["category"]> = [];
-  const codeReports: Array<PRAnalysis["code"]> = [];
+  const secretReports: PRAnalysis["secret"] = [];
+  const categoryReports: PRAnalysis["category"] = [];
+  const codeReports: PRAnalysis["code"] = [];
 
   for (const changedFile of changedFiles) {
     const { patch, filename, status } = changedFile;

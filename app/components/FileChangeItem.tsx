@@ -18,7 +18,7 @@ const STATUS_STYLES = {
 } as const;
 
 export function FileChangeItem({ file }: FileChangeItemProps) {
-  const statusStyle = STATUS_STYLES[file.status] || STATUS_STYLES.changed;
+  const statusStyle = (STATUS_STYLES as Record<string, string>)[file.status] || STATUS_STYLES.changed;
 
   return (
     <div className="group flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-950/30 p-3 transition-all hover:border-emerald-500/50">

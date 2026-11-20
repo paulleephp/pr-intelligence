@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ChangedFile, PRMetadata } from "@/types/github/octokit";
+import type { ChangedFile, PRMetadata } from "@/types/pr/metdata";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { PRForm } from "./components/PRForm";

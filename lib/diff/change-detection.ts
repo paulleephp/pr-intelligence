@@ -8,32 +8,6 @@ export const AUTH_PATTERNS = [
   "permission validation",
 ];
 
-const MIGRATION_UPDATE_PATTERNS = [
-  "migration",
-  "schema",
-  "database"
-];
-
-const PROD_CONFIG_CHANGE_PATTERNS = [
-  "production",
-  "prod",
-  "NODE_ENV"
-]
-
-const TEST_FILE_REMOVAL = [
-  ".test",
-  ".spec"
-]
-
-const RISKY_API_PATTERNS = [
-  "fetch(",
-  "axios(",
-  "http(",
-  "request(",
-  "window.location",
-  "document.createElement",
-]
-
 export const PASSWORD_HASHING_PATTERNS = [
   // Password hashing patterns - check for weak or deprecated algorithms
   "bcrypt", "bcryptjs", "argon2", "scrypt", "pbkdf2",
@@ -48,3 +22,17 @@ export const CRYPTO_ALGO_PATTERNS = [
 ];
 
 
+export const PROD_CONFIG_CHANGE_PATTERNS = [
+  "production",
+  "prod",
+  "NODE_ENV"
+]
+
+export const RISKY_API_PATTERNS = [
+  "fetch(",
+  "axios(",
+  "http(",
+  "request(",
+  "window.location",
+  "document.createElement",
+]

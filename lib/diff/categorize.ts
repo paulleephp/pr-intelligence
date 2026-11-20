@@ -1,34 +1,50 @@
 import type { CategorizerArg } from "@/types/diff/categorize";
 import type { Pattern } from "@/types/diff/pattern";
+import type { CategoryAnalysis } from "../types/pr/metadata";
 import { PRFileStatus } from "./constants/file";
 import { SeverityLevels } from "./constants/patterns";
 
 // Authentication + Authorization
 const AUTH_PATHS = ["/auth", "/login", "/session", "/permission", "/access-control", "/rbac"];
 const CI_PATHS = [".github/workflows/", "Dockerfile", "docker-compose"];
-const POTENTIAL_CONFIG_CHANGES = [".env", ".config", "tsconfig.json", "dockerfile", "package.json", "package-lock.json", "tsconfig", ".npmrc", "webpack.config"];
+const POTENTIAL_CONFIG_CHANGES = [
+  ".env",
+  ".config",
+  "tsconfig.json",
+  "dockerfile",
+  "package.json",
+  "package-lock.json",
+  "tsconfig",
+  ".npmrc",
+  "webpack.config",
+];
 const SECURITY_PATHS = ["/security", "/crypto", "/encryption"];
-const INFRA_PATHS = ["terraform/", "k8s/", "helm/"]
+const INFRA_PATHS = ["terraform/", "k8s/", "helm/"];
 
-export const getCategoryReport = ({ filename: rawFilename, status }: CategorizerArg) => {
-  const filename = rawFilename.toLowerCase()
-  
+export const getCategoryReport = ({
+  filename: rawFilename,
+  status,
+}: CategorizerArg): CategoryAnalysis => {
+  const filename = rawFilename.toLowerCase();
+
   const detections = [
     detectConfigChanges({ filename, status }),
     detectAuthChanges({ filename, status }),
     detectCIChanges({ filename, status }),
     detectSecurityChanges({ filename, status }),
     detectInfraChanges({ filename, status }),
-    detectTestChanges({filename, status}),
-  ]
-  
-  return detections.filter(Boolean)
+    detectTestChanges({ filename, status }),
+  ];
+
+  const cleaned: Pattern[] = detections.filter(d => !!d);
+
+  return {
+    filename: rawFilename,
+    category: cleaned,
+  };
 };
 
-export const detectConfigChanges = ({
-  filename,
-  status,
-}: CategorizerArg): Pattern | null => {
+export const detectConfigChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
   if (
     (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
     POTENTIAL_CONFIG_CHANGES.includes(filename)
@@ -44,9 +60,11 @@ export const detectConfigChanges = ({
   return null;
 };
 
-export const detectAuthChanges = ({filename, status}: CategorizerArg): Pattern | null => {
-  if ((status === PRFileStatus.Modified || status === PRFileStatus.Removed) && 
-    AUTH_PATHS.some((p) => filename.includes(p))) {
+export const detectAuthChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
+  if (
+    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
+    AUTH_PATHS.some((p) => filename.includes(p))
+  ) {
     return {
       ruleId: "R001",
       severity: SeverityLevels.Medium,
@@ -56,9 +74,9 @@ export const detectAuthChanges = ({filename, status}: CategorizerArg): Pattern |
   }
 
   return null;
-}
+};
 
-export const detectCIChanges = ({filename, status}: CategorizerArg): Pattern | null => {
+export const detectCIChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
   if (status === PRFileStatus.Modified && CI_PATHS.some((p) => filename.includes(p))) {
     return {
       ruleId: "R006",
@@ -69,7 +87,7 @@ export const detectCIChanges = ({filename, status}: CategorizerArg): Pattern | n
   }
 
   return null;
-}
+};
 
 export const detectSecurityChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
   if (
@@ -85,12 +103,13 @@ export const detectSecurityChanges = ({ filename, status }: CategorizerArg): Pat
   }
 
   return null;
-}
+};
 
 export const detectInfraChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
   if (
-    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) && 
-    INFRA_PATHS.some((p) => filename.includes(p))) {
+    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
+    INFRA_PATHS.some((p) => filename.includes(p))
+  ) {
     return {
       ruleId: "R011",
       severity: SeverityLevels.High,
@@ -100,7 +119,7 @@ export const detectInfraChanges = ({ filename, status }: CategorizerArg): Patter
   }
 
   return null;
-}
+};
 
 export const detectTestChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
   if (status === PRFileStatus.Removed) {
@@ -113,4 +132,4 @@ export const detectTestChanges = ({ filename, status }: CategorizerArg): Pattern
   }
 
   return null;
-}
+};
