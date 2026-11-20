@@ -13,6 +13,7 @@ export const ERROR_MESSAGES = {
   INVALID_PR_URL: "Invalid GitHub URL format",
   INTERNAL_ERROR: "Internal error. Please try again later.",
   POST_EXPECTED: "POST endpoint expected for PR analysis",
+  GET_EXPECTED: "GET endpoint expected for PR analysis",
 } as const;
 
 export const PR_URL_REGEX = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:\?[^#]*)?$/;

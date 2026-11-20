@@ -1,20 +1,18 @@
-"use dynamic();";
-
 import { ERROR_MESSAGES } from "@/lib/constants";
 import { getPRMetadata } from "@/lib/server/github/pr-metadata/get";
-import { 
-  badRequestResponse, 
-  methodNotAllowedResponse, 
-  notFoundResponse, 
-  rateLimitResponse, 
-  serverErrorResponse, 
-  successResponse 
+import {
+  badRequestResponse,
+  methodNotAllowedResponse,
+  notFoundResponse,
+  rateLimitResponse,
+  serverErrorResponse,
+  successResponse,
 } from "@/lib/server/response";
 import { parsePRUrl } from "@/lib/server/url";
 
 import type { RequestLike } from "@/types/request";
 
-export async function POST(request: RequestLike) {
+export async function GET(request: RequestLike) {
   let body: unknown;
   try {
     body = await request.json();
@@ -52,9 +50,9 @@ export async function POST(request: RequestLike) {
     return serverErrorResponse(result.error);
   }
 
-  return successResponse(result.data);
+  return successResponse(result);
 }
 
-export async function GET() {
-  return methodNotAllowedResponse(ERROR_MESSAGES.POST_EXPECTED);
+export async function POST() {
+  return methodNotAllowedResponse(ERROR_MESSAGES.GET_EXPECTED);
 }

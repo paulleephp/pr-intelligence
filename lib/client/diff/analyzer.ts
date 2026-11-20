@@ -1,4 +1,4 @@
-import type { Finding } from "@/types/diff/diff-analyzer";
+import type { Pattern } from "@/types/diff/pattern";
 import { SEVERITY_LABELS, SEVERITY_SCORES } from "../../server/diff/constants/patterns";
 
 export function getRiskLevel(score: number): "low" | "medium" | "high" | "critical" {
@@ -8,7 +8,7 @@ export function getRiskLevel(score: number): "low" | "medium" | "high" | "critic
   return "low";
 }
 
-export function calculateConfidence(findings: readonly Finding[]): number {
+export function calculateConfidence(findings: readonly Pattern[]): number {
   const count = findings.length;
 
   if (count === 0) return 0;

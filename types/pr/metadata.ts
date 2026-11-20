@@ -23,9 +23,6 @@ export interface PRMetadata {
   html_url: string;
 }
 
-export interface PRMetadataResponse {
-  prMetadata: PRMetadata;
-}
 export interface PRAnalysisResponse {
   changedFiles: ChangedFile[] | null;
   prChangeSummary: PrChangeSummary;
@@ -50,4 +47,9 @@ export interface SecretAnalysis {
 export interface PRAnalysis {
   secret: Array<SecretAnalysis>;
   category: any; //@todo
+}
+
+export interface ErrorResponse {
+  error: string; 
+  status: number;
 }
