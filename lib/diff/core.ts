@@ -1,6 +1,7 @@
 import type { DiffHunks } from "@/types/diff/hunk";
 import type { PrChangeSummary } from "@/types/diff/summary";
 import type { ChangedFile, PRAnalysis } from "@/types/pr/metadata";
+import { aggregateData } from "./aggregator";
 import { getCategoryReport } from "./categorize";
 import { getCodeReport } from "./code";
 import { getSecretsReport } from "./secret";
@@ -56,9 +57,16 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
     codeReports.push(getCodeReport({ hunks, filename, status }));
   }
 
+  const aggregate = aggregateData({
+    secretReports,
+    categoryReports,
+    codeReports,
+  });
+
   return {
     secret: secretReports,
     category: categoryReports,
     code: codeReports,
+    aggregate,
   };
-}
+};

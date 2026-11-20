@@ -1,5 +1,6 @@
 import type { PRFileStatus } from "../diff/file";
 import type { Pattern } from "../diff/pattern";
+import type { PrChangeSummary } from "../diff/summary";
 
 export interface ChangedFile {
   filename: string;
@@ -17,16 +18,17 @@ export interface SecretAnalysis {
   ssh: Pattern | null;
 }
 
-interface PatternResult { 
-  patternId: string; 
-  message: string 
+interface PatternResult {
+  ruleId: string;
+  message: string;
 }
+
 export interface CodeAnalysis {
-  authPatterns: Array<PatternResult>;
-  passwordHashingPatterns: Array<PatternResult>;
-  cryptoAlgoPatterns: Array<PatternResult>;
-  prodConfigChanges: Array<PatternResult>;
-  riskyApiCalls: Array<PatternResult>;
+  authPatterns: PatternResult | null;
+  passwordHashingPatterns: PatternResult | null;
+  cryptoAlgoPatterns: PatternResult | null;
+  prodConfigChanges: PatternResult | null;
+  riskyApiCalls: PatternResult | null;
 }
 
 export interface CategoryAnalysis {
@@ -38,12 +40,14 @@ export interface PRAnalysis {
   secret: SecretAnalysis[];
   category: CategoryAnalysis[];
   code: CodeAnalysis[];
+  aggregate: any; //@todo
 }
 
 export interface PRAnalysisResponse {
   changedFiles: ChangedFile[];
-  prChangeSummary: any;
+  prChangeSummary: PrChangeSummary;
   analysis: PRAnalysis;
+  aggregate: any; //@todo
 }
 
 export interface ErrorResponse {

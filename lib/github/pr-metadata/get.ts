@@ -1,14 +1,17 @@
 import { HTTP_STATUS } from "@/lib/constants";
 import { analyzeDiff, summarizePr } from "@/lib/diff/core";
-import type { ChangedFile, ErrorResponse, PRAnalysisResponse, PRMetadata } from "../types/pr/metdata";
 import { fetchChangedFiles, fetchPRMetadata } from "../client";
 import { GITHUB_ERROR_MESSAGES } from "../constants";
+import type {
+  ChangedFile,
+  ErrorResponse,
+  PRAnalysisResponse,
+  PRMetadata,
+} from "../types/pr/metdata";
 
-type GithubError = { response?: { status: number } }
+type GithubError = { response?: { status: number } };
 
-async function handleGitHubError(
-  err: GithubError | Error,
-): Promise<ErrorResponse> {
+async function handleGitHubError(err: GithubError | Error): Promise<ErrorResponse> {
   try {
     const githubError = err as GithubError | undefined;
 
