@@ -24,7 +24,10 @@ describe("POST /api/pr", () => {
 
   it("should analyze PR successfully", async () => {
     const { analyzePR } = await import("@/lib/github");
+    console.log('analyzePR:', analyzePR);
     vi.mocked(analyzePR).mockResolvedValueOnce({ data: mockPRAnalysisSuccess });
+    const prResult = await analyzePR('test', 'repo', 123);
+    console.log('analyzePR result:', prResult);
 
     const request = createMockRequest(mockRequestBodies.validPR);
     const response = await POST(request);

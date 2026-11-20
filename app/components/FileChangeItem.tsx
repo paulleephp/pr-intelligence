@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChangedFile } from "@/types/github/octokit";
+import type { ChangedFile } from "@/types/pr/metdata";
 import { MinusIcon, ModifyIcon, PlusIcon } from "./icons";
 
 interface FileChangeItemProps {

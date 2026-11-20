@@ -1,27 +1,4 @@
 import type { Pattern } from "../diff/pattern";
-import type { PrChangeSummary } from "../diff/summary";
-import type { GitHubUser } from "../github/octokit";
-
-export interface PRLabel {
-  name: string;
-  color: string;
-}
-
-export type PRStatus = "open" | "closed";
-
-export interface PRMetadata {
-  number: number;
-  title: string;
-  state: PRStatus;
-  user: GitHubUser;
-  createdAt: string;
-  updatedAt: string;
-  mergeable: boolean | null;
-  labels: PRLabel[];
-  head: { repo: { url: string } };
-  base: { repo: { url: string }; ref: string };
-  html_url: string;
-}
 
 export interface ChangedFile {
   filename: string;

@@ -1,5 +1,5 @@
 import type { Pattern, PatternSeverity } from "@/types/diff/pattern";
-import { SEVERITY_LABELS, SEVERITY_SCORES } from "../../server/diff/constants/patterns";
+import { SEVERITY_LABELS, SEVERITY_SCORES } from "./constants/patterns";
 
 export function getRiskLevel(score: number): PatternSeverity {
   if (score >= 100) return "critical";

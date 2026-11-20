@@ -2,6 +2,7 @@ import type { DiffHunks } from "@/types/diff/hunk";
 import type { PrChangeSummary } from "@/types/diff/summary";
 import type { ChangedFile, PRAnalysis } from "@/types/pr/metadata";
 import { getCategoryReport } from "./categorize";
+import { getCodeReport } from "./code";
 import { getSecretsReport } from "./secret";
 import { parsePatch } from "./util/parse-patch";
 
@@ -42,8 +43,9 @@ export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
 }
 
 export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
-  const secretReports: PRAnalysis["secret"] = [];
-  const categoryReports: PRAnalysis["category"] = [];
+  const secretReports: Array<PRAnalysis["secret"]> = [];
+  const categoryReports: Array<PRAnalysis["category"]> = [];
+  const codeReports: Array<PRAnalysis["code"]> = [];
 
   for (const changedFile of changedFiles) {
     const { patch, filename, status } = changedFile;
@@ -51,10 +53,12 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
 
     secretReports.push(getSecretsReport({ hunks, filename }));
     categoryReports.push(getCategoryReport({ filename, status }));
+    codeReports.push(getCodeReport({ hunks, filename, status }));
   }
 
   return {
     secret: secretReports,
     category: categoryReports,
+    code: codeReports,
   };
-};
+}

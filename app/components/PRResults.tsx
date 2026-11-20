@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChangedFile, PRMetadata } from "@/types/github/octokit";
+import type { ChangedFile, PRMetadata } from "@/types/pr/metdata";
 import { ChangedFilesCard } from "./ChangedFilesCard";
 import { PRInfoCard } from "./PRInfoCard";
 import { PRResultsSkeleton } from "./PRResultsSkeleton";

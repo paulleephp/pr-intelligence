@@ -1,5 +1,5 @@
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { getPRMetadata } from "@/lib/server/github/pr-metadata/get";
+import { getPRMetadata } from "@/lib/github/pr-metadata/get";
 import {
   badRequestResponse,
   methodNotAllowedResponse,
@@ -7,8 +7,8 @@ import {
   rateLimitResponse,
   serverErrorResponse,
   successResponse,
-} from "@/lib/server/response";
-import { parsePRUrl } from "@/lib/server/url";
+} from "@/lib/response";
+import { parsePRUrl } from "@/lib/url";
 
 import type { RequestLike } from "@/types/request";
 

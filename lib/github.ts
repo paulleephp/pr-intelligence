@@ -1,4 +1,6 @@
 // Re-export GitHub API functions for convenient module-level access
-export { fetchPRMetadata, fetchChangedFiles } from "./server/github/client";
-import { analyzePR } from './server/github/analyze-pr';
+export { fetchChangedFiles, fetchPRMetadata } from "./github/client";
+
+import { analyzePR } from "./github/analyze-pr";
+
 export { analyzePR };

@@ -1,16 +1,14 @@
-"use strict";
-
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { getFullPRAnalysis } from "@/lib/server/github/pr-metadata/get";
-import { 
-  badRequestResponse, 
-  methodNotAllowedResponse, 
-  notFoundResponse, 
-  rateLimitResponse, 
-  serverErrorResponse, 
-  successResponse 
-} from "@/lib/server/response";
-import { parsePRUrl } from "@/lib/server/url";
+import { getFullPRAnalysis } from "@/lib/github/pr-metadata/get";
+import {
+  badRequestResponse,
+  methodNotAllowedResponse,
+  notFoundResponse,
+  rateLimitResponse,
+  serverErrorResponse,
+  successResponse,
+} from "@/lib/response";
+import { parsePRUrl } from "@/lib/url";
 
 import type { RequestLike } from "@/types/request";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import type { ChangedFile, PRMetadata } from "@/types/github/octokit";
+import type { ChangedFile, PRMetadata } from "@/types/pr/metdata";
 import { SpinnerIcon } from "./icons";
 
 interface PRFormProps {

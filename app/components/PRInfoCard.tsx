@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { PRMetadata } from "@/types/github/octokit";
+import type { PRMetadata } from "@/types/pr/metdata";
 
 interface PRInfoCardProps {
   prMetadata: PRMetadata;
