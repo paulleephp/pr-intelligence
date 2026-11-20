@@ -6,7 +6,7 @@ import { SeverityLevels } from "./constants/patterns";
 // Authentication + Authorization
 const AUTH_PATHS = ["/auth", "/login", "/session", "/permission", "/access-control", "/rbac"];
 const CI_PATHS = [".github/workflows/", "Dockerfile", "docker-compose"];
-const POTENTIAL_CONFIG_CHANGES = [".env", ".config", "tsconfig.json", "dockerfile", "package.json", "package-lock.json"];
+const POTENTIAL_CONFIG_CHANGES = [".env", ".config", "tsconfig.json", "dockerfile", "package.json", "package-lock.json", "tsconfig", ".npmrc", "webpack.config"];
 const SECURITY_PATHS = ["/security", "/crypto", "/encryption"];
 const INFRA_PATHS = ["terraform/", "k8s/", "helm/"]
 
