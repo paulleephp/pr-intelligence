@@ -1,6 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { POST } from "@/app/api/pr/route";
+import { GET } from "@/app/api/pr/route";
 import { createMockRequest } from "./test-utils";
+
+// Declare mock functions at the top level with vi.hoisted()
+// This runs before vi.mock() executes, avoiding closure issues
+const { mockGetPRMetadata } = vi.hoisted(() => ({
+  mockGetPRMetadata: vi.fn(),
+}));
+
+vi.mock("@/lib/github/pr-metadata/get", () => ({
+  getPRMetadata: mockGetPRMetadata,
+  getFullPRAnalysis: vi.fn(),
+}));
+
 import {
   mockPRAnalysisSuccess,
   mockPRAnalysisNoChanges,
@@ -8,12 +20,7 @@ import {
   mockRequestBodies,
 } from "./fixtures";
 
-// Mock the github module
-vi.mock("@/lib/github", () => ({
-  analyzePR: vi.fn(),
-}));
-
-describe("POST /api/pr", () => {
+describe("GET /api/pr", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -23,14 +30,13 @@ describe("POST /api/pr", () => {
   });
 
   it("should analyze PR successfully", async () => {
-    const { analyzePR } = await import("@/lib/github");
-    console.log('analyzePR:', analyzePR);
-    vi.mocked(analyzePR).mockResolvedValueOnce({ data: mockPRAnalysisSuccess });
-    const prResult = await analyzePR('test', 'repo', 123);
-    console.log('analyzePR result:', prResult);
+    mockGetPRMetadata.mockResolvedValueOnce({
+      ...mockPRAnalysisSuccess,
+      labels: [], // Simplified for this test
+    });
 
     const request = createMockRequest(mockRequestBodies.validPR);
-    const response = await POST(request);
+    const response = await GET(request);
     const responseBody = await response.json();
 
     expect(response.status).toBe(200);
@@ -40,7 +46,7 @@ describe("POST /api/pr", () => {
 
   it("should return 400 for missing URL", async () => {
     const request = createMockRequest(mockRequestBodies.emptyURL);
-    const response = await POST(request);
+    const response = await GET(request);
     const responseBody = await response.json();
 
     expect(response.status).toBe(400);
@@ -49,7 +55,7 @@ describe("POST /api/pr", () => {
 
   it("should return 400 for invalid PR URL format", async () => {
     const request = createMockRequest(mockRequestBodies.invalidDomain);
-    const response = await POST(request);
+    const response = await GET(request);
     const responseBody = await response.json();
 
     expect(response.status).toBe(400);
@@ -57,11 +63,10 @@ describe("POST /api/pr", () => {
   });
 
   it("should return 404 when PR not found", async () => {
-    const { analyzePR } = await import("@/lib/github");
-    vi.mocked(analyzePR).mockResolvedValueOnce(mockErrorResponses.notFound);
+    mockGetPRMetadata.mockResolvedValueOnce(mockErrorResponses.notFound);
 
     const request = createMockRequest(mockRequestBodies.validPR);
-    const response = await POST(request);
+    const response = await GET(request);
     const responseBody = await response.json();
 
     expect(response.status).toBe(404);
@@ -69,11 +74,10 @@ describe("POST /api/pr", () => {
   });
 
   it("should return 429 when rate limited", async () => {
-    const { analyzePR } = await import("@/lib/github");
-    vi.mocked(analyzePR).mockResolvedValueOnce(mockErrorResponses.rateLimited);
+    mockGetPRMetadata.mockResolvedValueOnce(mockErrorResponses.rateLimited);
 
     const request = createMockRequest(mockRequestBodies.validPR);
-    const response = await POST(request);
+    const response = await GET(request);
     const responseBody = await response.json();
 
     expect(response.status).toBe(429);
@@ -81,13 +85,12 @@ describe("POST /api/pr", () => {
   });
 
   it("should return 500 for internal errors", async () => {
-    const { analyzePR } = await import("@/lib/github");
-    vi.mocked(analyzePR).mockResolvedValueOnce(
+    mockGetPRMetadata.mockResolvedValueOnce(
       mockErrorResponses.internalError,
     );
 
     const request = createMockRequest(mockRequestBodies.validPR);
-    const response = await POST(request);
+    const response = await GET(request);
     const responseBody = await response.json();
 
     expect(response.status).toBe(500);
@@ -101,7 +104,7 @@ describe("POST /api/pr", () => {
       },
     };
 
-    const response = await POST(mockRequest);
+    const response = await GET(mockRequest);
     const responseBody = await response.json();
 
     expect(response.status).toBe(500);
@@ -109,13 +112,13 @@ describe("POST /api/pr", () => {
   });
 
   it("should trim whitespace from URL", async () => {
-    const { analyzePR } = await import("@/lib/github");
-    vi.mocked(analyzePR).mockResolvedValueOnce({
-      data: mockPRAnalysisNoChanges,
+    mockGetPRMetadata.mockResolvedValueOnce({
+      ...mockPRAnalysisNoChanges,
+      labels: [], // Simplified for this test
     });
 
     const request = createMockRequest(mockRequestBodies.urlWithWhitespace);
-    const response = await POST(request);
+    const response = await GET(request);
 
     expect(response.status).toBe(200);
   });
