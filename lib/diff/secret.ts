@@ -4,7 +4,7 @@ import type {
   DetectRiskyPatternsArg,
   GetHandlerFn,
   GetSecretReportArg,
-  SecretScan,
+  SecretScanType,
 } from "@/types/diff/secret";
 import type { SecretAnalysis } from "@/types/pr/metadata";
 import {
@@ -21,26 +21,29 @@ import {
   getSSHFoundData,
 } from "./util/format-data";
 
-const dataFnMap: Record<string, GetHandlerFn> = {
+const dataFnMap: Record<SecretScanType, GetHandlerFn> = {
   secret: getSecretFoundData,
   ssh: getSSHFoundData,
   password: getPasswordFoundData,
   apiKey: getApiKeyFoundData,
 };
 
-const scansMap: Record<string, Array<string>> = {
+const scansMap: Record<Exclude<SecretScanType, "secret">, string[]> = {
   ssh: SSH_PATTERNS,
   password: PASSWORD_PATTERNS,
   apiKey: API_KEY_PATTERNS,
 };
 
-export const getSecretsReport = ({ hunks, filename }: GetSecretReportArg): SecretAnalysis => ({
-  filename,
-  secret: detectSecrets(hunks, filename),
-  apiKey: detectAPIKeys(hunks, filename),
-  password: detectPasswords(hunks, filename),
-  ssh: detectSSHKeys(hunks, filename),
-});
+const SECRET_SCAN_ORDER: readonly SecretScanType[] = ["secret", "apiKey", "password", "ssh"];
+
+export const getSecretsReport = ({ hunks, filename }: GetSecretReportArg): SecretAnalysis => {
+  const claimedLines = new Set<number>();
+  const results = {} as Record<SecretScanType, Pattern | null>;
+  for (const type of SECRET_SCAN_ORDER) {
+    results[type] = detectRiskyPatterns({ hunks, filename, type, claimedLines });
+  }
+  return { filename, ...results };
+};
 
 export const detectSecrets = (hunks: DiffHunks, filename: string): Pattern | null =>
   detectRiskyPatterns({ hunks, filename, type: "secret" });
@@ -54,31 +57,30 @@ export const detectPasswords = (hunks: DiffHunks, filename: string): Pattern | n
 export const detectSSHKeys = (hunks: DiffHunks, filename: string): Pattern | null =>
   detectRiskyPatterns({ hunks, filename, type: "ssh" });
 
-const detectRiskyPatterns = ({ hunks, filename, type }: DetectRiskyPatternsArg) => {
+const findMatchName = (line: string, type: SecretScanType): string | null => {
+  if (type === "secret") {
+    return SECRET_SCAN_RULES.find((scan) => scan.regex.test(line))?.name ?? null;
+  }
+  return scansMap[type].find((scan) => line.includes(scan)) ?? null;
+};
+
+const detectRiskyPatterns = ({
+  hunks,
+  filename,
+  type,
+  claimedLines = new Set<number>(),
+}: DetectRiskyPatternsArg): Pattern | null => {
   const formatFn = dataFnMap[type];
 
-  for (const rawString of hunks.added) {
+  for (const [index, rawString] of hunks.added.entries()) {
     const string = rawString.toLowerCase();
-
-    if (LOW_RISK_PATTERNS.some((p) => string.includes(p.toLowerCase()))) {
+    if (claimedLines.has(index) || LOW_RISK_PATTERNS.some((p) => string.includes(p.toLowerCase()))) {
       continue;
     }
-
-    if (type === "secret") {
-      const scans: SecretScan[] = SECRET_SCAN_RULES;
-
-      for (const scan of scans) {
-        if (scan.regex?.test(string)) {
-          return formatFn({ filename, pattern: scan.name });
-        }
-      }
-    } else {
-      const scans: Array<string> = scansMap[type];
-      for (const scan of scans) {
-        if (string.includes(scan)) {
-          return formatFn({ filename, pattern: scan });
-        }
-      }
+    const match = findMatchName(string, type);
+    if (match) {
+      claimedLines.add(index);
+      return formatFn({ filename, pattern: match });
     }
   }
 

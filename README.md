@@ -118,6 +118,17 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 - Advanced pattern matching beyond rule-based detection
 - Semantic understanding of code changes through LLM reasoning
 
+## Known Limitations
+
+### Dependency detection (R005)
+
+R005 only checks files whose basename is a recognised dependency manifest (`package.json`, `go.mod`, `Cargo.toml`, `Gemfile`, `build.gradle(.kts)`, `pyproject.toml`, `Pipfile`, `requirements*.txt` / `requirements*.in`). Known gaps:
+
+1. **Requirements files kept in a folder aren't detected.** Files such as `requirements/base.txt` or `requirements/dev.txt` aren't recognised, because only the filename is checked, not the folder.
+2. **Some ecosystems aren't supported.** `setup.py`, `setup.cfg`, `composer.json` (PHP) and `pom.xml` (Maven) aren't in the manifest list. The detector also has no line patterns for their dependency formats, so supporting them needs both a filename entry and new patterns.
+
+Lockfiles (`package-lock.json`, etc.) are excluded on purpose.
+
 ## Project Roadmap
 
 | Day | Focus | Deliverables |

@@ -1,7 +1,5 @@
-- Strategy Pattern. Swaps LLM providers (such as Claude, OpenAI, or local models) or planning algorithms at runtime without rewriting the core agent loop
 - Command Pattern. Encapsulates tool calls—like running bash commands, editing files, or searching repositories—as discrete objects. This enables action logging, dry-run approvals, and undo/rollback capabilities
 - Chain of Responsibility. Passes a coding task or error trace through a sequence of handlers, such as a linter, test runner, security scanner, and self-correction step
-- Adapter Pattern. Normalizes disparate tool schemas, Model Context Protocol (MCP) servers, and Language Server Protocol (LSP) outputs into a unified format the LLM can consume
 - Memento Pattern. Snapshots repository state, git diffs, and conversation context before destructive file edits so the agent can revert when tests fail.
 - Observer Pattern. Streams real-time token generation, tool execution statuses, and terminal outputs to the user interface or audit logs
 - Reflection (Evaluator-Optimizer). The agent writes code, runs compilers or test suites, inspects the error logs, and iteratively refines its own output until quality checks pass.
@@ -9,3 +7,6 @@
 - Planning (Plan-Execute-Verify). The agent decomposes a complex feature request into a step-by-step specification, executes file changes sequentially, and verifies each milestone before proceeding.
 - No comments. Just write type definitions which will replace comments
 - Do not write to .md file. Work on something. Call it a day.
+- Don't be stuck on a same issue for more than a minute. report to the user what is repeatedly failing. 
+- tsc check is good-to-have but not mandatory. User can help with cleanup if needed
+  

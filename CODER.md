@@ -64,8 +64,8 @@
 
 ### 8. File Size Limits
 
-- Keep each file under 120 lines if possible
-- If a file exceeds 120 lines, split it into smaller, focused modules
+- Keep each file under 150 lines if possible
+- If a file exceeds 150 lines, split it into smaller, focused modules
 - Example split: `components/Header.tsx`, `components/Footer.tsx`, `components/PRForm.tsx`
 
 ### 9. No Nested Try-Catch Blocks

@@ -11,6 +11,8 @@
     "format": "@biomejs/biome format --write",
     "format:fix": "@biomejs/biome check --write",
     "test": "vitest",
+    "test:frontend": "vitest --project frontend",
+    "test:backend": "vitest --project backend",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   },
@@ -26,6 +28,10 @@
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
     "@tailwindcss/turbopack": "4.3.3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
     "@types/node": "^26.6.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",

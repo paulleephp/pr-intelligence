@@ -3,6 +3,7 @@ import { getCategoryReport } from "@/lib/diff/categorize";
 import { getCodeReport } from "@/lib/diff/code";
 import { analyzeDiff } from "@/lib/diff/core";
 import { detectDependencyChanges, isDependencyManifest } from "@/lib/diff/dependency";
+import { getSecretsReport } from "@/lib/diff/secret";
 import { parsePatch } from "@/lib/diff/util/parse-patch";
 import type { PRFileStatus } from "@/lib/types/diff/file";
 import type { ChangedFile } from "@/lib/types/pr/metadata";
@@ -388,4 +389,31 @@ describe("R016 - dangerous code execution / DOM sinks", () => {
       expect(codeRuleIds(patch)).not.toContain("R016");
     },
   );
+});
+
+describe("R007 - secret de-duplication", () => {
+  const secrets = (patch: string) => {
+    const r = getSecretsReport({ hunks: parsePatch(`@@ -1 +1 @@\n${patch}`), filename: "src/a.ts" });
+    return [r.secret, r.apiKey, r.password, r.ssh].filter((p) => p !== null);
+  };
+
+  it("reports a single added line once, even if several secret scans match it", () => {
+    const findings = secrets('+const github_token = "abc";');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({ ruleId: "R007", severity: "critical" });
+  });
+
+  it("still reports separate lines that match different scans", () => {
+    expect(secrets('+const github_token = "abc";\n+const db_password = "hunter2";')).toHaveLength(2);
+  });
+
+  it("counts one finding for one secret line in the aggregate", () => {
+    const { aggregate } = analyzeDiff([
+      file({ filename: "src/config.ts", patch: '@@ -1 +1 @@\n+const github_token = "abc";' }),
+    ]);
+
+    expect(aggregate.totalFindings).toBe(1);
+    expect(aggregate.severityCounts.critical).toBe(1);
+  });
 });
