@@ -60,8 +60,8 @@ const detectRiskyPatterns = ({ hunks, filename, type }: DetectRiskyPatternsArg) 
   for (const rawString of hunks.added) {
     const string = rawString.toLowerCase();
 
-    if (LOW_RISK_PATTERNS.some((p) => string.includes(p))) {
-      return null;
+    if (LOW_RISK_PATTERNS.some((p) => string.includes(p.toLowerCase()))) {
+      continue;
     }
 
     if (type === "secret") {

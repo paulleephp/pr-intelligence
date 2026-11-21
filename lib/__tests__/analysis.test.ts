@@ -47,8 +47,9 @@ describe("PR Analysis Endpoint", () => {
       const summary = summarizePr(files);
 
       expect(summary.filesAdded).toBe(1); // only 'added' status
-      expect(summary.filesRemoved).toBe(2); // 'removed' and 'deleted' count together
-      expect(summary.totalLinesAdded).toBe(6);
+      expect(summary.filesRemoved).toBe(1);
+      expect(summary.filesChanged).toBe(3);
+      expect(summary.totalLinesAdded).toBe(8);
       expect(summary.totalLinesRemoved).toBe(11);
     });
 
@@ -98,9 +99,9 @@ describe("PR Analysis Endpoint", () => {
 
       const result = parsePatch(patch);
 
-      expect(result.added).toHaveLength(2); // "import React from 'react';" and "const greeting = \"Hello\";"
+      expect(result.added).toEqual(['const greeting = "Hello";']);
       expect(result.removed).toHaveLength(0);
-      expect(result.context).toHaveLength(4);
+      expect(result.context).toHaveLength(5);
     });
 
     it("should handle multiple hunks", () => {
@@ -126,9 +127,9 @@ describe("PR Analysis Endpoint", () => {
 
       const result = parsePatch(patch);
 
-      expect(result.added).toHaveLength(3); // 2 from first hunk, 1 from second
-      expect(result.removed).toHaveLength(2); // 1 from first hunk, 1 from second
-      expect(result.context).toHaveLength(6); // 4 + 2
+      expect(result.added).toHaveLength(3);
+      expect(result.removed).toEqual(['      "test": "jest"']);
+      expect(result.context).toHaveLength(7);
     });
 
     it("should handle empty patch", () => {
@@ -152,7 +153,20 @@ describe("PR Analysis Endpoint", () => {
 
       expect(result.added).toHaveLength(0);
       expect(result.removed).toHaveLength(0);
-      expect(result.context).toHaveLength(2);
+      expect(result.context).toHaveLength(3);
+    });
+
+    it("should classify lines by leading marker, not by characters inside the line", () => {
+      const patch = `@@ -1,2 +1,2 @@
+ const total = a - b + c;
+-const x = 1;
++const x = 2;`;
+
+      const result = parsePatch(patch);
+
+      expect(result.added).toEqual(["const x = 2;"]);
+      expect(result.removed).toEqual(["const x = 1;"]);
+      expect(result.context).toEqual(["const total = a - b + c;"]);
     });
   });
 
@@ -172,7 +186,7 @@ describe("PR Analysis Endpoint", () => {
  
  export default function Button() {
    return <button style={styles}>Click</button>;
-}`;
+}`,
         },
       ];
 
@@ -198,7 +212,7 @@ describe("PR Analysis Endpoint", () => {
    return x * 2;
 +}
  
- const sum = (a, b) => a + b;`;
+ const sum = (a, b) => a + b;`,
         },
       ];
 
@@ -221,7 +235,7 @@ describe("PR Analysis Endpoint", () => {
 -   { id: 1 },
 +   { id: 1, name: "Alice" },
 +   { id: 2, name: "Bob" },
- ];`;
+ ];`,
         },
       ];
 

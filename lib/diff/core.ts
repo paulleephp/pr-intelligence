@@ -4,12 +4,13 @@ import type { ChangedFile, PRAnalysis } from "@/types/pr/metadata";
 import { aggregateData } from "./aggregator";
 import { getCategoryReport } from "./categorize";
 import { getCodeReport } from "./code";
+import { getFileType } from "./file-type";
 import { getSecretsReport } from "./secret";
 import { isBinaryFile } from "./util/is-binary";
 import { parsePatch } from "./util/parse-patch";
 
 export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
-  let filesChanged = 0;
+  const filesChanged = changedFiles.length;
   let totalLinesAdded = 0;
   let totalLinesRemoved = 0;
   let filesAdded = 0;
@@ -18,10 +19,6 @@ export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
 
   for (const file of changedFiles) {
     const { status, additions, deletions } = file;
-
-    if (status === "added" || status === "removed") {
-      filesChanged++;
-    }
 
     totalLinesAdded += additions ?? 0;
     totalLinesRemoved += deletions ?? 0;
@@ -48,9 +45,11 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
   const secretReports: PRAnalysis["secret"] = [];
   const categoryReports: PRAnalysis["category"] = [];
   const codeReports: PRAnalysis["code"] = [];
+  const fileTypes: PRAnalysis["fileTypes"] = {};
 
   for (const changedFile of changedFiles) {
     const { patch, filename, status } = changedFile;
+    fileTypes[filename] = getFileType(filename);
 
     // Skip analysis for binary files - they don't have readable text content
     if (isBinaryFile(patch)) {
@@ -74,6 +73,7 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
     secret: secretReports,
     category: categoryReports,
     code: codeReports,
+    fileTypes,
     aggregate,
   };
 };

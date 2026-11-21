@@ -1,5 +1,6 @@
 import type { PRFileStatus } from "../diff/file";
-import type { Pattern } from "../diff/pattern";
+import type { FileType } from "../diff/file-type";
+import type { Pattern, PatternSeverity } from "../diff/pattern";
 import type { PrChangeSummary } from "../diff/summary";
 
 export interface ChangedFile {
@@ -18,17 +19,14 @@ export interface SecretAnalysis {
   ssh: Pattern | null;
 }
 
-interface PatternResult {
-  ruleId: string;
-  message: string;
-}
-
 export interface CodeAnalysis {
-  authPatterns: PatternResult | null;
-  passwordHashingPatterns: PatternResult | null;
-  cryptoAlgoPatterns: PatternResult | null;
-  prodConfigChanges: PatternResult | null;
-  riskyApiCalls: PatternResult | null;
+  filename: string;
+  authPatterns: Pattern | null;
+  passwordHashingPatterns: Pattern | null;
+  cryptoAlgoPatterns: Pattern | null;
+  prodConfigChanges: Pattern | null;
+  riskyApiCalls: Pattern | null;
+  dependencyChanges: Pattern | null;
 }
 
 export interface CategoryAnalysis {
@@ -40,7 +38,27 @@ export interface PRAnalysis {
   secret: SecretAnalysis[];
   category: CategoryAnalysis[];
   code: CodeAnalysis[];
-  aggregate: any; //@todo
+  fileTypes: Record<string, FileType>;
+  aggregate: PRAggregate;
+}
+
+export type SeverityCounts = Record<PatternSeverity, number>;
+
+export interface RuleCount {
+  ruleId: string;
+  condition: string;
+  severity: PatternSeverity;
+  count: number;
+}
+
+export interface PRAggregate {
+  findings: Pattern[];
+  totalFindings: number;
+  severityCounts: SeverityCounts;
+  ruleCounts: RuleCount[];
+  fileSeverity: Record<string, PatternSeverity>;
+  fileSeverityCounts: SeverityCounts;
+  overallSeverity: PatternSeverity | null;
 }
 
 export interface PRAnalysisResponse {
@@ -49,18 +67,9 @@ export interface PRAnalysisResponse {
   analysis: PRAnalysis;
 }
 
-export interface SummaryResponse {
-  changedFilesCount: number;
-  totalLinesAdded: number;
-  totalLinesRemoved: number;
-  filesAdded: number;
-  filesRemoved: number;
-  severityCounts?: Record<string, number>;
-}
-
 export interface ErrorResponse {
   error: string;
   status: number;
 }
 
-export type ServerResponse<T> = T | ErrorResponse
+export type ServerResponse<T> = T | ErrorResponse;

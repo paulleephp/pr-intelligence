@@ -38,7 +38,7 @@
     }
   },
   "tailwind": {
-    "stylesheet": "./app/global.css",
+    "stylesheet": "./app/globals.css",
     "attributes": ["class", "className", "tw"],
     "mergeFunctions": ["clsx", "cn", "tw"],
     "variantFunctions": ["cva"]

@@ -87,12 +87,12 @@ export const mockErrorResponses = {
 /**
  * Mock request bodies
  */
-export const mockRequestBodies = {
-  validPR: { url: "https://github.com/owner/repo/pull/123" },
-  emptyURL: { url: "" },
-  invalidDomain: { url: "https://gitlab.com/owner/repo/pull/123" },
-  urlWithWhitespace: { url: "  https://github.com/owner/repo/pull/123  " },
-  invalidURL: { url: "not-a-url" },
+export const mockPRUrls = {
+  validPR: "https://github.com/owner/repo/pull/123",
+  emptyURL: "",
+  invalidDomain: "https://gitlab.com/owner/repo/pull/123",
+  urlWithWhitespace: "  https://github.com/owner/repo/pull/123  ",
+  invalidURL: "not-a-url",
 };
 
 export const unauthenticatedHeader = {

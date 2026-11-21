@@ -1,14 +1,21 @@
+import type { NextRequest, NextResponse } from "next/server";
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { serverErrorResponse } from "@/lib/response";
-import type { RequestLike } from "@/lib/types/request";
+import { badRequestResponse } from "@/lib/response";
+import { type ParsedPRUrl, parsePRUrl } from "@/lib/url";
 
-export const getBody = async (request: RequestLike) => {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch (error) {
-    console.error("Request parsing error:", error);
-    return serverErrorResponse(ERROR_MESSAGES.INTERNAL_ERROR);
+export const PR_URL_QUERY_PARAM = "url";
+
+export const getPRUrlParam = (request: NextRequest): ParsedPRUrl | NextResponse => {
+  const url = request.nextUrl.searchParams.get(PR_URL_QUERY_PARAM)?.trim();
+
+  if (!url) {
+    return badRequestResponse(ERROR_MESSAGES.NO_PR_URL);
   }
-  return body;
+
+  const parsed = parsePRUrl(url);
+  if (!parsed) {
+    return badRequestResponse(ERROR_MESSAGES.INVALID_PR_URL);
+  }
+
+  return parsed;
 };
