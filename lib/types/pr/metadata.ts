@@ -62,3 +62,5 @@ export interface ErrorResponse {
   error: string;
   status: number;
 }
+
+export type ServerResponse<T> = T | ErrorResponse

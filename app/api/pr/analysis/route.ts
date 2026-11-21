@@ -3,23 +3,16 @@ import { getFullPRAnalysis } from "@/lib/github/pr-metadata/get";
 import {
   badRequestResponse,
   methodNotAllowedResponse,
-  notFoundResponse,
-  rateLimitResponse,
-  serverErrorResponse,
   successResponse,
 } from "@/lib/response";
+import type { PRAnalysisResponse, ServerResponse } from "@/lib/types/pr/metadata";
 import { parsePRUrl } from "@/lib/url";
-
 import type { RequestLike } from "@/types/request";
+import { checkForErrors } from "../../_lib/github/response";
+import { getBody } from "../../_lib/request";
 
 export async function GET(request: RequestLike) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch (error) {
-    console.error("Request parsing error:", error);
-    return serverErrorResponse(ERROR_MESSAGES.INTERNAL_ERROR);
-  }
+  const body = getBody(request);
 
   if (typeof body !== "object" || body === null || !("url" in body)) {
     return badRequestResponse(ERROR_MESSAGES.NO_PR_URL);
@@ -38,17 +31,9 @@ export async function GET(request: RequestLike) {
   }
 
   const { owner, repo, prNumber } = parsed;
-  const result = await getFullPRAnalysis(owner, repo, prNumber);
+  const result: ServerResponse<PRAnalysisResponse> = await getFullPRAnalysis(owner, repo, prNumber);
 
-  if ("error" in result) {
-    if (result.status === 404) {
-      return notFoundResponse(result.error);
-    }
-    if (result.status === 429) {
-      return rateLimitResponse(result.error);
-    }
-    return serverErrorResponse(result.error);
-  }
+  checkForErrors(result);
 
   return successResponse(result);
 }
