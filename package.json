@@ -20,22 +20,23 @@
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-loading-skeleton": "^3.5.0"
+    "react-loading-skeleton": "^3.5.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
     "@tailwindcss/turbopack": "4.3.3",
-    "@types/node": "^20",
+    "@types/node": "^26.6.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^5.1.1",
-    "@vitest/ui": "^1.6.0",
-    "happy-dom": "^14.12.3",
+    "@vitest/ui": "^5.1.1",
+    "happy-dom": "^21.0.4",
     "msw": "^2.4.10",
     "tailwindcss": "4.3.3",
     "typescript": "^5",
     "vite": "^8.3.8",
-    "vitest": "^1.6.0"
+    "vitest": "^5.1.1"
   },
   "allowScripts": {
     "fsevents@2.3.3": true,
