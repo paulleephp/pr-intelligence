@@ -47,7 +47,15 @@ export interface PRAnalysisResponse {
   changedFiles: ChangedFile[];
   prChangeSummary: PrChangeSummary;
   analysis: PRAnalysis;
-  aggregate: any; //@todo
+}
+
+export interface SummaryResponse {
+  changedFilesCount: number;
+  totalLinesAdded: number;
+  totalLinesRemoved: number;
+  filesAdded: number;
+  filesRemoved: number;
+  severityCounts?: Record<string, number>;
 }
 
 export interface ErrorResponse {

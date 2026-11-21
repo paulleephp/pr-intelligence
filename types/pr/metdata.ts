@@ -1,3 +1,4 @@
+// Frontend-friendly type without patch
 export interface ChangedFile {
   filename: string;
   status: string;

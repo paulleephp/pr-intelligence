@@ -5,6 +5,7 @@ import { aggregateData } from "./aggregator";
 import { getCategoryReport } from "./categorize";
 import { getCodeReport } from "./code";
 import { getSecretsReport } from "./secret";
+import { isBinaryFile } from "./util/is-binary";
 import { parsePatch } from "./util/parse-patch";
 
 export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
@@ -50,6 +51,12 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
 
   for (const changedFile of changedFiles) {
     const { patch, filename, status } = changedFile;
+
+    // Skip analysis for binary files - they don't have readable text content
+    if (isBinaryFile(patch)) {
+      continue;
+    }
+
     const hunks: DiffHunks = parsePatch(patch);
 
     secretReports.push(getSecretsReport({ hunks, filename }));

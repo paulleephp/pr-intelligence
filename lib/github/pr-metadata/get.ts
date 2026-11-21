@@ -1,13 +1,9 @@
 import { HTTP_STATUS } from "@/lib/constants";
 import { analyzeDiff, summarizePr } from "@/lib/diff/core";
+import type { ChangedFile, ErrorResponse, PRAnalysisResponse } from "@/lib/types/pr/metadata";
+import type { PRMetadata } from "@/types/pr/metdata";
 import { fetchChangedFiles, fetchPRMetadata } from "../client";
 import { GITHUB_ERROR_MESSAGES } from "../constants";
-import type {
-  ChangedFile,
-  ErrorResponse,
-  PRAnalysisResponse,
-  PRMetadata,
-} from "../types/pr/metdata";
 
 type GithubError = { response?: { status: number } };
 
@@ -61,7 +57,7 @@ export async function getFullPRAnalysis(
     return {
       changedFiles,
       prChangeSummary,
-      analysis,
+      analysis
     };
   } catch (error: unknown) {
     return handleGitHubError(error as GithubError | Error);
