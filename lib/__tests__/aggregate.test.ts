@@ -102,7 +102,7 @@ describe("detector rule IDs", () => {
   });
 
   it("matches config files by basename", () => {
-    const report = getCategoryReport({ filename: "apps/web/package.json", status: "modified" });
+    const report = getCategoryReport({ filename: "apps/web/tsconfig.json", status: "modified" });
 
     expect(report.category.map((p) => p.ruleId)).toContain("R009");
   });

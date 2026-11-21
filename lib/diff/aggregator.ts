@@ -37,6 +37,7 @@ const flattenCodePatterns = (reports: CodeAnalysis[]): Pattern[] =>
       r.cryptoAlgoPatterns,
       r.prodConfigChanges,
       r.riskyApiCalls,
+      r.dangerousCodeCalls,
       r.dependencyChanges,
     ].filter(isPattern),
   );

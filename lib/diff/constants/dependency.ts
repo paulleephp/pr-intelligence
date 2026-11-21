@@ -14,3 +14,16 @@ export const DEPENDENCY_LINE_PATTERNS: readonly RegExp[] = [
 ];
 
 export const IGNORED_DEPENDENCY_KEYS: readonly string[] = ["version", "node", "npm"];
+
+export const DEPENDENCY_MANIFEST_FILENAMES: readonly string[] = [
+  "package.json",
+  "go.mod",
+  "cargo.toml",
+  "gemfile",
+  "build.gradle",
+  "build.gradle.kts",
+  "pyproject.toml",
+  "pipfile",
+];
+
+export const REQUIREMENTS_FILENAME_PATTERN = /^requirements[\w.-]*\.(?:txt|in)$/;

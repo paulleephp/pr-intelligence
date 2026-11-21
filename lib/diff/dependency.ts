@@ -1,11 +1,21 @@
 import type { DependencyChanges } from "@/types/diff/dependency";
 import type { DiffHunks } from "@/types/diff/hunk";
 import type { Pattern } from "@/types/diff/pattern";
-import { DEPENDENCY_LINE_PATTERNS, IGNORED_DEPENDENCY_KEYS } from "./constants/dependency";
+import {
+  DEPENDENCY_LINE_PATTERNS,
+  DEPENDENCY_MANIFEST_FILENAMES,
+  IGNORED_DEPENDENCY_KEYS,
+  REQUIREMENTS_FILENAME_PATTERN,
+} from "./constants/dependency";
 import { RISK_RULES } from "./util/risk-scoring";
 
 const DEPENDENCY_RULE_ID = "R005";
 const TRAILING_COMMA = /,\s*$/;
+
+export const isDependencyManifest = (filename: string): boolean => {
+  const basename = (filename.split("/").pop() ?? filename).toLowerCase();
+  return DEPENDENCY_MANIFEST_FILENAMES.includes(basename) || REQUIREMENTS_FILENAME_PATTERN.test(basename);
+};
 
 const normalizeLine = (line: string): string => line.trim().replace(TRAILING_COMMA, "");
 
@@ -59,6 +69,10 @@ const describeChanges = ({ added, removed, upgraded }: DependencyChanges): strin
 };
 
 export const detectDependencyChanges = (hunks: DiffHunks, filename: string): Pattern | null => {
+  if (!isDependencyManifest(filename)) {
+    return null;
+  }
+
   const changes = classifyDependencyChanges(hunks);
   const total = changes.added.length + changes.removed.length + changes.upgraded.length;
   if (total === 0) {

@@ -1,21 +1,23 @@
-import type { Mock, MockedFunction } from "vitest";
+import type { Mock } from "vitest";
 import { GITHUB_API_VERSION } from "@/lib/github-constants";
-import type { PRAnalysisResponse } from "@/types/github/octokit";
+import { analyzeDiff, summarizePr } from "@/lib/diff/core";
+import type { ChangedFile, PRAnalysisResponse } from "@/lib/types/pr/metadata";
+import type { PRMetadata } from "@/types/pr/metdata";
 
 export type mockOctokitFn = {
   pulls: {
-    get: MockedFunction<Mock>;
-    listFiles: MockedFunction<Mock>;
+    get: Mock;
+    listFiles: Mock;
   };
 };
 
 /**
  * Mock PR metadata for successful PR analysis
  */
-export const mockPRMetadataSuccess = {
+export const mockPRMetadataSuccess: PRMetadata = {
   number: 123,
   title: "Test PR",
-  state: "open" as const,
+  state: "open",
   user: {
     login: "user",
     avatar_url: "https://avatars.githubusercontent.com/u/1",
@@ -34,36 +36,37 @@ export const mockPRMetadataSuccess = {
 };
 
 /**
- * Mock changed files for successful PR analysis
+ * Mock changed files (GitHub listFiles shape, including patch)
  */
-export const mockChangedFilesSuccess = [
+export const mockChangedFilesSuccess: ChangedFile[] = [
   {
     filename: "src/index.ts",
-    status: "modified" as const,
-    additions: 5,
-    deletions: 2,
+    status: "modified",
+    additions: 1,
+    deletions: 0,
+    patch: "@@ -1 +1,2 @@\n const a = 1;\n+const b = 2;",
   },
 ];
 
 /**
- * Complete mock response for successful PR analysis
+ * Full analysis response, as returned by getFullPRAnalysis().
+ * Built with the real deterministic engine so the shape can never drift from production.
  */
-export const mockPRAnalysisSuccess: PRAnalysisResponse = {
-  prMetadata: mockPRMetadataSuccess,
-  changedFiles: mockChangedFilesSuccess,
-};
+const buildAnalysis = (changedFiles: ChangedFile[]): PRAnalysisResponse => ({
+  changedFiles,
+  prChangeSummary: summarizePr(changedFiles),
+  analysis: analyzeDiff(changedFiles),
+});
+
+export const mockPRAnalysisSuccess = buildAnalysis(mockChangedFilesSuccess);
+export const mockPRAnalysisNoChanges = buildAnalysis([]);
 
 /**
- * Mock PR with no changed files (edge case)
+ * PR metadata variant (edge case: different PR number)
  */
-export const mockPRMetadataNoChanges = {
+export const mockPRMetadataNoChanges: PRMetadata = {
   ...mockPRMetadataSuccess,
   number: 456,
-};
-
-export const mockPRAnalysisNoChanges: PRAnalysisResponse = {
-  prMetadata: mockPRMetadataNoChanges,
-  changedFiles: [],
 };
 
 /**

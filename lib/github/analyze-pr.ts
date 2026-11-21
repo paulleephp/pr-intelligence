@@ -1,33 +1,41 @@
-import { fetchPRMetadata, fetchChangedFiles } from "./client";
+import { HTTP_STATUS } from "@/lib/constants";
+import type { AnalyzePRResult, OctokitErrorShape, PRFetchError } from "@/types/github/octokit";
+import type { ChangedFile } from "@/types/pr/metadata";
+import { fetchChangedFiles, fetchPRMetadata } from "./client";
+import { GITHUB_ERROR_MESSAGES } from "./constants";
 
-/**
- * Analyzes a PR by fetching metadata and changed files.
- * Returns aggregated data with prMetadata and changedFiles.
- */
-export async function analyzePR(
+const isObject = (value: unknown): value is OctokitErrorShape =>
+  typeof value === "object" && value !== null;
+
+const toFetchError = (error: unknown): PRFetchError => {
+  const shaped = isObject(error) ? error : undefined;
+  const status = shaped?.response?.status ?? HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  const message = shaped?.message?.toLowerCase() || GITHUB_ERROR_MESSAGES.FETCH_FAILED;
+  return { status, error: message };
+};
+
+const fetchChangedFilesSafe = async (
   owner: string,
   repo: string,
   prNumber: number,
-): Promise<{ data: { prMetadata: unknown; changedFiles: unknown } }> {
+): Promise<ChangedFile[]> => {
+  try {
+    return await fetchChangedFiles(owner, repo, prNumber);
+  } catch (error) {
+    console.error("Failed to fetch changed files:", error);
+    return [];
+  }
+};
+
+export async function analyzePR(owner: string, repo: string, prNumber: number): Promise<AnalyzePRResult> {
   try {
     const [prMetadata, changedFiles] = await Promise.all([
       fetchPRMetadata(owner, repo, prNumber),
-      fetchChangedFiles(owner, repo, prNumber).catch(() => null),
+      fetchChangedFilesSafe(owner, repo, prNumber),
     ]);
-
-    return {
-      data: {
-        prMetadata,
-        changedFiles: changedFiles ?? [],
-      },
-    };
+    return { data: { prMetadata, changedFiles } };
   } catch (error) {
-    // Return error response if fetchPRMetadata fails
-    const hasResponse = error && typeof error === 'object' && 'response' in error;
-    return { 
-      status: hasResponse ? (error as any).response?.status : 500,
-      error: error && typeof error === 'object' && 'message' in error ? (error as any).message?.toLowerCase() || 'Unknown error' : 'Unknown error',
-      ...(hasResponse ? { response: (error as any).response } : {}),
-    };
+    console.error("Failed to analyze PR:", error);
+    return toFetchError(error);
   }
 }

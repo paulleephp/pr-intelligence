@@ -5,7 +5,6 @@ import {
   vi,
   beforeEach,
   afterEach,
-  MockedFunction,
 } from "vitest";
 import { fetchPRMetadata, fetchChangedFiles, analyzePR } from "@/lib/github";
 import { octokit, errors } from "./fixtures";
@@ -19,14 +18,15 @@ import { mockOctokitFn, unauthenticatedHeader } from "@/app/__tests__/fixtures";
  */
 const { mockOctokit, mockPullsGet, mockListFiles } = vi.hoisted(() => {
   return {
-    mockOctokit: vi.fn(
-      (): mockOctokitFn => ({
+    // Vitest 4+: a mock invoked with `new` must use `function` (or `class`), not an arrow fn.
+    mockOctokit: vi.fn(function (): mockOctokitFn {
+      return {
         pulls: {
           get: mockPullsGet,
           listFiles: mockListFiles,
         },
-      }),
-    ),
+      };
+    }),
     mockPullsGet: vi.fn(),
     mockListFiles: vi.fn(),
   };

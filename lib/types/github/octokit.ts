@@ -1,3 +1,5 @@
+import type { ChangedFile } from "@/types/pr/metadata";
+import type { PRMetadata } from "@/types/pr/metdata";
 export interface GenericResponse<T> {
   data: T;
 }
@@ -12,3 +14,15 @@ export interface PRMetadataResponse {
   changedFiles: unknown[];
 }
 
+
+export interface PRAnalyzeData {
+  prMetadata: PRMetadata;
+  changedFiles: ChangedFile[];
+}
+
+export interface OctokitErrorShape {
+  response?: { status?: number };
+  message?: string;
+}
+
+export type AnalyzePRResult = GenericResponse<PRAnalyzeData> | PRFetchError;

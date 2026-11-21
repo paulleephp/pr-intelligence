@@ -63,6 +63,10 @@ export const RISK_RULES = {
     condition: "Risky API call introduced",
     severity: "medium" as const,
   },
+  R016: {
+    condition: "Dangerous code execution or DOM sink introduced",
+    severity: "high" as const,
+  },
 } as const;
 
 export const SEVERITY_RANK: Record<PatternSeverity, number> = {

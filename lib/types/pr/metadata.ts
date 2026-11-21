@@ -26,6 +26,7 @@ export interface CodeAnalysis {
   cryptoAlgoPatterns: Pattern | null;
   prodConfigChanges: Pattern | null;
   riskyApiCalls: Pattern | null;
+  dangerousCodeCalls: Pattern | null;
   dependencyChanges: Pattern | null;
 }
 

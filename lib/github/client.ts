@@ -1,6 +1,7 @@
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 import type {} from "@/types/github/octokit";
-import type { ChangedFile, PRLabel, PRMetadata } from "../types/pr/metdata";
+import type { ChangedFile } from "@/types/pr/metadata";
+import type { PRLabel, PRMetadata } from "@/types/pr/metdata";
 import { GITHUB_API_VERSION } from "./constants";
 
 const githubClient = new Octokit({

@@ -3,15 +3,13 @@ export const AUTH_PATTERNS = [
   "if (!user.hasPermission", 
   "if (user.isAdmin", 
   "hasPermission", 
-  "authorization", 
-  "auth check", 
   "permission validation",
 ];
 
 export const PASSWORD_HASHING_PATTERNS = [
   // Password hashing patterns - check for weak or deprecated algorithms
   "bcrypt", "bcryptjs", "argon2", "scrypt", "pbkdf2",
-  ".hash(", "hashSync(", "pbkdf2Sync(", "scryptSync("
+  "pbkdf2Sync(", "scryptSync("
 ];
 
 export const CRYPTO_ALGO_PATTERNS = [
@@ -28,11 +26,23 @@ export const PROD_CONFIG_CHANGE_PATTERNS = [
   "NODE_ENV"
 ]
 
-export const RISKY_API_PATTERNS = [
-  "fetch(",
-  "axios(",
-  "http(",
-  "request(",
-  "window.location",
-  "document.createElement",
-]
+export const RISKY_API_PATTERNS: readonly RegExp[] = [
+  /(?<![\w.])fetch\s*\(/i,
+  /\bwindow\.fetch\s*\(/i,
+  /\baxios(?:\.\w+)?\s*\(/i,
+  /\bhttps?(?:\.\w+)?\s*\(/i,
+  /\bgot(?:\.\w+)?\s*\(/i,
+  /(?<![\w.])request\s*\(/i,
+  /\bwindow\.location\b/i,
+  /\bdocument\.createElement\b/i,
+];
+
+export const DANGEROUS_CODE_PATTERNS: readonly RegExp[] = [
+  /\beval\s*\(/,
+  /\bnew\s+Function\s*\(/,
+  /\.(?:inner|outer)HTML\s*\+?=(?!=)/,
+  /\bdangerouslySetInnerHTML\b/,
+  /\bdocument\.write(?:ln)?\s*\(/,
+  /\bchild_process\b/,
+  /(?<![\w.])(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(/,
+];

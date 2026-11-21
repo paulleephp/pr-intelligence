@@ -1,41 +1,78 @@
+import type { PRAnalysisResponse } from "@/lib/types/pr/metadata";
 import type { PRMetadata } from "@/types/pr/metdata";
-import type { PRAnalysisResponse } from "./types/pr/metadata";
+import type { ApiEndpoint, ApiRequestOptions, ApiResult, ResponseGuard } from "@/types/ui/api";
+import {
+  API_ENDPOINTS,
+  API_ERROR_MESSAGES,
+  API_TIMEOUT_MS,
+  JSON_CONTENT_TYPE,
+} from "./api-constants";
+import { isPRAnalysisResponse, isPRMetadata, readErrorMessage } from "./api-guards";
+
+const failure = <T>(error: string): ApiResult<T> => ({ data: null, error, ok: false });
+
+const buildSignal = (callerSignal?: AbortSignal): AbortSignal => {
+  const timeoutSignal = AbortSignal.timeout(API_TIMEOUT_MS);
+  return callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
+};
+
+const toRequestError = (err: unknown): string => {
+  if (err instanceof DOMException && err.name === "TimeoutError") return API_ERROR_MESSAGES.TIMEOUT;
+  if (err instanceof DOMException && err.name === "AbortError") return API_ERROR_MESSAGES.ABORTED;
+  if (err instanceof TypeError) return API_ERROR_MESSAGES.NETWORK;
+  return API_ERROR_MESSAGES.UNKNOWN;
+};
+
+const readJson = async (response: Response): Promise<unknown> => {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes(JSON_CONTENT_TYPE)) return undefined;
+  return response.json();
+};
 
 export async function fetchPrData<T>(
-  endpoint: string,
+  endpoint: ApiEndpoint,
   url: string,
-): Promise<{ data: T | null; error: string | null; ok: boolean }> {
+  isValid: ResponseGuard<T>,
+  { signal }: ApiRequestOptions = {},
+): Promise<ApiResult<T>> {
+  const query = new URLSearchParams({ url });
+  const requestUrl = `${endpoint}?${query}`;
+  const requestInit: RequestInit = {
+    method: "GET",
+    headers: { Accept: JSON_CONTENT_TYPE },
+    credentials: "same-origin",
+    signal: buildSignal(signal),
+  };
+
+  let response: Response;
+  let body: unknown;
   try {
-    const query = new URLSearchParams({ url });
-    const response = await fetch(`${endpoint}?${query}`);
-
-    const data = (await response.json()) as T & { error?: string };
-
-    if (!response.ok) {
-      const errorMessage =
-        typeof data.error === "string" ? data.error : `Failed to fetch from ${endpoint}`;
-      return { data: null, error: errorMessage, ok: false };
-    }
-
-    return { data, error: null, ok: true };
+    response = await fetch(requestUrl, requestInit);
+    body = await readJson(response);
   } catch (err) {
-    console.error(`Failed to fetch ${endpoint}:`, err);
-    const errorMessage = err instanceof Error ? err.message : "Unknown error";
-    return { data: null, error: errorMessage, ok: false };
+    console.error(`Request to ${endpoint} failed:`, err);
+    return failure(toRequestError(err));
   }
+
+  if (!response.ok) return failure(readErrorMessage(body) ?? API_ERROR_MESSAGES.UNKNOWN);
+  if (body === undefined) return failure(API_ERROR_MESSAGES.NON_JSON);
+  if (!isValid(body)) {
+    console.error(`Unexpected response shape from ${endpoint}`);
+    return failure(API_ERROR_MESSAGES.INVALID_SHAPE);
+  }
+  return { data: body, error: null, ok: true };
 }
 
-/**
- * Fetch PR metadata and analysis
- */
-export async function fetchPrMetadata(
+export function fetchPrMetadata(
   url: string,
-): Promise<{ data: PRMetadata | null; error: string | null; ok: boolean }> {
-  return fetchPrData<PRMetadata>("/api/pr", url);
+  options?: ApiRequestOptions,
+): Promise<ApiResult<PRMetadata>> {
+  return fetchPrData(API_ENDPOINTS.PR_METADATA, url, isPRMetadata, options);
 }
 
-export async function fetchPrAnalysis(
+export function fetchPrAnalysis(
   url: string,
-): Promise<{ data: PRAnalysisResponse | null; error: string | null; ok: boolean }> {
-  return fetchPrData<PRAnalysisResponse>("/api/pr/analysis", url);
+  options?: ApiRequestOptions,
+): Promise<ApiResult<PRAnalysisResponse>> {
+  return fetchPrData(API_ENDPOINTS.PR_ANALYSIS, url, isPRAnalysisResponse, options);
 }

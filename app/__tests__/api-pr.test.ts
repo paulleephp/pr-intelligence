@@ -15,8 +15,9 @@ vi.mock("@/lib/github/pr-metadata/get", () => ({
 
 import {
   mockErrorResponses,
-  mockPRAnalysisNoChanges,
   mockPRAnalysisSuccess,
+  mockPRMetadataNoChanges,
+  mockPRMetadataSuccess,
   mockPRUrls,
 } from "./fixtures";
 
@@ -33,13 +34,14 @@ describe("GET /api/pr", () => {
   });
 
   it("should return PR metadata for a valid url query", async () => {
-    mockGetPRMetadata.mockResolvedValueOnce({ ...mockPRAnalysisSuccess, labels: [] });
+    mockGetPRMetadata.mockResolvedValueOnce(mockPRMetadataSuccess);
 
     const response = await GET(createMockRequest(PR_PATH, mockPRUrls.validPR));
     const responseBody = await response.json();
 
     expect(response.status).toBe(200);
-    expect(responseBody.prMetadata.number).toBe(123);
+    expect(responseBody.number).toBe(123);
+    expect(responseBody.title).toBe("Test PR");
     expect(mockGetPRMetadata).toHaveBeenCalledWith("owner", "repo", 123);
   });
 
@@ -97,7 +99,7 @@ describe("GET /api/pr", () => {
   });
 
   it("should trim whitespace from URL", async () => {
-    mockGetPRMetadata.mockResolvedValueOnce({ ...mockPRAnalysisNoChanges, labels: [] });
+    mockGetPRMetadata.mockResolvedValueOnce(mockPRMetadataNoChanges);
 
     const response = await GET(createMockRequest(PR_PATH, mockPRUrls.urlWithWhitespace));
 
@@ -120,9 +122,13 @@ describe("GET /api/pr/analysis", () => {
     mockGetFullPRAnalysis.mockResolvedValueOnce(mockPRAnalysisSuccess);
 
     const response = await getAnalysis(createMockRequest(ANALYSIS_PATH, mockPRUrls.validPR));
+    const responseBody = await response.json();
 
     expect(response.status).toBe(200);
     expect(mockGetFullPRAnalysis).toHaveBeenCalledWith("owner", "repo", 123);
+    expect(responseBody.changedFiles).toHaveLength(1);
+    expect(responseBody.prChangeSummary.filesChanged).toBe(1);
+    expect(responseBody.analysis.aggregate.overallSeverity).toBeNull();
   });
 
   it("should return 400 when url query is missing", async () => {
