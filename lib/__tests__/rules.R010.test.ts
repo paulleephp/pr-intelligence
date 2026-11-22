@@ -10,7 +10,7 @@ describe("R010 - test files removed", () => {
   });
 
   // Decision (2026-11-22): fixture folders count as test paths. TEST_PATHS is shared, so this applies
-  // to file type and R010 as well as to the R007 skip (rules.R007.test.ts).
+  // to file type and R010 as well as to the R007 skip (rules.R007.skips.test.ts).
   it.each(FIXTURE_PATHS)("classifies %s as a test file", (filename) => {
     expect(getFileType(filename)).toBe("tests");
   });

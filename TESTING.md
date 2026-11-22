@@ -29,9 +29,12 @@ Tests live in `__tests__/` beside the code they cover.
 
 ```
 lib/__tests__/
-  ├── analysis.test.ts           # summarizePr, parsePatch, analyzeDiff smoke tests
+  ├── summarize-pr.test.ts       # summarizePr: file and line counts
+  ├── parse-patch.test.ts        # parsePatch: added / removed / context lines
+  ├── analyze-diff.test.ts       # analyzeDiff smoke tests, unscannedFiles
   ├── aggregate.test.ts          # aggregateData, category rule IDs, isBinaryFile
   ├── rules.<RULE_ID>.test.ts    # one file per rule: rules.R002 … rules.R016
+  ├── rules.R007.<topic>.test.ts # R007 is split: formats, generic-secret, unquoted-values, skips
   ├── rules.js-ts-scope.test.ts  # code-pattern rules only run on JS/TS files (cross-rule)
   ├── strip-comment.test.ts      # comment removal before the R007 low-risk filter
   ├── github.client.test.ts      # lib/github/client.ts: Octokit client, PRMetadata / ChangedFile mapping (Octokit mocked)
@@ -42,6 +45,7 @@ lib/__tests__/
   ├── response.test.ts           # lib/response.ts helpers
   ├── url.test.ts                # parsePRUrl
   ├── fixtures/
+  │   ├── diff.ts                # changedFile (empty patch by default), malformed, prFiles (patch inputs) for summarize-pr / analyze-diff
   │   ├── github.ts              # Octokit response data, expected mapped PRMetadata, Octokit-shaped errors
   │   └── rules.ts               # rule-test builders (file, ruleIds, codeRuleIds, secretFindings…), FAKE tokens
   └── mocks/
@@ -67,7 +71,7 @@ app/components/__tests__/
 test/setup.ts                    # jest-dom matchers + RTL cleanup (vitest setupFiles)
 ```
 
-Rule tests go in `lib/__tests__/rules.<RULE_ID>.test.ts`, one file per rule. Tests that cover several rules at once go in a named file such as `rules.js-ts-scope.test.ts`. Shared builders and test data live in `fixtures/rules.ts`: import them instead of redefining them.
+Rule tests go in `lib/__tests__/rules.<RULE_ID>.test.ts`, one file per rule. If a rule's file grows past Biome's 10 KB limit, split it by topic as `rules.<RULE_ID>.<topic>.test.ts` (as R007 is). Tests that cover several rules at once go in a named file such as `rules.js-ts-scope.test.ts`. Shared builders and test data live in `fixtures/rules.ts`: import them instead of redefining them.
 
 **Fake secrets in tests:** assemble token-shaped strings at runtime (`"sk_" + "live_" + "…"`, see `FAKE` in `fixtures/rules.ts`). A literal `sk_live_…`, `xoxb-…` or `AKIA…` in the source can trip GitHub push protection and block the push. AWS access keys are `AKIA`/`ASIA` + 16 characters (20 total); shorter strings are correctly *not* matched.
 
@@ -119,6 +123,7 @@ Frontend: components show severity *groups* and must **never show raw scores**. 
 - **Assert behavior, not shape.** `expect(Array.isArray(analysis.secret)).toBe(true)` proves very little. Assert the actual findings.
 - **Import Vitest APIs explicitly** (`import { describe, it, expect, vi } from "vitest"`). `globals: true` is on, but `tsconfig.json` doesn't include `vitest/globals` types.
 - **Don't exclude tests from `tsconfig.json`.** They must pass `npx tsc --noEmit`. If a cast is unavoidable (deliberately invalid input, `vi.mock` limitations), put it in one helper with a comment saying why.
+- **Keep each test file under 10 KB.** Biome's `files.maxSize` silently skips larger files, so they aren't linted. Split by topic instead, as with `github.*.test.ts` and `rules.R007.*.test.ts`.
 
 ## Frontend Testing
 
@@ -216,7 +221,6 @@ npm test -- --run && npx tsc --noEmit && npm run lint && npm run build
 | Rule coverage incomplete | R001, R012 and R014 have only a few cases (in `aggregate.test.ts` / `rules.js-ts-scope.test.ts`); R011 has none | Add a `rules.<RULE_ID>.test.ts` file for each |
 | No browser E2E tests | Playwright isn't installed. Component and integration tests run in happy-dom, so they can't catch real layout, CSS or `next/image` behavior | Add Playwright for a smoke flow once the UI settles |
 | Changed files capped at 30 per PR (deferred) | Documented in README → Known Limitations. Two `it.fails` tests, one each in `github.client.test.ts` and `github.pr-metadata.test.ts` | Flip them to `it` when pagination lands |
-| Biome skips large test files | `files.maxSize` is 10 KB, so `rules.R007.test.ts` and `analysis.test.ts` aren't linted | Raise `files.maxSize`, or split the files |
 | `.vue` / `.svelte` / `.astro` not scanned for HTML injection (KNOWN GAP) | Decided 2026-11-23: the other code-pattern rules stay off for these files, but they should be scanned for the innerHTML part of R016. 6 `it.fails` in `rules.R016.test.ts`: 3 DOM sinks in `<script>` and 3 framework raw-HTML directives (`v-html`, `{@html}`, `set:html`) | Run R016's HTML-injection patterns on these files; add patterns for the three directives |
 | Dockerfile edge cases (untested, low priority) | `Dockerfile.md` and `Dockerfile.json` count as Dockerfiles. The old `ENV KEY value` form and `*.Dockerfile` names aren't detected | Not decided |
 | camelCase secret names (deferred) | Some real camelCase names are missed and camelCase placeholders are flagged. See README → Known Limitations | Add tests with the fix |
