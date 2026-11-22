@@ -1,3 +1,4 @@
+import type { MessageFn } from "@/types/diff/finding";
 import type { DiffHunks } from "@/types/diff/hunk";
 import type { Pattern } from "@/types/diff/pattern";
 import type { CodeAnalysis, CodePatternFindings, CodeReportArg } from "@/types/pr/metadata";
@@ -12,8 +13,6 @@ import {
 import { detectDependencyChanges } from "./dependency";
 import { findRegexFinding } from "./util/regex-finding";
 import { RISK_RULES, type RiskRuleId } from "./util/risk-scoring";
-
-import type { MessageFn } from "@/types/diff/finding";
 
 const WORD_PATTERN = /^\w+$/;
 
@@ -105,7 +104,13 @@ const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePattern
     "R016",
     (f, m) => `Dangerous code execution or DOM sink introduced in ${f}: "${m}"`,
   );
-  return { authPatterns, passwordHashingPatterns, cryptoAlgoPatterns, riskyApiCalls, dangerousCodeCalls };
+  return {
+    authPatterns,
+    passwordHashingPatterns,
+    cryptoAlgoPatterns,
+    riskyApiCalls,
+    dangerousCodeCalls,
+  };
 };
 
 const NO_CODE_PATTERN_FINDINGS: CodePatternFindings = {
@@ -116,8 +121,14 @@ const NO_CODE_PATTERN_FINDINGS: CodePatternFindings = {
   dangerousCodeCalls: null,
 };
 
-export const getCodeReport = ({ hunks, filename, scanCodePatterns = true }: CodeReportArg): CodeAnalysis => {
-  const codePatternFindings = scanCodePatterns ? getCodePatternFindings(hunks, filename) : NO_CODE_PATTERN_FINDINGS;
+export const getCodeReport = ({
+  hunks,
+  filename,
+  scanCodePatterns = true,
+}: CodeReportArg): CodeAnalysis => {
+  const codePatternFindings = scanCodePatterns
+    ? getCodePatternFindings(hunks, filename)
+    : NO_CODE_PATTERN_FINDINGS;
   const prodConfigChanges = findRegexFinding(
     hunks.added,
     filename,
