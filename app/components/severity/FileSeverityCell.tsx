@@ -1,4 +1,4 @@
-import type { ChangedFileRow } from "@/types/ui/report";
+import type { FileSeverityCellProps } from "@/types/ui/components";
 import {
   NOT_SCANNED_BADGE,
   NOT_SCANNED_HINT,
@@ -6,10 +6,6 @@ import {
   UNSCANNED_REASON_LABELS,
 } from "../_lib/file-display";
 import { SeverityBadge } from "./SeverityBadge";
-
-interface FileSeverityCellProps {
-  row: ChangedFileRow;
-}
 
 export function FileSeverityCell({ row }: FileSeverityCellProps) {
   const { severity, unscannedReason } = row;

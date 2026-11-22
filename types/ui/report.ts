@@ -1,4 +1,4 @@
-import type { FileType } from "@/lib/types/diff/file-type";
+import type { FileType } from "@/lib/types/diff/file";
 import type { PatternSeverity } from "@/lib/types/diff/pattern";
 import type { PRAnalysisResponse, UnscannedReason } from "@/lib/types/pr/metadata";
 import type { PRMetadata } from "@/types/pr/metdata";

@@ -32,14 +32,19 @@ Tests live in `__tests__/` beside the code they cover.
 lib/__tests__/
   ├── analysis.test.ts     # summarizePr, parsePatch, analyzeDiff smoke tests
   ├── aggregate.test.ts    # aggregateData, category rule IDs, isBinaryFile
-  ├── rules.test.ts        # per-rule positive/negative cases
+  ├── rules.<RULE_ID>.test.ts # one file per rule: rules.R002 … rules.R016 (positive/negative cases)
+  ├── rules.js-ts-scope.test.ts # code-pattern rules only run on JS/TS files (cross-rule)
   ├── strip-comment.test.ts # lib/diff/util/strip-comment.ts (comment removal before the R007 low-risk filter)
   ├── github.test.ts       # lib/github/{client,errors,pr-metadata/get} (Octokit mocked)
   ├── integration.test.ts  # URL parsing + constants working together
   ├── api.test.ts          # lib/api.ts fetch client + lib/api-guards.ts (fetch stubbed)
   ├── response.test.ts     # lib/response.ts helpers
   ├── url.test.ts          # parsePRUrl
-  └── fixtures.ts          # Octokit response mocks
+  ├── fixtures/
+  │   ├── github.ts        # Octokit response data, expected mapped PRMetadata, Octokit-shaped errors
+  │   └── rules.ts         # rule-test builders (file, ruleIds, codeRuleIds, secretFindings…), FAKE tokens
+  └── mocks/
+      └── octokit.ts       # vi.fn() mock of @octokit/rest (pulls.get, listFiles, paginate, serveFiles)
 
 app/__tests__/
   ├── api-pr.test.ts       # GET /api/pr and GET /api/pr/analysis route handlers
@@ -61,13 +66,13 @@ app/components/__tests__/
 test/setup.ts              # jest-dom matchers + RTL cleanup (vitest setupFiles)
 ```
 
-Add per-rule tests to `rules.test.ts`, with one `describe` per rule ID. If it grows too large, split it by detector (`secret.test.ts`, `code.test.ts`, `categorize.test.ts`).
+Rule tests go in `lib/__tests__/rules.<RULE_ID>.test.ts`, one file per rule (e.g. `rules.R007.test.ts`). Put a test in the file of the rule it asserts on; tests that cover several rules at once go in a named file such as `rules.js-ts-scope.test.ts`. Shared builders and test data live in `fixtures/rules.ts`: import them instead of redefining them. A rule with no file yet (R001, R008, R011, R012, R014) gets one when its first tests are written.
 
-**Fake secrets in tests:** assemble token-shaped strings at runtime (`"sk_" + "live_" + "…"`, see `FAKE` in `rules.test.ts`). A literal `sk_live_…`, `xoxb-…` or `AKIA…` in the source can trip GitHub push protection and block the push. AWS access keys are `AKIA`/`ASIA` + 16 characters (20 total); shorter strings are correctly *not* matched by the value rule.
+**Fake secrets in tests:** assemble token-shaped strings at runtime (`"sk_" + "live_" + "…"`, see `FAKE` in `lib/__tests__/fixtures/rules.ts`). A literal `sk_live_…`, `xoxb-…` or `AKIA…` in the source can trip GitHub push protection and block the push. AWS access keys are `AKIA`/`ASIA` + 16 characters (20 total); shorter strings are correctly *not* matched by the value rule.
 
 **R007 decisions (2026-11-22):** secret scans are skipped in test paths (`TEST_PATHS`: `__tests__/`, `test(s)/`, `e2e/`, `fixture(s)/`, `*.test.*`, `*.spec.*`); other rules still run there. Outside test paths, a low-risk word (test, mock, TODO…) only suppresses a secret when it's in the code, not in a trailing comment. Unquoted secret values are only flagged in config and shell files (config: `CONFIG_FILE_PATTERNS` in `lib/diff/constants/secret.ts`, i.e. `.env*`, `Dockerfile*`, YAML, `.ini`, `.toml`, `.conf`, `.cfg`, `.tfvars`; shell: `.sh`, `.bash`, `.zsh`, `.envrc`); in code files an unquoted value is a variable. Quoted values are flagged everywhere. What counts as a reference to another value depends on the file kind: code files only `${…}`, so `"$abc…"` is a literal; config files `$NAME` and `${…}`; shell files also `$(…)` and backticks. Env lookups (`process.env`) are never secrets.
 
-**Scope: JavaScript/TypeScript only (2026-11-22).** Use `.ts`/`.tsx`/`.js` filenames for code-file test cases. Don't write tests for other languages, and don't add tests for gaps in the existing non-JS checks (R005 Python/Go/Rust/Ruby/Gradle manifests). Alembic and Rails migration paths, `os.environ` and `.properties` were removed on 2026-11-22 under this rule. Shell scripts and `.envrc` are not "other languages": they're config/deploy files of a JS/TS repo and stay in scope (confirmed 2026-11-22). Leave the existing non-JS tests alone, but if one ever needs changing (a failure, a new expected value, a refactor), don't update it: remove that language's support instead, meaning delete the test and ask the backend coder to delete the matching check. Where languages disagree, assert the JS/TS meaning (e.g. `"$name"` in code is a literal string). The code-pattern rules (R002, R012, R013, R015, R016) only run on JS/TS files (`JS_TS_FILE_PATTERN`). The gate is in `analyzeDiff`; `getCodeReport` scans by default, so tests that call it directly (the `code()` helper) don't exercise the gate. Gate tests live in the "code-pattern rules run on JS/TS files only" describe.
+**Scope: JavaScript/TypeScript only (2026-11-22).** Use `.ts`/`.tsx`/`.js` filenames for code-file test cases. Don't write tests for other languages, and don't add tests for gaps in the existing non-JS checks (R005 Python/Go/Rust/Ruby/Gradle manifests). Alembic and Rails migration paths, `os.environ` and `.properties` were removed on 2026-11-22 under this rule. Shell scripts and `.envrc` are not "other languages": they're config/deploy files of a JS/TS repo and stay in scope (confirmed 2026-11-22). Leave the existing non-JS tests alone, but if one ever needs changing (a failure, a new expected value, a refactor), don't update it: remove that language's support instead, meaning delete the test and ask the backend coder to delete the matching check. Where languages disagree, assert the JS/TS meaning (e.g. `"$name"` in code is a literal string). The code-pattern rules (R002, R012, R013, R015, R016) only run on JS/TS files (`JS_TS_FILE_PATTERN`). The gate is in `analyzeDiff`; `getCodeReport` scans by default, so tests that call it directly (the `code()` helper) don't exercise the gate. Gate tests live in `rules.js-ts-scope.test.ts`.
 
 ### Documenting known bugs with `it.fails`
 
@@ -143,10 +148,17 @@ describe("Feature", () => {
 
 ## Mock Data Organization
 
-Move large mocks into `fixtures.ts` so they can be reused. Fixture objects must be **typed with the real production types**. If a fixture no longer matches a type, `tsc` should fail.
+Keep test files readable: move large mock data out of them.
+
+- **Static data** (API responses, expected results, error shapes) goes in a `fixtures/` file, e.g. `lib/__tests__/fixtures/github.ts`.
+- **Mock functions** (`vi.fn()` stand-ins for a library) go in a `mocks/` file, e.g. `lib/__tests__/mocks/octokit.ts`.
+- **Builders** that make inputs and run the engine go in a `fixtures/` file too, e.g. `lib/__tests__/fixtures/rules.ts`.
+- Keep short inputs and the expected values a test is about inline, so a reader can see what's being checked.
+
+Fixture objects must be **typed with the real production types**. If a fixture no longer matches a type, `tsc` should fail.
 
 ```typescript
-// lib/__tests__/fixtures.ts
+// lib/__tests__/fixtures/github.ts
 export const octokit = { pullsGetSuccess: { data: { /* ... */ } } };
 export const errors = { notFound: { response: { status: 404 } } };
 ```
@@ -213,9 +225,18 @@ const mockOctokit = vi.fn(function () {
 });
 ```
 
-`lib/github/client.ts` creates its Octokit at module load, so the constructor call happens before any test runs. To assert on it, `mockOctokit.mockClear(); vi.resetModules(); await import("@/lib/github/client")`. `github.test.ts` also mocks `paginate` and a page-aware `listFiles` (`serveFiles`), so pagination tests pass whether the client uses `paginate()` or loops over pages itself.
+`lib/github/client.ts` creates its Octokit at module load, so the constructor call happens before any test runs. To assert on it, `mockOctokit.mockClear(); vi.resetModules(); await import("@/lib/github/client")`. `mocks/octokit.ts` also mocks `paginate` and a page-aware `listFiles` (`serveFiles`), so pagination tests pass whether the client uses `paginate()` or loops over pages itself.
 
 **Why hoisted?** `vi.mock` is hoisted above imports, so normal top-level variables don't exist yet when the factory runs.
+
+**Mocks kept in a separate file:** load the module inside `vi.hoisted`, so the `vi.mock` factory and the test share the same `vi.fn()` instances:
+
+```typescript
+const { mockOctokit, mockPullsGet } = await vi.hoisted(() => import("./mocks/octokit"));
+vi.mock("@octokit/rest", () => ({ Octokit: mockOctokit }));
+```
+
+Don't use a plain `import` plus a factory that imports the mock file again: after `vi.resetModules()` the factory can load a fresh copy, and the constructor assertion would check the wrong `vi.fn()`.
 
 ## Mock Lifecycle
 
@@ -283,8 +304,8 @@ npm test -- --run && npx tsc --noEmit && npm run lint && npm run build
 
 | Issue | Impact | Fix |
 |---|---|---|
-| Coverage % is inflated | Since Vitest 4, files no test imports are left out of the report, so the whole frontend and any untested lib file don't count | Set `coverage.include: ["lib/**/*.ts", "app/**/*.{ts,tsx}"]` in `vitest.config.ts` (expect the number to drop) |
-| Rule coverage incomplete | R002–R007, R009, R013, R015 and R016 have per-rule tests. R001, R010, R011, R012 and R014 have only a few cases | Add them to `rules.test.ts` |
+| Coverage % slightly inflated (re-measured 2026-11-22) | Two small effects. 1) Files no test imports are left out of the report (Vitest 4+): now only `app/layout.tsx`, `app/page.tsx`, `app/dashboard/page.tsx`, `Header.tsx` and `Footer.tsx` (13 statements). 2) Test helpers (`fixtures`, `mocks/octokit.ts`, `test-utils.ts`) are counted as source code. Reported 97.3% statements / 97.4% lines / 95.7% functions; true figure 96.4% / 96.2% / 92.1% | In `vitest.config.ts`, set `coverage.include: ["lib/**/*.ts", "app/**/*.{ts,tsx}"]` and add `"**/__tests__/**"` to `coverage.exclude` |
+| Rule coverage incomplete | R002–R007, R009, R013, R015 and R016 have per-rule tests. R001, R010, R011, R012 and R014 have only a few cases | Add a `rules.<RULE_ID>.test.ts` file for each |
 | No browser E2E tests | Playwright isn't installed. Component and integration tests run in happy-dom, so they can't catch real layout, CSS or `next/image` behavior | Add Playwright for a smoke flow once the UI settles |
 | Changed files capped at 30 per PR (deferred) | Out of scope for now; documented in README → Known Limitations. Two `it.fails` tests in `github.test.ts` will start failing once pagination lands | Flip them to `it` when fixed |
 | camelCase secret names (deferred) | Some real camelCase names are missed and camelCase placeholders are flagged. See README → Known Limitations | No tests yet; add them with the fix |

@@ -1,14 +1,10 @@
 import Image from "next/image";
-import type { PRReport } from "@/types/ui/report";
+import type { PRSummaryProps } from "@/types/ui/components";
 import { PR_STATE_STYLES } from "./_lib/file-display";
 import { SEVERITY_ORDER } from "./_lib/severity";
 import { StatTile } from "./report/StatTile";
 import { SeverityBadge } from "./severity/SeverityBadge";
 import { SeverityBar } from "./severity/SeverityBar";
-
-interface PRSummaryProps {
-  report: PRReport;
-}
 
 export function PRSummary({ report }: PRSummaryProps) {
   const { metadata, analysis } = report;

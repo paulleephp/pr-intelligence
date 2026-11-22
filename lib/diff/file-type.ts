@@ -1,4 +1,4 @@
-import type { FileType } from "@/types/diff/file-type";
+import type { FileType } from "@/types/diff/file";
 import {
   CONFIG_BASENAMES,
   CONFIG_EXTENSIONS,

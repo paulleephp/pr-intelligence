@@ -125,11 +125,16 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 ## Key Decisions Made
 
 1. **Diff Source**: parse git patch
-2. **Binary Files**: Skipped - focus on text diffs only
+2. **Binary Files**: Skipped - focus on text diffs only. Binary files and files without a patch are returned in `analysis.unscannedFiles` and shown as "Not scanned" in the UI, never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them, and their findings still show
 3. **Severity, not scores**: Each rule (R001–R016) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
 4. **Frontend Display**: Color-coded severity groups (critical/high/medium/low), no raw scores shown to users
 5. **Testing Strategy**: Full test coverage expected in Day 2+, integration tests for UI
 6. **Language Scope**: JavaScript/TypeScript only for source-code analysis; language-agnostic config, infrastructure, migration, dependency and secret checks still apply to all files (see Language Scope)
+7. **Rule changes**: R003 flags migrations that are added as well as modified; R004 covers deleted migrations. R005 inspects the patch for packages added, removed or upgraded and does not match on file names. R008 (>500 lines) is not implemented but stays in the rule table
+8. **Severity display**: Critical is its own level in bright red; high is orange, medium yellow, low sky, none grey. In per-file counts, "None" means scanned with no findings; unscanned files without findings appear only in a separate "Not scanned" note
+9. **PR state**: `open`, `closed` or `merged`. GitHub reports merged PRs as `closed` plus a `merged` flag; the client maps that to `merged`
+10. **API contract**: The frontend uses only `GET /api/pr?url=<PR URL>` (metadata) and `GET /api/pr/analysis?url=<PR URL>` (changed files, summary, findings). There is no summary endpoint. Errors return `{ error }` with 400, 401, 403, 404, 405, 429 or 500
+11. **Guarded client fetches**: All frontend requests go through `lib/api.ts`, which uses an endpoint allowlist, a 20s timeout, cancellation of superseded requests, a JSON content-type check, and runtime validation of the response shape (`lib/api-guards.ts`) before the UI uses it
 
 <!-- BEGIN:nextjs-agent-rules -->
 

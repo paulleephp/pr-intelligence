@@ -1,7 +1,12 @@
 import type { CategorizerArg } from "@/types/diff/categorize";
 import type { Pattern } from "@/types/diff/pattern";
 import type { CategoryAnalysis } from "@/types/pr/metadata";
-import { PRFileStatus } from "./constants/file";
+import {
+  CHANGED_STATUSES,
+  DELETED_STATUSES,
+  MIGRATION_MODIFIED_STATUSES,
+  PRFileStatus,
+} from "./constants/file";
 import {
   AUTH_PATHS,
   CI_PATHS,
@@ -21,18 +26,6 @@ const buildFinding = (ruleId: RiskRuleId, filename: string, message: string): Pa
 });
 
 const getBasename = (filename: string): string => filename.split("/").pop() ?? filename;
-
-const MIGRATION_MODIFIED_STATUSES: readonly string[] = [
-  PRFileStatus.Modified,
-  PRFileStatus.Renamed,
-  PRFileStatus.Changed,
-];
-const DELETED_STATUSES: readonly string[] = [PRFileStatus.Removed, PRFileStatus.Deleted];
-const CHANGED_STATUSES: readonly string[] = [
-  PRFileStatus.Added,
-  ...MIGRATION_MODIFIED_STATUSES,
-  ...DELETED_STATUSES,
-];
 
 const matchesAny = (filename: string, patterns: readonly RegExp[]): boolean =>
   patterns.some((pattern) => pattern.test(filename));

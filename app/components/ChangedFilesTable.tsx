@@ -1,14 +1,14 @@
 import type { PRAnalysisResponse } from "@/lib/types/pr/metadata";
+import type { ChangedFilesTableProps } from "@/types/ui/components";
 import type { ChangedFileRow } from "@/types/ui/report";
-import { DEFAULT_STATUS_STYLE, FILE_TYPE_LABELS, STATUS_STYLES } from "./_lib/file-display";
+import {
+  DEFAULT_STATUS_STYLE,
+  FALLBACK_FILE_TYPE,
+  FILE_TYPE_LABELS,
+  STATUS_STYLES,
+} from "./_lib/file-display";
 import { severityRank } from "./_lib/severity";
 import { FileSeverityCell } from "./severity/FileSeverityCell";
-
-interface ChangedFilesTableProps {
-  analysis: PRAnalysisResponse;
-}
-
-const FALLBACK_TYPE = "backend";
 
 const toRows = ({ changedFiles, analysis }: PRAnalysisResponse): ChangedFileRow[] => {
   const unscanned = new Map(analysis.unscannedFiles.map((f) => [f.filename, f.reason]));
@@ -17,7 +17,7 @@ const toRows = ({ changedFiles, analysis }: PRAnalysisResponse): ChangedFileRow[
     status,
     additions,
     deletions,
-    type: analysis.fileTypes[filename] ?? FALLBACK_TYPE,
+    type: analysis.fileTypes[filename] ?? FALLBACK_FILE_TYPE,
     severity: analysis.aggregate.fileSeverity[filename] ?? "none",
     unscannedReason: unscanned.get(filename) ?? null,
   }));

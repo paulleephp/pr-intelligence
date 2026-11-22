@@ -1,4 +1,4 @@
-import type { FileType } from "@/lib/types/diff/file-type";
+import type { FileType } from "@/lib/types/diff/file";
 import type { UnscannedReason } from "@/lib/types/pr/metadata";
 import type { PRStatus } from "@/types/pr/metdata";
 import type { PRStateStyle } from "@/types/ui/report";
@@ -14,6 +14,8 @@ export const STATUS_STYLES: Record<string, string> = {
 };
 
 export const DEFAULT_STATUS_STYLE = STATUS_STYLES.changed;
+
+export const FALLBACK_FILE_TYPE: FileType = "backend";
 
 export const FILE_TYPE_LABELS: Record<FileType, string> = {
   frontend: "Frontend",

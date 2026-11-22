@@ -1,7 +1,8 @@
 /**
  * GitHub data layer: lib/github/client.ts (Octokit calls + mapping), lib/github/errors.ts
  * (Octokit error -> ErrorResponse) and lib/github/pr-metadata/get.ts (what the API routes call).
- * Only @octokit/rest is mocked; the diff engine behind getFullPRAnalysis is real.
+ * Only @octokit/rest is mocked (./mocks/octokit.ts); the diff engine behind getFullPRAnalysis is real.
+ * Response data lives in ./fixtures/github.ts.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchChangedFiles, fetchPRMetadata } from "@/lib/github/client";
@@ -9,49 +10,13 @@ import { GITHUB_ERROR_MESSAGES } from "@/lib/github/constants";
 import { toGitHubErrorResponse } from "@/lib/github/errors";
 import { getFullPRAnalysis, getPRMetadata } from "@/lib/github/pr-metadata/get";
 import { HTTP_STATUS } from "../constants";
-import { errors, octokit } from "./fixtures";
+import { errors, mappedPRMetadata, octokit } from "./fixtures/github";
 
-const { mockOctokit, mockPullsGet, mockListFiles, mockPaginate } = vi.hoisted(() => {
-  const mockPullsGet = vi.fn();
-  const mockListFiles = vi.fn();
-  /** Mirrors Octokit's paginate(): request pages until one comes back short. */
-  const mockPaginate = vi.fn(async (method: (params: object) => Promise<{ data: unknown[] }>, params: object) => {
-    const perPage = (params as { per_page?: number }).per_page ?? 30;
-    const all: unknown[] = [];
-    for (let page = 1; ; page++) {
-      const { data } = await method({ ...params, per_page: perPage, page });
-      all.push(...data);
-      if (data.length < perPage) return all;
-    }
-  });
-  return {
-    mockPullsGet,
-    mockListFiles,
-    mockPaginate,
-    // Vitest 4+: a mock invoked with `new` must use `function` (or `class`), not an arrow fn.
-    mockOctokit: vi.fn(function () {
-      return { pulls: { get: mockPullsGet, listFiles: mockListFiles }, paginate: mockPaginate };
-    }),
-  };
-});
+const { mockOctokit, mockPullsGet, mockListFiles, rawFile, serveFiles } = await vi.hoisted(
+  () => import("./mocks/octokit"),
+);
 
 vi.mock("@octokit/rest", () => ({ Octokit: mockOctokit }));
-
-type RawFile = { filename: string; status: string; additions: number; deletions: number; patch?: string };
-
-const rawFile = (i: number): RawFile => ({
-  filename: `src/file-${i}.ts`,
-  status: "modified",
-  additions: 1,
-  deletions: 0,
-  patch: "@@ -1 +1,2 @@\n+const x = 1;",
-});
-
-/** listFiles that behaves like GitHub: honours page/per_page (default 30) over a fixed file list. */
-const serveFiles = (files: RawFile[]) =>
-  mockListFiles.mockImplementation(async ({ page = 1, per_page = 30 }: { page?: number; per_page?: number }) => ({
-    data: files.slice((page - 1) * per_page, page * per_page),
-  }));
 
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -83,23 +48,7 @@ describe("client", () => {
       const result = await fetchPRMetadata("owner", "repo", 123);
 
       expect(mockPullsGet).toHaveBeenCalledWith({ owner: "owner", repo: "repo", pull_number: 123 });
-      expect(result).toEqual({
-        number: 123,
-        title: "Test PR",
-        state: "open",
-        user: {
-          login: "testuser",
-          avatar_url: "https://avatars.githubusercontent.com/u/123",
-          html_url: "https://github.com/testuser",
-        },
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-02T00:00:00Z",
-        mergeable: true,
-        labels: [],
-        head: { repo: { url: "https://api.github.com/repos/testuser/repo" } },
-        base: { repo: { url: "https://api.github.com/repos/owner/repo" }, ref: "main" },
-        html_url: "https://github.com/owner/repo/pull/123",
-      });
+      expect(result).toEqual(mappedPRMetadata);
     });
 
     it("keeps only name and color of each label", async () => {
@@ -154,9 +103,7 @@ describe("client", () => {
 
   describe("fetchChangedFiles", () => {
     it("maps listFiles entries to ChangedFile", async () => {
-      mockListFiles.mockResolvedValueOnce({
-        data: [{ ...octokit.listFilesSuccess.data[0], patch: "@@ -1 +1 @@\n+x", sha: "abc", blob_url: "u" }],
-      });
+      mockListFiles.mockResolvedValueOnce(octokit.listFilesWithExtras);
 
       const result = await fetchChangedFiles("owner", "repo", 123);
 
@@ -200,47 +147,28 @@ describe("client", () => {
 
 describe("toGitHubErrorResponse", () => {
   const { RATE_LIMIT, BAD_TOKEN, FORBIDDEN, PR_NOT_FOUND, FETCH_FAILED } = GITHUB_ERROR_MESSAGES;
+  const { TOO_MANY_REQUESTS, FORBIDDEN: FORBIDDEN_STATUS, UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } = HTTP_STATUS;
 
   it.each([
-    ["429", { status: 429 }, HTTP_STATUS.TOO_MANY_REQUESTS, RATE_LIMIT],
-    ["429 on response", errors.rateLimited, HTTP_STATUS.TOO_MANY_REQUESTS, RATE_LIMIT],
-    [
-      "403 with x-ratelimit-remaining: 0",
-      { status: 403, response: { headers: { "x-ratelimit-remaining": "0" } } },
-      HTTP_STATUS.TOO_MANY_REQUESTS,
-      RATE_LIMIT,
-    ],
-    [
-      "403 with numeric x-ratelimit-remaining 0",
-      { status: 403, response: { headers: { "x-ratelimit-remaining": 0 } } },
-      HTTP_STATUS.TOO_MANY_REQUESTS,
-      RATE_LIMIT,
-    ],
-    [
-      "403 with retry-after (secondary rate limit)",
-      { status: 403, response: { headers: { "retry-after": "60" } } },
-      HTTP_STATUS.TOO_MANY_REQUESTS,
-      RATE_LIMIT,
-    ],
-    [
-      "403 with quota left",
-      { status: 403, response: { headers: { "x-ratelimit-remaining": "42" } } },
-      HTTP_STATUS.FORBIDDEN,
-      FORBIDDEN,
-    ],
-    ["403 without headers", errors.rateLimitedForbidden, HTTP_STATUS.FORBIDDEN, FORBIDDEN],
-    ["401", { status: 401 }, HTTP_STATUS.UNAUTHORIZED, BAD_TOKEN],
-    ["404", errors.notFound, HTTP_STATUS.NOT_FOUND, PR_NOT_FOUND],
-    ["500", { status: 500 }, HTTP_STATUS.INTERNAL_SERVER_ERROR, FETCH_FAILED],
-    ["a plain Error", errors.networkError, HTTP_STATUS.INTERNAL_SERVER_ERROR, FETCH_FAILED],
-    ["a non-object", "boom", HTTP_STATUS.INTERNAL_SERVER_ERROR, FETCH_FAILED],
-    ["null", null, HTTP_STATUS.INTERNAL_SERVER_ERROR, FETCH_FAILED],
+    ["429", { status: 429 }, TOO_MANY_REQUESTS, RATE_LIMIT],
+    ["429 on response", errors.rateLimited, TOO_MANY_REQUESTS, RATE_LIMIT],
+    ["403 with x-ratelimit-remaining: 0", errors.quotaExhausted, TOO_MANY_REQUESTS, RATE_LIMIT],
+    ["403 with numeric x-ratelimit-remaining 0", errors.quotaExhaustedNumeric, TOO_MANY_REQUESTS, RATE_LIMIT],
+    ["403 with retry-after (secondary rate limit)", errors.secondaryRateLimit, TOO_MANY_REQUESTS, RATE_LIMIT],
+    ["403 with quota left", errors.forbiddenWithQuotaLeft, FORBIDDEN_STATUS, FORBIDDEN],
+    ["403 without headers", errors.rateLimitedForbidden, FORBIDDEN_STATUS, FORBIDDEN],
+    ["401", { status: 401 }, UNAUTHORIZED, BAD_TOKEN],
+    ["404", errors.notFound, NOT_FOUND, PR_NOT_FOUND],
+    ["500", { status: 500 }, INTERNAL_SERVER_ERROR, FETCH_FAILED],
+    ["a plain Error", errors.networkError, INTERNAL_SERVER_ERROR, FETCH_FAILED],
+    ["a non-object", "boom", INTERNAL_SERVER_ERROR, FETCH_FAILED],
+    ["null", null, INTERNAL_SERVER_ERROR, FETCH_FAILED],
   ])("maps %s", (_, error, status, message) => {
     expect(toGitHubErrorResponse(error)).toEqual({ status, error: message });
   });
 
   it("prefers the top-level status over response.status", () => {
-    expect(toGitHubErrorResponse({ status: 404, response: { status: 500 } }).status).toBe(HTTP_STATUS.NOT_FOUND);
+    expect(toGitHubErrorResponse({ status: 404, response: { status: 500 } }).status).toBe(NOT_FOUND);
   });
 
   it("never echoes the raw GitHub error message to the client", () => {
@@ -270,9 +198,7 @@ describe("pr-metadata/get", () => {
 
   describe("getFullPRAnalysis", () => {
     it("returns changed files, the change summary and the analysis", async () => {
-      mockListFiles.mockResolvedValueOnce({
-        data: [{ filename: "src/hash.ts", status: "modified", additions: 1, deletions: 0, patch: "+md5(x)" }],
-      });
+      mockListFiles.mockResolvedValueOnce(octokit.listFilesWithFinding);
 
       const result = await getFullPRAnalysis("owner", "repo", 123);
 
@@ -285,12 +211,7 @@ describe("pr-metadata/get", () => {
     });
 
     it("handles a deleted file with no patch (removed / binary)", async () => {
-      mockListFiles.mockResolvedValueOnce({
-        data: [
-          { filename: "src/old.ts", status: "removed", additions: 0, deletions: 120 },
-          { filename: "assets/logo.png", status: "removed", additions: 0, deletions: 0 },
-        ],
-      });
+      mockListFiles.mockResolvedValueOnce(octokit.listFilesNoPatch);
 
       const result = await getFullPRAnalysis("owner", "repo", 123);
 

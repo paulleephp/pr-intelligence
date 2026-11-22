@@ -1,12 +1,8 @@
-import type { PRAnalysisResponse } from "@/lib/types/pr/metadata";
+import type { PRDashboardProps } from "@/types/ui/components";
 import type { SeverityCountMap } from "@/types/ui/report";
 import { NOT_SCANNED_LABEL } from "./_lib/file-display";
 import { FILE_SEVERITY_ORDER, SEVERITY_STYLES } from "./_lib/severity";
 import { StatTile } from "./report/StatTile";
-
-interface PRDashboardProps {
-  analysis: PRAnalysisResponse;
-}
 
 const formatSigned = (value: number): string => (value > 0 ? `+${value}` : `${value}`);
 
