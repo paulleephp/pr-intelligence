@@ -1,5 +1,5 @@
-import { resolve } from "path";
-import { fileURLToPath } from "url";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -16,7 +16,10 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: ["node_modules/", "coverage/", "**/*.test.ts", "**/*.test.tsx", "**/types/**"],
+      // List source files explicitly: since Vitest 4, files no test imports are otherwise left out.
+      include: ["lib/**/*.ts", "app/**/*.{ts,tsx}"],
+      // Test helpers (fixtures, mocks, test-utils) live in __tests__ and aren't code under test.
+      exclude: ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "**/types/**"],
     },
     projects: [
       {

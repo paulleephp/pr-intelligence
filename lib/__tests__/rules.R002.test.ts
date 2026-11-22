@@ -51,6 +51,7 @@ describe("R002 - authentication check changes", () => {
 
   describe("does not fire on non-auth-logic lines", () => {
     it.each([
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: diff text containing a JS template literal.
       "+  headers: { Authorization: `Bearer ${token}` },",
       "+// TODO auth check",
     ])("%s", (patch) => {

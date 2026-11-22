@@ -1,7 +1,6 @@
 /** Code-pattern rules (R002, R012, R013, R015, R016) only run on JS/TS files (JS_TS_FILE_PATTERN). */
 import { describe, expect, it } from "vitest";
-import { analyzeDiff } from "@/lib/diff/core";
-import { file } from "./fixtures/rules";
+import { analyzedRuleIds } from "./fixtures/rules";
 
 // Scope decision (2026-11-22): the code-pattern rules are written for JS/TS syntax, so analyzeDiff
 // only runs them on JS/TS files. The gate is in analyzeDiff, so these go through it.
@@ -15,9 +14,6 @@ describe("code-pattern rules run on JS/TS files only", () => {
     "+fetch(url);", // R015
     "+eval(x);", // R016
   ].join("\n");
-
-  const analyzedRuleIds = (filename: string, patch: string) =>
-    analyzeDiff([file({ filename, patch })]).aggregate.findings.map((p) => p.ruleId);
 
   it("reports R016 for eval( in a .tsx file", () => {
     expect(analyzedRuleIds("src/App.tsx", "@@ -1 +1 @@\n+eval(x);")).toContain("R016");

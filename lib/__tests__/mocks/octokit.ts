@@ -25,6 +25,7 @@ export const mockPaginate = vi.fn(
 );
 
 // Vitest 4+: a mock invoked with `new` must use `function` (or `class`), not an arrow fn.
+// biome-ignore lint/complexity/useArrowFunction: client.ts calls `new Octokit()`; an arrow fn can't be constructed.
 export const mockOctokit = vi.fn(function () {
   return { pulls: { get: mockPullsGet, listFiles: mockListFiles }, paginate: mockPaginate };
 });

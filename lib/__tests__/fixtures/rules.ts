@@ -28,6 +28,10 @@ export const pathRuleIds = (filename: string, status: ChangedFile["status"]) =>
     (p) => p.ruleId,
   );
 
+/** Rule IDs through analyzeDiff for one file, so the JS/TS-only gate for code-pattern rules applies. */
+export const analyzedRuleIds = (filename: string, patch: string) =>
+  analyzeDiff([file({ filename, patch })]).aggregate.findings.map((p) => p.ruleId);
+
 /** R005 finding for one patch in one file. */
 export const deps = (filename: string, patch: string) =>
   detectDependencyChanges(parsePatch(`@@ -1 +1 @@\n${patch}`), filename);
@@ -74,6 +78,7 @@ export const FAKE = {
   githubPat: "github_pat_" + "11ABCDEFG0123456789_abcdefghijklmnop",
   slackBot: "xoxb-" + "1234567890-abcdefghij",
   stripeLive: "sk_" + "live_" + "abcdefghijklmnop1234",
+  // biome-ignore lint/style/useTemplate: kept split so secret scanners don't see a key header in this file.
   privateKey: (kind: string) => `-----BEGIN ${kind}PRIVATE` + " KEY-----",
 };
 
