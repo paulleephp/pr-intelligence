@@ -1,6 +1,7 @@
+import type { MessageFn } from "@/types/diff/finding";
 import type { DiffHunks } from "@/types/diff/hunk";
 import type { Pattern } from "@/types/diff/pattern";
-import type { CodeAnalysis } from "../types/pr/metadata";
+import type { CodeAnalysis, CodePatternFindings, CodeReportArg } from "@/types/pr/metadata";
 import {
   AUTH_PATTERNS,
   CRYPTO_ALGO_PATTERNS,
@@ -12,8 +13,6 @@ import {
 import { detectDependencyChanges } from "./dependency";
 import { findRegexFinding } from "./util/regex-finding";
 import { RISK_RULES, type RiskRuleId } from "./util/risk-scoring";
-
-import type { MessageFn } from "@/types/diff/finding";
 
 const WORD_PATTERN = /^\w+$/;
 
@@ -54,32 +53,29 @@ const getNetRemovedLines = (hunks: DiffHunks): string[] => {
   return hunks.removed.filter((line) => !addedTrimmed.has(line.trim()));
 };
 
-export const getCodeReport = ({
-  hunks,
-  filename,
-}: {
-  hunks: DiffHunks;
-  status: string;
-  filename: string;
-}): CodeAnalysis => {
-  const added = hunks.added;
-
-  const netRemoved = getNetRemovedLines(hunks);
+const findAuthCheckChange = (hunks: DiffHunks, filename: string): Pattern | null => {
   const removedAuthCheck = findCodeFinding(
-    netRemoved,
+    getNetRemovedLines(hunks),
     filename,
     AUTH_PATTERNS,
     "R002",
     (f, m) => `Authentication/authorization check removed in ${f}: "${m}"`,
   );
-  const changedAuthCheck = findCodeFinding(
-    added,
-    filename,
-    AUTH_PATTERNS,
-    "R002",
-    (f, m) => `Authentication/authorization logic changed in ${f}: "${m}"`,
+  return (
+    removedAuthCheck ??
+    findCodeFinding(
+      hunks.added,
+      filename,
+      AUTH_PATTERNS,
+      "R002",
+      (f, m) => `Authentication/authorization logic changed in ${f}: "${m}"`,
+    )
   );
-  const authPatterns = removedAuthCheck ?? changedAuthCheck;
+};
+
+const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePatternFindings => {
+  const added = hunks.added;
+  const authPatterns = findAuthCheckChange(hunks, filename);
   const passwordHashingPatterns = findCodeFinding(
     added,
     filename,
@@ -93,13 +89,6 @@ export const getCodeReport = ({
     CRYPTO_ALGO_PATTERNS,
     "R012",
     (f, m) => `Insecure crypto algorithm detected in ${f}: "${m}"`,
-  );
-  const prodConfigChanges = findCodeFinding(
-    added,
-    filename,
-    PROD_CONFIG_CHANGE_PATTERNS,
-    "R009",
-    (f, m) => `Production configuration change detected in ${f}: "${m}"`,
   );
   const riskyApiCalls = findRegexFinding(
     added,
@@ -115,17 +104,39 @@ export const getCodeReport = ({
     "R016",
     (f, m) => `Dangerous code execution or DOM sink introduced in ${f}: "${m}"`,
   );
-
-  const dependencyChanges = detectDependencyChanges(hunks, filename);
-
   return {
-    filename,
     authPatterns,
     passwordHashingPatterns,
     cryptoAlgoPatterns,
-    prodConfigChanges,
     riskyApiCalls,
     dangerousCodeCalls,
-    dependencyChanges,
   };
+};
+
+const NO_CODE_PATTERN_FINDINGS: CodePatternFindings = {
+  authPatterns: null,
+  passwordHashingPatterns: null,
+  cryptoAlgoPatterns: null,
+  riskyApiCalls: null,
+  dangerousCodeCalls: null,
+};
+
+export const getCodeReport = ({
+  hunks,
+  filename,
+  scanCodePatterns = true,
+}: CodeReportArg): CodeAnalysis => {
+  const codePatternFindings = scanCodePatterns
+    ? getCodePatternFindings(hunks, filename)
+    : NO_CODE_PATTERN_FINDINGS;
+  const prodConfigChanges = findRegexFinding(
+    hunks.added,
+    filename,
+    PROD_CONFIG_CHANGE_PATTERNS,
+    "R009",
+    (f, m) => `Production configuration change detected in ${f}: "${m}"`,
+  );
+  const dependencyChanges = detectDependencyChanges(hunks, filename);
+
+  return { filename, ...codePatternFindings, prodConfigChanges, dependencyChanges };
 };

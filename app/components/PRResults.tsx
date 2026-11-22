@@ -1,14 +1,9 @@
-import type { PRReport } from "@/types/ui/report";
+import type { PRResultsProps } from "@/types/ui/components";
 import { ChangedFilesTable } from "./ChangedFilesTable";
 import { PRDashboard } from "./PRDashboard";
 import { PRResultsSkeleton } from "./PRResultsSkeleton";
 import { PRSummary } from "./PRSummary";
 import { RiskIndicator } from "./RiskIndicator";
-
-interface PRResultsProps {
-  report: PRReport | null;
-  loading: boolean;
-}
 
 export function PRResults({ report, loading }: PRResultsProps) {
   if (loading) {

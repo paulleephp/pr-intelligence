@@ -1,75 +1,74 @@
-import type { DiffHunks } from "@/types/diff/hunk";
 import type { PrChangeSummary } from "@/types/diff/summary";
-import type { ChangedFile, PRAnalysis } from "@/types/pr/metadata";
+import type { ChangedFile, PRAnalysis, UnscannedReason } from "@/types/pr/metadata";
 import { aggregateData } from "./aggregator";
 import { getCategoryReport } from "./categorize";
 import { getCodeReport } from "./code";
+import { JS_TS_FILE_PATTERN, PRFileStatus } from "./constants/file";
 import { getFileType } from "./file-type";
 import { getSecretsReport } from "./secret";
 import { isBinaryFile } from "./util/is-binary";
 import { parsePatch } from "./util/parse-patch";
 
 export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
-  const filesChanged = changedFiles.length;
   let totalLinesAdded = 0;
   let totalLinesRemoved = 0;
   let filesAdded = 0;
   let filesRemoved = 0;
-  let filesDeleted = 0;
 
-  for (const file of changedFiles) {
-    const { status, additions, deletions } = file;
-
+  for (const { status, additions, deletions } of changedFiles) {
     totalLinesAdded += additions ?? 0;
     totalLinesRemoved += deletions ?? 0;
 
-    if (status === "added") {
+    if (status === PRFileStatus.Added) {
       filesAdded++;
-    } else if (status === "removed" || status === "deleted") {
+    } else if (status === PRFileStatus.Removed || status === PRFileStatus.Deleted) {
       filesRemoved++;
-      filesDeleted++;
     }
   }
 
   return {
-    filesChanged,
+    filesChanged: changedFiles.length,
     totalLinesAdded,
     totalLinesRemoved,
     filesAdded,
     filesRemoved,
-    filesDeleted,
   };
 }
 
+const getUnscannedReason = (patch: string | null | undefined): UnscannedReason | null => {
+  if (!patch) {
+    return "no-patch";
+  }
+  return isBinaryFile(patch) ? "binary" : null;
+};
+
 export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
+  const unscannedFiles: PRAnalysis["unscannedFiles"] = [];
   const secretReports: PRAnalysis["secret"] = [];
   const categoryReports: PRAnalysis["category"] = [];
   const codeReports: PRAnalysis["code"] = [];
   const fileTypes: PRAnalysis["fileTypes"] = {};
 
-  for (const changedFile of changedFiles) {
-    const { patch, filename, status } = changedFile;
+  for (const { patch, filename, status } of changedFiles) {
     fileTypes[filename] = getFileType(filename);
+    categoryReports.push(getCategoryReport({ filename, status }));
 
-    // Skip analysis for binary files - they don't have readable text content
-    if (isBinaryFile(patch)) {
+    const unscannedReason = getUnscannedReason(patch);
+    if (unscannedReason) {
+      unscannedFiles.push({ filename, reason: unscannedReason });
       continue;
     }
 
-    const hunks: DiffHunks = parsePatch(patch);
-
+    const hunks = parsePatch(patch);
     secretReports.push(getSecretsReport({ hunks, filename }));
-    categoryReports.push(getCategoryReport({ filename, status }));
-    codeReports.push(getCodeReport({ hunks, filename, status }));
+    const scanCodePatterns = JS_TS_FILE_PATTERN.test(filename);
+    codeReports.push(getCodeReport({ hunks, filename, scanCodePatterns }));
   }
 
-  const aggregate = aggregateData({
-    secretReports,
-    categoryReports,
-    codeReports,
-  });
+  const aggregate = aggregateData({ secretReports, categoryReports, codeReports });
 
   return {
+    unscannedFiles,
     secret: secretReports,
     category: categoryReports,
     code: codeReports,

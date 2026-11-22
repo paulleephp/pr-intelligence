@@ -1,4 +1,3 @@
-// Frontend-friendly type without patch
 export interface ChangedFile {
   filename: string;
   status: string;
@@ -6,7 +5,7 @@ export interface ChangedFile {
   deletions: number;
 }
 
-export type PRStatus = "open" | "closed";
+export type PRStatus = "open" | "closed" | "merged";
 
 export interface GitHubUser {
   login: string;
@@ -32,4 +31,3 @@ export interface PRMetadata {
   base: { repo: { url: string }; ref: string };
   html_url: string;
 }
-

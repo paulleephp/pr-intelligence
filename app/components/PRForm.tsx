@@ -1,15 +1,8 @@
 "use client";
 
-import type { Dispatch, FormEvent, SetStateAction } from "react";
+import type { FormEvent } from "react";
+import type { PRFormProps } from "@/types/ui/components";
 import { SpinnerIcon } from "./icons";
-
-interface PRFormProps {
-  url: string;
-  setUrl: Dispatch<SetStateAction<string>>;
-  loading: boolean;
-  error: string | null;
-  onAnalyze: (url: string) => void;
-}
 
 export function PRForm({ url, setUrl, loading, error, onAnalyze }: PRFormProps) {
   const trimmedUrl = url.trim();

@@ -1,5 +1,4 @@
 export const AUTH_PATTERNS = [
-  // Removal of authentication/authorization checks
   "if (!user.hasPermission", 
   "if (user.isAdmin", 
   "hasPermission", 
@@ -7,24 +6,22 @@ export const AUTH_PATTERNS = [
 ];
 
 export const PASSWORD_HASHING_PATTERNS = [
-  // Password hashing patterns - check for weak or deprecated algorithms
   "bcrypt", "bcryptjs", "argon2", "scrypt", "pbkdf2",
   "pbkdf2Sync(", "scryptSync("
 ];
 
 export const CRYPTO_ALGO_PATTERNS = [
-  // Crypto algorithm patterns - check for weak or deprecated algorithms
   "md5", "sha1", 
   "des", "3des",
-  "ecb" // ECB mode is insecure without proper padding
+  "ecb"
 ];
 
-
-export const PROD_CONFIG_CHANGE_PATTERNS = [
-  "production",
-  "prod",
-  "NODE_ENV"
-]
+export const PROD_CONFIG_CHANGE_PATTERNS: readonly RegExp[] = [
+  /\bNODE_ENV(?:\s*(?::|=(?!=))\s*|\s+)["'`]?prod(?:uction)?\b/i,
+  /^\s*["']?(?:production|prod)["']?\s*:(?!:)/i,
+  /\b(?:PROD|PRODUCTION)_[A-Z0-9_]+\s*(?::|=(?!=))/,
+  /(?:^|\s)--prod(?:uction)?\b/,
+];
 
 export const RISKY_API_PATTERNS: readonly RegExp[] = [
   /(?<![\w.])fetch\s*\(/i,

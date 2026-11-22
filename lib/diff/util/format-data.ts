@@ -1,4 +1,5 @@
 import type { Pattern } from "@/types/diff/pattern";
+import { RISK_RULES } from "./risk-scoring";
 import type { ApiArgs, FormatDataArgs, PassArgs, SshArgs } from "@/types/diff/util/format-data";
 
 export const getSecretFoundData = ({ filename, pattern }: PassArgs) => {
@@ -36,7 +37,7 @@ export const getPasswordFoundData = ({ filename, pattern }: PassArgs) => {
 export const formatData = ({ ruleId, filename, message }: FormatDataArgs): Pattern => {
   return {
     ruleId,
-    severity: "critical" as const, // @TODO use the enum
+    severity: RISK_RULES[ruleId].severity,
     filename,
     message,
     evidence: `Pattern found in file: ${filename}`,

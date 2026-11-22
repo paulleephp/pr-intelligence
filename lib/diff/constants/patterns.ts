@@ -7,33 +7,6 @@ export const SEVERITY_SCORES: Record<PatternSeverity, number> = {
   critical: 85,
 };
 
-//@ move to frontend constant?
-export const SEVERITY_LABELS: Record<PatternSeverity, string> = {
-  low: "Low Risk",
-  medium: "Medium Risk",
-  high: "High Risk",
-  critical: "Critical Risk",
-} as const;
-
-export enum SeverityLevels {
-  Low = "low",
-  Medium = "medium",
-  High = "high",
-}
-
-export const HIGH_PRIORITY_FILES: Array<string> = [
-  "package.json",
-  "package-lock.json",
-  ".npmrc",
-  ".env",
-  "tsconfig.json",
-  "Dockerfile",
-  "docker-compose.yml",
-  "webpack.config.js",
-] as const;
-
-export const LOW_RISK_PATTERNS = ["TODO", "FIXME", "EXAMPLE", "DEMO", "MOCK", "TEST"];
-
 export const API_KEY_PATTERNS = [
   "api_key",
   "apikey",

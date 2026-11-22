@@ -4,6 +4,8 @@ import { PRSummary } from "../PRSummary";
 import { buildReport, cleanReport, FILES, mixedReport } from "./fixtures";
 
 const statValue = (label: string) => screen.getByText(label).nextElementSibling;
+/** The "PR #123 · Open" line; the state is wrapped in its own coloured span. */
+const prLine = () => screen.getByText((_, el) => el?.tagName === "P" && /^PR #\d+/.test(el.textContent ?? ""));
 
 describe("PRSummary", () => {
   it("links the PR title to GitHub in a new tab", () => {
@@ -18,15 +20,32 @@ describe("PRSummary", () => {
   it("shows the PR number, state and author", () => {
     render(<PRSummary report={mixedReport()} />);
 
-    expect(screen.getByText("PR #123 · Open")).toBeInTheDocument();
+    expect(prLine()).toHaveTextContent("PR #123 · Open");
     expect(screen.getByText("@user")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "user" })).toBeInTheDocument();
   });
 
-  it("labels a closed PR as Closed", () => {
-    render(<PRSummary report={buildReport([FILES.clean], { state: "closed" })} />);
+  it.each([
+    ["open", "Open"],
+    ["closed", "Closed"],
+    ["merged", "Merged"],
+  ] as const)("labels a %s PR as %s, in a distinct colour", (state, label) => {
+    render(<PRSummary report={buildReport([FILES.clean], { state })} />);
 
-    expect(screen.getByText("PR #123 · Closed")).toBeInTheDocument();
+    expect(prLine()).toHaveTextContent(`PR #123 · ${label}`);
+    expect(screen.getByText(label).className).toMatch(/text-/);
+  });
+
+  it("gives open, closed and merged different colours", () => {
+    const colour = (state: "open" | "closed" | "merged") => {
+      const { unmount } = render(<PRSummary report={buildReport([FILES.clean], { state })} />);
+      const label = { open: "Open", closed: "Closed", merged: "Merged" }[state];
+      const cls = screen.getByText(label).className;
+      unmount();
+      return cls;
+    };
+
+    expect(new Set([colour("open"), colour("closed"), colour("merged")]).size).toBe(3);
   });
 
   it("shows file, line and finding totals", () => {

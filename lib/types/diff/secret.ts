@@ -13,9 +13,21 @@ export type DetectRiskyPatternsArg = {
   claimedLines?: Set<number>;
 };
 
+export interface SecretLineContext {
+  rawLine: string;
+  type: SecretScanType;
+  fileKind: SecretFileKind;
+}
+
+export type SecretScanKind = "name" | "value";
+
+export type SecretFileKind = "code" | "config" | "shell";
+
 export interface SecretScan {
   name: string;
+  kind: SecretScanKind;
   regex: RegExp;
+  fileKind?: SecretFileKind;
 }
 
 export type GetSecretReportArg = {

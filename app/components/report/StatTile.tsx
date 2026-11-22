@@ -1,10 +1,4 @@
-interface StatTileProps {
-  label: string;
-  value: string | number;
-  tone?: string;
-  hint?: string;
-}
-
+import type { StatTileProps } from "@/types/ui/components";
 export function StatTile({ label, value, tone = "text-white", hint }: StatTileProps) {
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">

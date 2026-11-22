@@ -2,25 +2,29 @@
 
 ### 1. Third-party API Calls in Separate Files
 
-- All external API integrations (GitHub, OpenAI, etc.) must be in `lib/{service}.ts`
-- Example: `lib/github.ts` for all Octokit calls
+- All external API integrations (GitHub, OpenAI, etc.) must be in `lib/{service}/client.ts`
+- Example: `lib/github/client.ts` for all Octokit calls
+- Import directly from `lib/{service}/client.ts`; do not add re-export barrels such as `lib/github.ts`
 - Do not inline API calls in route handlers or components
 
 ### 2. Type Safety - Avoid `any` and Inline Types
 
-- Define all custom types in `types/*.ts` (e.g., `types/github.ts`)
+- Define all custom types in a types folder, never in the file that uses them: backend types in `lib/types/**/*.ts`, frontend UI types in the root `types/**/*.ts` (e.g. `types/ui/report.ts`)
 - **Never use inline type definitions** in function parameters or JSX
 - Bad: `(label: { name: string; color: string })`
 - Good: Extract to `types/github.ts` as `interface PRLabel { ... }` and import it
 - This includes function parameters, JSX props, and variable declarations
+- Types for `lib/<path>.ts` go in `lib/types/<path>.ts`, mirroring the folder structure (e.g. `AggregateArgs` for `lib/diff/aggregator.ts` lives in `lib/types/diff/aggregator.ts`)
+- There are two type folders: `lib/types/` and the root `types/` (holds `types/pr/metdata.ts`, misspelled, and `types/ui/report.ts`). tsconfig resolves `@/types/...` against both. Put new backend types in `lib/types/`; don't merge the folders or rename `metdata.ts` until asked, since tests import from both
 
 ### 3. Constants - Numeric and String Values
 
 - Define all numeric constants in `lib/constants.ts`
 - Separate concerns by domain:
   - `lib/constants.ts` - Generic HTTP statuses, common error messages
-  - `lib/{service}-constants.ts` - Service-specific constants (e.g., `lib/github-constants.ts`)
+  - `lib/{service}/constants.ts` - Service-specific constants (e.g., `lib/github/constants.ts`)
 - Always import and use constants instead of hardcoding
+- Constants derived from an enum live in the same constants file as the enum (e.g. `DELETED_STATUSES` sits next to `PRFileStatus` in `lib/diff/constants/file.ts`)
 - Example error messages:
   - Generic: `"Internal server error. Please try again later."`
   - GitHub-specific: `"GitHub rate limit exceeded or invalid token."`
@@ -28,7 +32,7 @@
 ### 4. Error Messages Organization
 
 - Generic errors in `lib/constants.ts` under `ERROR_MESSAGES`
-- Service-specific errors in `lib/{service}-constants.ts` under `{SERVICE}_ERROR_MESSAGES`
+- Service-specific errors in `lib/{service}/constants.ts` under `{SERVICE}_ERROR_MESSAGES`
 
 ### 5. Helper Functions for Repeated Calls
 
@@ -75,7 +79,7 @@
 
 ### 10. Export Types Alongside Interfaces
 
-- Export types used by external files from `types/*.ts`
+- Export types used by external files from the types folders (`lib/types/` or `types/`, see #2)
 - Keep types co-located with their domain. Example: `types/github.ts` exports `PRMetadata`, `ChangedFile`, `PRLabel`, `PRAnalysisResponse`
 
 ### 11. Typescript Syntaxes
@@ -89,3 +93,10 @@
 - Use `import type` when importing type
 
 ### 12. Use optional chaining
+
+### 13. Workflow Gotchas
+
+- Commit and stage only when asked. Delete files with plain `rm`, not `git rm --cached` (that stages the deletion); check `git diff --cached --name-only` is empty afterwards
+- For full test results run `npx vitest run --reporter=json --outputFile=<tmp>/r.json` and parse the JSON. Console output inside tests is suppressed, so a throwaway probe test must write to a file and be deleted afterwards
+- An `it.fails` test failing with "Expect test to fail" means the bug is fixed. Ask the tester to switch it to `it`; coders don't edit test files
+- A tsc error in `.next/types/validator.ts` about a missing route is stale `next dev` output, not a source error. Restart `next dev` or delete `.next/types`
