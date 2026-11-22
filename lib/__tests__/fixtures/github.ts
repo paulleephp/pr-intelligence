@@ -1,5 +1,5 @@
 /**
- * Mock data for GitHub API tests (lib/__tests__/github.test.ts).
+ * Mock data for GitHub API tests (lib/__tests__/github.{client,errors,pr-metadata}.test.ts).
  * Organized by API endpoint response. The Octokit mock itself is in ../mocks/octokit.ts.
  */
 import { HTTP_STATUS } from "../../constants";
