@@ -7,3 +7,5 @@ export enum PRFileStatus {
   Changed = 'changed',
   Deleted = 'deleted',
 }
+
+export const JS_TS_FILE_PATTERN = /\.(?:[cm]?[jt]s|[jt]sx)$/i;

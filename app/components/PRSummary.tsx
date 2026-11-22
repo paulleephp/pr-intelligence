@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { PRReport } from "@/types/ui/report";
+import { PR_STATE_STYLES } from "./_lib/file-display";
 import { SEVERITY_ORDER } from "./_lib/severity";
 import { StatTile } from "./report/StatTile";
 import { SeverityBadge } from "./severity/SeverityBadge";
@@ -13,8 +14,8 @@ export function PRSummary({ report }: PRSummaryProps) {
   const { metadata, analysis } = report;
   const { filesChanged, totalLinesAdded, totalLinesRemoved } = analysis.prChangeSummary;
   const { severityCounts, totalFindings, overallSeverity } = analysis.analysis.aggregate;
+  const stateStyle = PR_STATE_STYLES[metadata.state];
   const linesChanged = totalLinesAdded + totalLinesRemoved;
-  const stateLabel = metadata.state === "open" ? "Open" : "Closed";
 
   return (
     <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm">
@@ -27,7 +28,7 @@ export function PRSummary({ report }: PRSummaryProps) {
             className="group block"
           >
             <p className="text-xs text-zinc-500">
-              PR #{metadata.number} · {stateLabel}
+              PR #{metadata.number} · <span className={stateStyle.text}>{stateStyle.label}</span>
             </p>
             <h2 className="font-semibold text-white text-xl transition-colors group-hover:text-emerald-400">
               {metadata.title}

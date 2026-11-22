@@ -2,7 +2,7 @@ import type { PRAnalysisResponse } from "@/lib/types/pr/metadata";
 import type { ChangedFileRow } from "@/types/ui/report";
 import { DEFAULT_STATUS_STYLE, FILE_TYPE_LABELS, STATUS_STYLES } from "./_lib/file-display";
 import { severityRank } from "./_lib/severity";
-import { SeverityBadge } from "./severity/SeverityBadge";
+import { FileSeverityCell } from "./severity/FileSeverityCell";
 
 interface ChangedFilesTableProps {
   analysis: PRAnalysisResponse;
@@ -11,6 +11,7 @@ interface ChangedFilesTableProps {
 const FALLBACK_TYPE = "backend";
 
 const toRows = ({ changedFiles, analysis }: PRAnalysisResponse): ChangedFileRow[] => {
+  const unscanned = new Map(analysis.unscannedFiles.map((f) => [f.filename, f.reason]));
   const rows: ChangedFileRow[] = changedFiles.map(({ filename, status, additions, deletions }) => ({
     filename,
     status,
@@ -18,6 +19,7 @@ const toRows = ({ changedFiles, analysis }: PRAnalysisResponse): ChangedFileRow[
     deletions,
     type: analysis.fileTypes[filename] ?? FALLBACK_TYPE,
     severity: analysis.aggregate.fileSeverity[filename] ?? "none",
+    unscannedReason: unscanned.get(filename) ?? null,
   }));
   return rows.sort(
     (a, b) =>
@@ -77,7 +79,7 @@ export function ChangedFilesTable({ analysis }: ChangedFilesTableProps) {
                     <span className="text-red-400">−{row.deletions}</span>
                   </td>
                   <td className="py-2.5">
-                    <SeverityBadge severity={row.severity} />
+                    <FileSeverityCell row={row} />
                   </td>
                 </tr>
               ))}

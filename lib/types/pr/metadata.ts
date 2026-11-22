@@ -1,4 +1,5 @@
 import type { PRFileStatus } from "../diff/file";
+import type { DiffHunks } from "../diff/hunk";
 import type { FileType } from "../diff/file-type";
 import type { Pattern, PatternSeverity } from "../diff/pattern";
 import type { PrChangeSummary } from "../diff/summary";
@@ -30,12 +31,31 @@ export interface CodeAnalysis {
   dependencyChanges: Pattern | null;
 }
 
+export type CodePatternFindings = Pick<
+  CodeAnalysis,
+  "authPatterns" | "passwordHashingPatterns" | "cryptoAlgoPatterns" | "riskyApiCalls" | "dangerousCodeCalls"
+>;
+
 export interface CategoryAnalysis {
   filename: string;
   category: Pattern[];
 }
 
+export type UnscannedReason = "binary" | "no-patch";
+
+export interface UnscannedFile {
+  filename: string;
+  reason: UnscannedReason;
+}
+
+export interface CodeReportArg {
+  hunks: DiffHunks;
+  filename: string;
+  scanCodePatterns?: boolean;
+}
+
 export interface PRAnalysis {
+  unscannedFiles: UnscannedFile[];
   secret: SecretAnalysis[];
   category: CategoryAnalysis[];
   code: CodeAnalysis[];

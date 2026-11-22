@@ -44,6 +44,20 @@ export const FILES = {
   clean: changed("README.md", "+Some docs", { additions: 2, deletions: 1, status: "added" }),
 } satisfies Record<string, ChangedFile>;
 
+/** Files the engine can't scan for content (analysis.unscannedFiles). */
+export const UNSCANNED = {
+  binary: {
+    filename: "assets/logo.png",
+    status: "modified",
+    additions: 0,
+    deletions: 0,
+    patch: "Binary files a/assets/logo.png and b/assets/logo.png differ",
+  },
+  noPatch: { filename: "src/old.ts", status: "removed", additions: 0, deletions: 40, patch: "" },
+  /** No patch, but a path rule still fires (R004, high). */
+  deletedMigration: { filename: "db/migrations/001_init.sql", status: "removed", additions: 0, deletions: 30, patch: "" },
+} satisfies Record<string, ChangedFile>;
+
 export const mixedReport = (): PRReport =>
   buildReport([FILES.clean, FILES.low, FILES.medium, FILES.high, FILES.critical]);
 

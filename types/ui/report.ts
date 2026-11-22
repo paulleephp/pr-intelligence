@@ -1,6 +1,6 @@
 import type { FileType } from "@/lib/types/diff/file-type";
 import type { PatternSeverity } from "@/lib/types/diff/pattern";
-import type { PRAnalysisResponse } from "@/lib/types/pr/metadata";
+import type { PRAnalysisResponse, UnscannedReason } from "@/lib/types/pr/metadata";
 import type { PRMetadata } from "@/types/pr/metdata";
 
 export interface PRReport {
@@ -33,4 +33,10 @@ export interface ChangedFileRow {
   deletions: number;
   type: FileType;
   severity: FileSeverity;
+  unscannedReason: UnscannedReason | null;
+}
+
+export interface PRStateStyle {
+  label: string;
+  text: string;
 }

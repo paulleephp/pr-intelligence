@@ -119,24 +119,10 @@ export const octokit = {
       },
     ],
   },
-
-  /**
-   * Mock response from listFiles for single file
-   */
-  listFilesSingle: {
-    data: [
-      {
-        filename: "src/index.ts",
-        status: "modified" as const,
-        additions: 5,
-        deletions: 2,
-      },
-    ],
-  },
 };
 
 /**
- * Error responses for analyzePR testing
+ * Octokit-shaped errors for client / toGitHubErrorResponse tests
  */
 export const errors = {
   notFound: {

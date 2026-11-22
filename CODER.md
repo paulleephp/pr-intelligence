@@ -2,8 +2,9 @@
 
 ### 1. Third-party API Calls in Separate Files
 
-- All external API integrations (GitHub, OpenAI, etc.) must be in `lib/{service}.ts`
-- Example: `lib/github.ts` for all Octokit calls
+- All external API integrations (GitHub, OpenAI, etc.) must be in `lib/{service}/client.ts`
+- Example: `lib/github/client.ts` for all Octokit calls
+- Import directly from `lib/{service}/client.ts`; do not add re-export barrels such as `lib/github.ts`
 - Do not inline API calls in route handlers or components
 
 ### 2. Type Safety - Avoid `any` and Inline Types
@@ -19,7 +20,7 @@
 - Define all numeric constants in `lib/constants.ts`
 - Separate concerns by domain:
   - `lib/constants.ts` - Generic HTTP statuses, common error messages
-  - `lib/{service}-constants.ts` - Service-specific constants (e.g., `lib/github-constants.ts`)
+  - `lib/{service}/constants.ts` - Service-specific constants (e.g., `lib/github/constants.ts`)
 - Always import and use constants instead of hardcoding
 - Example error messages:
   - Generic: `"Internal server error. Please try again later."`
@@ -28,7 +29,7 @@
 ### 4. Error Messages Organization
 
 - Generic errors in `lib/constants.ts` under `ERROR_MESSAGES`
-- Service-specific errors in `lib/{service}-constants.ts` under `{SERVICE}_ERROR_MESSAGES`
+- Service-specific errors in `lib/{service}/constants.ts` under `{SERVICE}_ERROR_MESSAGES`
 
 ### 5. Helper Functions for Repeated Calls
 

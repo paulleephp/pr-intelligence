@@ -8,7 +8,7 @@ import {
   FRONTEND_EXTENSIONS,
   FRONTEND_PATHS,
 } from "./constants/file-type";
-import { TEST_PATHS } from "./constants/paths";
+import { isTestPath } from "./util/test-path";
 
 const getExtension = (basename: string): string => {
   const dot = basename.lastIndexOf(".");
@@ -20,7 +20,7 @@ export const getFileType = (rawFilename: string): FileType => {
   const basename = path.slice(path.lastIndexOf("/") + 1);
   const extension = getExtension(basename);
 
-  if (TEST_PATHS.some((p) => path.includes(p))) {
+  if (isTestPath(rawFilename)) {
     return "tests";
   }
   if (DOC_EXTENSIONS.includes(extension) || DOC_PATHS.some((p) => path.includes(p))) {

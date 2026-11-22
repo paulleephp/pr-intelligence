@@ -1,3 +1,5 @@
+import type { RiskRuleId } from "@/lib/diff/util/risk-scoring";
+
 interface GenericArgs {
   filename: string;
 };
@@ -11,7 +13,7 @@ export type PassArgs = GenericArgs & {
 export type SshArgs = GenericArgs;
 
 export type FormatDataArgs = {
-  ruleId: string;
+  ruleId: RiskRuleId;
   filename: string;
   message: string;
 };

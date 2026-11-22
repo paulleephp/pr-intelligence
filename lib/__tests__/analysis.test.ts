@@ -252,6 +252,71 @@ describe("PR Analysis Endpoint", () => {
     });
   });
 
+  describe("unscannedFiles - files with no text diff", () => {
+    const SECRET_LINE = '+const github_token = "ghp_abcdefghijklmnopqrstuvwxyz0123456789";';
+
+    it("marks a file with an empty patch as no-patch and skips content scans for it", () => {
+      const analysis = analyzeDiff([file({ filename: "src/old.ts", status: "removed", deletions: 40 })]);
+
+      expect(analysis.unscannedFiles).toEqual([{ filename: "src/old.ts", reason: "no-patch" }]);
+      expect(analysis.secret).toEqual([]);
+      expect(analysis.code).toEqual([]);
+    });
+
+    it("treats a missing patch (null/undefined from the API) as no-patch", () => {
+      const analysis = analyzeDiff(
+        malformed([
+          { filename: "a.ts", status: "modified", additions: 0, deletions: 0, patch: null },
+          { filename: "b.ts", status: "modified", additions: 0, deletions: 0 },
+        ]),
+      );
+
+      expect(analysis.unscannedFiles.map((f) => f.reason)).toEqual(["no-patch", "no-patch"]);
+    });
+
+    it("marks a 'Binary files ... differ' patch as binary", () => {
+      const analysis = analyzeDiff([
+        file({ filename: "assets/logo.png", patch: "Binary files a/assets/logo.png and b/assets/logo.png differ" }),
+      ]);
+
+      expect(analysis.unscannedFiles).toEqual([{ filename: "assets/logo.png", reason: "binary" }]);
+    });
+
+    it("marks a patch containing a NUL byte as binary and does not scan it for secrets", () => {
+      const analysis = analyzeDiff([file({ filename: "blob.bin", patch: `@@ -1 +1 @@\n${SECRET_LINE}\n+\0\0` })]);
+
+      expect(analysis.unscannedFiles).toEqual([{ filename: "blob.bin", reason: "binary" }]);
+      expect(analysis.aggregate.totalFindings).toBe(0);
+    });
+
+    it("still applies path rules to unscanned files", () => {
+      const analysis = analyzeDiff([file({ filename: "db/migrations/001_init.sql", status: "removed" })]);
+
+      expect(analysis.unscannedFiles).toHaveLength(1);
+      expect(analysis.category).toHaveLength(1);
+      expect(analysis.aggregate.totalFindings).toBeGreaterThan(0);
+    });
+
+    it("scans text files normally and leaves them out of unscannedFiles", () => {
+      const analysis = analyzeDiff([
+        file({ filename: "assets/logo.png", patch: "Binary files a/assets/logo.png and b/assets/logo.png differ" }),
+        file({ filename: "src/config.ts", patch: `@@ -1 +1 @@\n${SECRET_LINE}` }),
+      ]);
+
+      expect(analysis.unscannedFiles.map((f) => f.filename)).toEqual(["assets/logo.png"]);
+      expect(analysis.secret).toHaveLength(1);
+      expect(analysis.aggregate.totalFindings).toBeGreaterThan(0);
+    });
+
+    it("does not treat an added line that mentions 'Binary files ... differ' as binary", () => {
+      const analysis = analyzeDiff([
+        file({ filename: "src/log.ts", patch: '@@ -1 +1 @@\n+log("Binary files a and b differ");' }),
+      ]);
+
+      expect(analysis.unscannedFiles).toEqual([]);
+    });
+  });
+
   describe("Edge Cases", () => {
     it("should handle null/undefined additions and deletions gracefully", () => {
       const files = malformed([

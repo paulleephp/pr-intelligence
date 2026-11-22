@@ -33,7 +33,8 @@ lib/__tests__/
   ├── analysis.test.ts     # summarizePr, parsePatch, analyzeDiff smoke tests
   ├── aggregate.test.ts    # aggregateData, category rule IDs, isBinaryFile
   ├── rules.test.ts        # per-rule positive/negative cases
-  ├── github.test.ts       # GitHub client (Octokit mocked)
+  ├── strip-comment.test.ts # lib/diff/util/strip-comment.ts (comment removal before the R007 low-risk filter)
+  ├── github.test.ts       # lib/github/{client,errors,pr-metadata/get} (Octokit mocked)
   ├── integration.test.ts  # URL parsing + constants working together
   ├── api.test.ts          # lib/api.ts fetch client + lib/api-guards.ts (fetch stubbed)
   ├── response.test.ts     # lib/response.ts helpers
@@ -61,6 +62,12 @@ test/setup.ts              # jest-dom matchers + RTL cleanup (vitest setupFiles)
 ```
 
 Add per-rule tests to `rules.test.ts`, with one `describe` per rule ID. If it grows too large, split it by detector (`secret.test.ts`, `code.test.ts`, `categorize.test.ts`).
+
+**Fake secrets in tests:** assemble token-shaped strings at runtime (`"sk_" + "live_" + "…"`, see `FAKE` in `rules.test.ts`). A literal `sk_live_…`, `xoxb-…` or `AKIA…` in the source can trip GitHub push protection and block the push. AWS access keys are `AKIA`/`ASIA` + 16 characters (20 total); shorter strings are correctly *not* matched by the value rule.
+
+**R007 decisions (2026-11-22):** secret scans are skipped in test paths (`TEST_PATHS`: `__tests__/`, `test(s)/`, `e2e/`, `fixture(s)/`, `*.test.*`, `*.spec.*`); other rules still run there. Outside test paths, a low-risk word (test, mock, TODO…) only suppresses a secret when it's in the code, not in a trailing comment. Unquoted secret values are only flagged in config and shell files (config: `CONFIG_FILE_PATTERNS` in `lib/diff/constants/secret.ts`, i.e. `.env*`, `Dockerfile*`, YAML, `.ini`, `.toml`, `.conf`, `.cfg`, `.tfvars`; shell: `.sh`, `.bash`, `.zsh`, `.envrc`); in code files an unquoted value is a variable. Quoted values are flagged everywhere. What counts as a reference to another value depends on the file kind: code files only `${…}`, so `"$abc…"` is a literal; config files `$NAME` and `${…}`; shell files also `$(…)` and backticks. Env lookups (`process.env`) are never secrets.
+
+**Scope: JavaScript/TypeScript only (2026-11-22).** Use `.ts`/`.tsx`/`.js` filenames for code-file test cases. Don't write tests for other languages, and don't add tests for gaps in the existing non-JS checks (R005 Python/Go/Rust/Ruby/Gradle manifests). Alembic and Rails migration paths, `os.environ` and `.properties` were removed on 2026-11-22 under this rule. Shell scripts and `.envrc` are not "other languages": they're config/deploy files of a JS/TS repo and stay in scope (confirmed 2026-11-22). Leave the existing non-JS tests alone, but if one ever needs changing (a failure, a new expected value, a refactor), don't update it: remove that language's support instead, meaning delete the test and ask the backend coder to delete the matching check. Where languages disagree, assert the JS/TS meaning (e.g. `"$name"` in code is a literal string). The code-pattern rules (R002, R012, R013, R015, R016) only run on JS/TS files (`JS_TS_FILE_PATTERN`). The gate is in `analyzeDiff`; `getCodeReport` scans by default, so tests that call it directly (the `code()` helper) don't exercise the gate. Gate tests live in the "code-pattern rules run on JS/TS files only" describe.
 
 ### Documenting known bugs with `it.fails`
 
@@ -202,9 +209,11 @@ vi.mock("@/lib/github/pr-metadata/get", () => ({
 
 ```typescript
 const mockOctokit = vi.fn(function () {
-  return { pulls: { get: mockPullsGet, listFiles: mockListFiles } };
+  return { pulls: { get: mockPullsGet, listFiles: mockListFiles }, paginate: mockPaginate };
 });
 ```
+
+`lib/github/client.ts` creates its Octokit at module load, so the constructor call happens before any test runs. To assert on it, `mockOctokit.mockClear(); vi.resetModules(); await import("@/lib/github/client")`. `github.test.ts` also mocks `paginate` and a page-aware `listFiles` (`serveFiles`), so pagination tests pass whether the client uses `paginate()` or loops over pages itself.
 
 **Why hoisted?** `vi.mock` is hoisted above imports, so normal top-level variables don't exist yet when the factory runs.
 
@@ -228,11 +237,11 @@ afterEach(() => {
 | `tsconfig.json` | `./foo`, then `./app/foo`, `./lib/foo`, `./types/foo` (first match) |
 | `vitest.config.ts` | `./foo` only |
 
-So `@/types/github/octokit` type-checks because tsc finds `lib/types/github/octokit.ts`. At runtime in Vitest it would fail, because `./types/github/octokit` doesn't exist. Type-only imports get erased, which hides the problem.
+So `@/types/github/errors` type-checks because tsc finds `lib/types/github/errors.ts`. At runtime in Vitest it would fail, because `./types/github/errors` doesn't exist. Type-only imports get erased, which hides the problem.
 
 **In tests, always use full paths**: `@/lib/types/...`, `@/lib/github/...`.
 
-Also, `@/lib/github` resolves to the **file** `lib/github.ts`, which is a re-export barrel, not the `lib/github/` directory.
+The GitHub layer has no barrel file: import from `@/lib/github/client`, `@/lib/github/errors` or `@/lib/github/pr-metadata/get`.
 
 ## Type Safety in Tests
 
@@ -275,8 +284,10 @@ npm test -- --run && npx tsc --noEmit && npm run lint && npm run build
 | Issue | Impact | Fix |
 |---|---|---|
 | Coverage % is inflated | Since Vitest 4, files no test imports are left out of the report, so the whole frontend and any untested lib file don't count | Set `coverage.include: ["lib/**/*.ts", "app/**/*.{ts,tsx}"]` in `vitest.config.ts` (expect the number to drop) |
-| Rule coverage incomplete | R002, R003, R004, R005, R013, R015 and R016 have per-rule tests. R001, R006, R007, R009, R010, R011, R012 and R014 have only one or two cases each in `aggregate.test.ts` | Add them to `rules.test.ts` |
+| Rule coverage incomplete | R002–R007, R009, R013, R015 and R016 have per-rule tests. R001, R010, R011, R012 and R014 have only a few cases | Add them to `rules.test.ts` |
 | No browser E2E tests | Playwright isn't installed. Component and integration tests run in happy-dom, so they can't catch real layout, CSS or `next/image` behavior | Add Playwright for a smoke flow once the UI settles |
+| Changed files capped at 30 per PR (deferred) | Out of scope for now; documented in README → Known Limitations. Two `it.fails` tests in `github.test.ts` will start failing once pagination lands | Flip them to `it` when fixed |
+| camelCase secret names (deferred) | Some real camelCase names are missed and camelCase placeholders are flagged. See README → Known Limitations | No tests yet; add them with the fix |
 | No CI | There's no `.github/workflows`, so nothing runs tests automatically | Add a GitHub Actions job that runs the Pre-Commit commands |
 
 ## Resources
