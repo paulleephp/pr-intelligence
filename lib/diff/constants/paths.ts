@@ -1,28 +1,34 @@
-export const AUTH_PATHS = [
-  "/auth",
-  "/login",
-  "/session",
-  "/permission",
-  "/access-control",
-  "/rbac",
+const SEGMENT_END = String.raw`(?=[/._-]|$)`;
+
+const segment = (names: string): RegExp => new RegExp(String.raw`/(?:${names})${SEGMENT_END}`);
+const directory = (names: string): RegExp => new RegExp(String.raw`/(?:${names})/`);
+
+export const AUTH_PATHS: readonly RegExp[] = [
+  segment("auth|authn|authz|authentication|authorization|oauth|sso|login|logout|sessions?|permissions?|access-control|rbac"),
 ];
 
-export const CI_PATHS = [".github/workflows/", "dockerfile", "docker-compose"];
-
-export const POTENTIAL_CONFIG_CHANGES = [
-  ".env",
-  ".config",
-  "tsconfig.json",
-  "dockerfile",
-  "tsconfig",
-  ".npmrc",
-  "webpack.config",
+export const CI_PATHS: readonly RegExp[] = [
+  /\/\.github\/workflows\//,
+  /\/\.gitlab-ci\.ya?ml$/,
+  /\/\.circleci\//,
+  /\/jenkinsfile$/,
+  /\/dockerfile(?:\.[\w-]+)?$/,
+  /\/docker-compose(?:\.[\w-]+)?\.ya?ml$/,
 ];
 
-export const SECURITY_PATHS = ["/security", "/crypto", "/encryption"];
+export const CONFIG_FILE_PATTERNS: readonly RegExp[] = [
+  /^\.env(?:\.[\w-]+)?$/,
+  /^tsconfig(?:\.[\w-]+)?\.json$/,
+  /^webpack\.config\.[cm]?[jt]s$/,
+  /^next\.config\.[cm]?[jt]s$/,
+  /^dockerfile(?:\.[\w-]+)?$/,
+  /^\.npmrc$/,
+];
 
-export const INFRA_PATHS = ["terraform/", "k8s/", "helm/"];
+export const SECURITY_PATHS: readonly RegExp[] = [segment("security|crypto|encryption")];
 
-export const TEST_PATHS = ["__tests__/", "/test/", "/tests/", ".test.", ".spec.", "e2e/"];
+export const INFRA_PATHS: readonly RegExp[] = [directory("terraform|k8s|kubernetes|helm"), /\.tf$/];
 
-export const MIGRATION_PATHS = ["/migrations/", "/migration/", "/migrate/", "/alembic/versions/"];
+export const TEST_PATHS: readonly RegExp[] = [directory("__tests__|tests?|e2e|fixtures?"), /\.(?:test|spec)\.[\w]+$/];
+
+export const MIGRATION_PATHS: readonly RegExp[] = [directory("migrations?")];

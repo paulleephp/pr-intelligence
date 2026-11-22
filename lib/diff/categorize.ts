@@ -1,13 +1,18 @@
 import type { CategorizerArg } from "@/types/diff/categorize";
 import type { Pattern } from "@/types/diff/pattern";
-import type { CategoryAnalysis } from "../types/pr/metadata";
-import { PRFileStatus } from "./constants/file";
+import type { CategoryAnalysis } from "@/types/pr/metadata";
+import {
+  CHANGED_STATUSES,
+  DELETED_STATUSES,
+  MIGRATION_MODIFIED_STATUSES,
+  PRFileStatus,
+} from "./constants/file";
 import {
   AUTH_PATHS,
   CI_PATHS,
+  CONFIG_FILE_PATTERNS,
   INFRA_PATHS,
   MIGRATION_PATHS,
-  POTENTIAL_CONFIG_CHANGES,
   SECURITY_PATHS,
   TEST_PATHS,
 } from "./constants/paths";
@@ -22,12 +27,10 @@ const buildFinding = (ruleId: RiskRuleId, filename: string, message: string): Pa
 
 const getBasename = (filename: string): string => filename.split("/").pop() ?? filename;
 
-const MIGRATION_MODIFIED_STATUSES: readonly string[] = [
-  PRFileStatus.Modified,
-  PRFileStatus.Renamed,
-  PRFileStatus.Changed,
-];
-const MIGRATION_DELETED_STATUSES: readonly string[] = [PRFileStatus.Removed, PRFileStatus.Deleted];
+const matchesAny = (filename: string, patterns: readonly RegExp[]): boolean =>
+  patterns.some((pattern) => pattern.test(filename));
+
+const isChanged = (status: string): boolean => CHANGED_STATUSES.includes(status);
 
 export const getCategoryReport = ({
   filename: rawFilename,
@@ -55,71 +58,41 @@ export const getCategoryReport = ({
   };
 };
 
-export const detectConfigChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
-  if (
-    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
-    POTENTIAL_CONFIG_CHANGES.includes(getBasename(filename))
-  ) {
-    return buildFinding("R009", filename, "Config change detected");
-  }
+export const detectConfigChanges = ({ filename, status }: CategorizerArg): Pattern | null =>
+  isChanged(status) && matchesAny(getBasename(filename), CONFIG_FILE_PATTERNS)
+    ? buildFinding("R009", filename, "Config change detected")
+    : null;
 
-  return null;
-};
+export const detectAuthChanges = ({ filename, status }: CategorizerArg): Pattern | null =>
+  isChanged(status) && matchesAny(filename, AUTH_PATHS)
+    ? buildFinding("R001", filename, "Potential auth change detected")
+    : null;
 
-export const detectAuthChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
-  if (
-    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
-    AUTH_PATHS.some((p) => filename.includes(p))
-  ) {
-    return buildFinding("R001", filename, "Potential auth change detected");
-  }
+export const detectCIChanges = ({ filename, status }: CategorizerArg): Pattern | null =>
+  isChanged(status) && matchesAny(filename, CI_PATHS)
+    ? buildFinding("R006", filename, "CI change detected")
+    : null;
 
-  return null;
-};
+export const detectSecurityChanges = ({ filename, status }: CategorizerArg): Pattern | null =>
+  isChanged(status) && matchesAny(filename, SECURITY_PATHS)
+    ? buildFinding("R014", filename, "Security change detected")
+    : null;
 
-export const detectCIChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
-  if (status === PRFileStatus.Modified && CI_PATHS.some((p) => filename.includes(p))) {
-    return buildFinding("R006", filename, "CI change detected");
-  }
+export const detectInfraChanges = ({ filename, status }: CategorizerArg): Pattern | null =>
+  isChanged(status) && matchesAny(filename, INFRA_PATHS)
+    ? buildFinding("R011", filename, "Infrastructure change detected")
+    : null;
 
-  return null;
-};
-
-export const detectSecurityChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
-  if (
-    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
-    SECURITY_PATHS.some((p) => filename.includes(p))
-  ) {
-    return buildFinding("R014", filename, "Security change detected");
-  }
-
-  return null;
-};
-
-export const detectInfraChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
-  if (
-    (status === PRFileStatus.Modified || status === PRFileStatus.Removed) &&
-    INFRA_PATHS.some((p) => filename.includes(p))
-  ) {
-    return buildFinding("R011", filename, "Infrastructure change detected");
-  }
-
-  return null;
-};
-
-export const detectTestChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
-  if (status === PRFileStatus.Removed && TEST_PATHS.some((p) => filename.includes(p))) {
-    return buildFinding("R010", filename, "Test removal detected");
-  }
-
-  return null;
-};
+export const detectTestChanges = ({ filename, status }: CategorizerArg): Pattern | null =>
+  DELETED_STATUSES.includes(status) && matchesAny(filename, TEST_PATHS)
+    ? buildFinding("R010", filename, "Test removal detected")
+    : null;
 
 export const detectMigrationChanges = ({ filename, status }: CategorizerArg): Pattern | null => {
-  if (!MIGRATION_PATHS.some((p) => filename.includes(p))) {
+  if (!matchesAny(filename, MIGRATION_PATHS)) {
     return null;
   }
-  if (MIGRATION_DELETED_STATUSES.includes(status)) {
+  if (DELETED_STATUSES.includes(status)) {
     return buildFinding("R004", filename, "Database migration deleted");
   }
   if (status === PRFileStatus.Added) {
@@ -128,6 +101,5 @@ export const detectMigrationChanges = ({ filename, status }: CategorizerArg): Pa
   if (MIGRATION_MODIFIED_STATUSES.includes(status)) {
     return buildFinding("R003", filename, "Database migration modified");
   }
-
   return null;
 };

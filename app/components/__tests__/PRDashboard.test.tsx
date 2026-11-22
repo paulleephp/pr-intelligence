@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PRDashboard } from "../PRDashboard";
-import { buildAnalysis, FILES, mixedReport } from "./fixtures";
+import { buildAnalysis, FILES, mixedReport, UNSCANNED } from "./fixtures";
 
 const severityRow = (label: string) => screen.getByText(label).closest("li");
 const statValue = (label: string) => screen.getByText(label).nextElementSibling;
@@ -33,6 +33,49 @@ describe("PRDashboard", () => {
       expect(severityRow("Critical")).toHaveTextContent(/1$/);
       expect(severityRow("High")).toHaveTextContent(/0$/);
       expect(severityRow("None")).toHaveTextContent(/0$/);
+    });
+  });
+
+  describe("unscanned files", () => {
+    it("lists unscanned files separately and leaves them out of None", () => {
+      render(<PRDashboard analysis={buildAnalysis([UNSCANNED.binary, UNSCANNED.noPatch, FILES.clean])} />);
+
+      expect(severityRow("None")).toHaveTextContent(/1$/);
+      expect(screen.getByText(/Not scanned: 2 files/)).toBeInTheDocument();
+    });
+
+    it("uses the singular for one unscanned file", () => {
+      render(<PRDashboard analysis={buildAnalysis([UNSCANNED.binary])} />);
+
+      expect(screen.getByText(/Not scanned: 1 file \(/)).toBeInTheDocument();
+      expect(severityRow("None")).toHaveTextContent(/0$/);
+    });
+
+    it("shows no 'Not scanned' note when every file was scanned", () => {
+      render(<PRDashboard analysis={mixedReport().analysis} />);
+
+      expect(screen.queryByText(/Not scanned/)).not.toBeInTheDocument();
+    });
+
+    // Regression: the flagged unscanned file used to be subtracted twice (None = 2 - 1 - 1 = 0).
+    it("counts a clean file under None when an unscanned file also has a path finding", () => {
+      render(<PRDashboard analysis={buildAnalysis([UNSCANNED.deletedMigration, FILES.clean])} />);
+
+      expect(severityRow("High")).toHaveTextContent(/1$/);
+      expect(severityRow("None")).toHaveTextContent(/1$/);
+    });
+
+    it("adds up to the number of changed files with flagged, unflagged-unscanned and clean files", () => {
+      render(
+        <PRDashboard
+          analysis={buildAnalysis([UNSCANNED.deletedMigration, UNSCANNED.binary, FILES.clean, FILES.low])}
+        />,
+      );
+
+      expect(severityRow("High")).toHaveTextContent(/1$/); // deleted migration
+      expect(severityRow("Low")).toHaveTextContent(/1$/);
+      expect(severityRow("None")).toHaveTextContent(/1$/); // README only; the binary is under "Not scanned"
+      expect(screen.getByText(/Not scanned: 2 files/)).toBeInTheDocument();
     });
   });
 

@@ -1,20 +1,14 @@
+import type { AggregateArgs } from "../types/diff/aggregator";
 import type { Pattern, PatternSeverity } from "../types/diff/pattern";
 import type {
   CategoryAnalysis,
   CodeAnalysis,
   PRAggregate,
-  PRAnalysis,
   RuleCount,
   SecretAnalysis,
   SeverityCounts,
 } from "../types/pr/metadata";
 import { RISK_RULES, SEVERITY_RANK } from "./util/risk-scoring";
-
-interface AggregateArgs {
-  secretReports: PRAnalysis["secret"];
-  categoryReports: PRAnalysis["category"];
-  codeReports: PRAnalysis["code"];
-}
 
 const emptySeverityCounts = (): SeverityCounts => ({ low: 0, medium: 0, high: 0, critical: 0 });
 

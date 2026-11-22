@@ -1,10 +1,6 @@
-import type { PRAggregate } from "@/lib/types/pr/metadata";
+import type { RiskIndicatorProps } from "@/types/ui/components";
 import { SEVERITY_ORDER, SEVERITY_STYLES } from "./_lib/severity";
 import { SeverityBadge } from "./severity/SeverityBadge";
-
-interface RiskIndicatorProps {
-  aggregate: PRAggregate;
-}
 
 export function RiskIndicator({ aggregate }: RiskIndicatorProps) {
   const { ruleCounts, findings, severityCounts } = aggregate;

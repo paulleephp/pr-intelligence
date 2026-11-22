@@ -1,4 +1,6 @@
 
+export type FileType = "frontend" | "backend" | "tests" | "docs" | "config";
+
 export type FileCategory = 
   | "code"
   | "test"

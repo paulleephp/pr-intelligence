@@ -1,11 +1,5 @@
-import type { FileSeverity, SeverityCountMap } from "@/types/ui/report";
+import type { SeverityBarProps } from "@/types/ui/components";
 import { SEVERITY_STYLES } from "../_lib/severity";
-
-interface SeverityBarProps {
-  counts: SeverityCountMap;
-  order: readonly FileSeverity[];
-  ariaLabel: string;
-}
 
 export function SeverityBar({ counts, order, ariaLabel }: SeverityBarProps) {
   const total = order.reduce((sum, level) => sum + (counts[level] ?? 0), 0);

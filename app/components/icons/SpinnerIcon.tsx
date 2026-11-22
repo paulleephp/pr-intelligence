@@ -1,6 +1,6 @@
 export function SpinnerIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24">
+    <svg className={className} fill="none" viewBox="0 0 24 24" aria-hidden="true">
       <circle
         cx="12"
         cy="12"

@@ -1,15 +1,6 @@
-import type { Mock } from "vitest";
-import { GITHUB_API_VERSION } from "@/lib/github-constants";
 import { analyzeDiff, summarizePr } from "@/lib/diff/core";
 import type { ChangedFile, PRAnalysisResponse } from "@/lib/types/pr/metadata";
 import type { PRMetadata } from "@/types/pr/metdata";
-
-export type mockOctokitFn = {
-  pulls: {
-    get: Mock;
-    listFiles: Mock;
-  };
-};
 
 /**
  * Mock PR metadata for successful PR analysis
@@ -96,12 +87,4 @@ export const mockPRUrls = {
   invalidDomain: "https://gitlab.com/owner/repo/pull/123",
   urlWithWhitespace: "  https://github.com/owner/repo/pull/123  ",
   invalidURL: "not-a-url",
-};
-
-export const unauthenticatedHeader = {
-  request: {
-    headers: {
-      "X-GitHub-Api-Version": GITHUB_API_VERSION,
-    },
-  },
 };

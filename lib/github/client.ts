@@ -1,8 +1,7 @@
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
-import type {} from "@/types/github/octokit";
 import type { ChangedFile } from "@/types/pr/metadata";
-import type { PRLabel, PRMetadata } from "@/types/pr/metdata";
-import { GITHUB_API_VERSION } from "./constants";
+import type { PRLabel, PRMetadata, PRStatus } from "@/types/pr/metdata";
+import { GITHUB_API_VERSION, PR_STATUS_MAP } from "./constants";
 
 const githubClient = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -28,10 +27,13 @@ export async function fetchPRMetadata(
     color: label.color,
   }));
 
+  const closedState: PRStatus = prData.merged ? PR_STATUS_MAP.MERGED : PR_STATUS_MAP.CLOSED;
+  const state: PRStatus = prData.state === PR_STATUS_MAP.CLOSED ? closedState : PR_STATUS_MAP.OPEN;
+
   return {
     number: prData.number,
     title: prData.title,
-    state: prData.state as "open" | "closed",
+    state,
     user: {
       login: prData.user.login,
       avatar_url: prData.user.avatar_url,
@@ -52,11 +54,12 @@ export async function fetchChangedFiles(
   repo: string,
   prNumber: number,
 ): Promise<ChangedFile[]> {
-  const filesResponse: RestEndpointMethodTypes["pulls"]["listFiles"]["response"] = await githubClient.pulls.listFiles({
-    owner,
-    repo,
-    pull_number: prNumber,
-  });
+  const filesResponse: RestEndpointMethodTypes["pulls"]["listFiles"]["response"] =
+    await githubClient.pulls.listFiles({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
 
   const transformedFiles: ChangedFile[] = filesResponse.data.map((file) => ({
     filename: file.filename,

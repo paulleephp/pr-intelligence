@@ -16,6 +16,14 @@ export function badRequestResponse(message: string) {
   return errorResponse(message, HTTP_STATUS.BAD_REQUEST);
 }
 
+export function unauthorizedResponse(message: string) {
+  return errorResponse(message, HTTP_STATUS.UNAUTHORIZED);
+}
+
+export function forbiddenResponse(message: string) {
+  return errorResponse(message, HTTP_STATUS.FORBIDDEN);
+}
+
 export function notFoundResponse(message: string) {
   return errorResponse(message, HTTP_STATUS.NOT_FOUND);
 }

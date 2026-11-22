@@ -1,10 +1,5 @@
-import type { FileSeverity } from "@/types/ui/report";
+import type { SeverityBadgeProps } from "@/types/ui/components";
 import { SEVERITY_STYLES } from "../_lib/severity";
-
-interface SeverityBadgeProps {
-  severity: FileSeverity;
-  label?: string;
-}
 
 export function SeverityBadge({ severity, label }: SeverityBadgeProps) {
   const style = SEVERITY_STYLES[severity];
