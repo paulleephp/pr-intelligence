@@ -1,11 +1,11 @@
-import { RequestLike } from "@/types/request";
+import { NextRequest } from "next/server";
 
-/**
- * Creates a type-safe mock request for testing
- * Implements RequestLike interface - no type casting needed
- */
-export function createMockRequest(body: unknown): RequestLike {
-  return {
-    json: async () => body,
-  };
+const TEST_ORIGIN = "http://localhost:3000";
+
+export function createMockRequest(path: string, prUrl?: string): NextRequest {
+  const requestUrl = new URL(path, TEST_ORIGIN);
+  if (prUrl !== undefined) {
+    requestUrl.searchParams.set("url", prUrl);
+  }
+  return new NextRequest(requestUrl);
 }

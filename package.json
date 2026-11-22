@@ -11,6 +11,8 @@
     "format": "@biomejs/biome format --write",
     "format:fix": "@biomejs/biome check --write",
     "test": "vitest",
+    "test:frontend": "vitest --project frontend",
+    "test:backend": "vitest --project backend",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   },
@@ -20,20 +22,31 @@
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-loading-skeleton": "^3.5.0"
+    "react-loading-skeleton": "^3.5.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
     "@tailwindcss/turbopack": "4.3.3",
-    "@types/node": "^20",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
+    "@types/node": "^26.6.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitest/ui": "^1.6.0",
-    "happy-dom": "^14.12.3",
+    "@vitest/coverage-v8": "^5.1.1",
+    "@vitest/ui": "^5.1.1",
+    "happy-dom": "^21.0.4",
     "msw": "^2.4.10",
     "tailwindcss": "4.3.3",
     "typescript": "^5",
     "vite": "^8.3.8",
-    "vitest": "^1.6.0"
+    "vitest": "^5.1.1"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true,
+    "msw@2.15.0": true,
+    "esbuild@0.21.5": true
   }
 }

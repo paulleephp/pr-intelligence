@@ -29,21 +29,6 @@
 
 - Generic errors in `lib/constants.ts` under `ERROR_MESSAGES`
 - Service-specific errors in `lib/{service}-constants.ts` under `{SERVICE}_ERROR_MESSAGES`
-- Example:
-
-  ```typescript
-  // lib/constants.ts
-  export const ERROR_MESSAGES = {
-    INTERNAL_ERROR: "Internal server error. Please try again later.",
-    POST_EXPECTED: "POST endpoint expected for PR analysis",
-  };
-
-  // lib/github-constants.ts
-  export const GITHUB_ERROR_MESSAGES = {
-    PR_NOT_FOUND: "PR not found. Please verify the PR number is correct.",
-    RATE_LIMIT: "GitHub rate limit exceeded or invalid token. Check your GITHUB_TOKEN.",
-  };
-  ```
 
 ### 5. Helper Functions for Repeated Calls
 
@@ -79,38 +64,28 @@
 
 ### 8. File Size Limits
 
-- Keep each file under 100 lines if possible
-- If a file exceeds 100 lines, split it into smaller, focused modules
+- Keep each file under 150 lines if possible
+- If a file exceeds 150 lines, split it into smaller, focused modules
 - Example split: `components/Header.tsx`, `components/Footer.tsx`, `components/PRForm.tsx`
 
 ### 9. No Nested Try-Catch Blocks
 
 - Flatten error handling using early returns and conditional branching
 - Create wrapper functions to handle and transform errors
-- Bad:
-
-  ```typescript
-  try {
-    try {
-      const data = await fetch();
-    } catch (error) { ... }
-  } catch (error) { ... }
-  ```
-- Good:
-
-  ```typescript
-  try {
-    body = await request.json();
-  } catch (error) {
-    return errorResponse(error);
-  }
-
-  const result = await wrappedFunction(); // wrappedFunction handles errors internally
-  if ("error" in result) { ... }
-  ```
 
 ### 10. Export Types Alongside Interfaces
 
 - Export types used by external files from `types/*.ts`
-- Keep types co-located with their domain
-- Example: `types/github.ts` exports `PRMetadata`, `ChangedFile`, `PRLabel`, `PRAnalysisResponse`
+- Keep types co-located with their domain. Example: `types/github.ts` exports `PRMetadata`, `ChangedFile`, `PRLabel`, `PRAnalysisResponse`
+
+### 11. Typescript Syntaxes
+- Avoid duplicate export. This results in typescript compiler error
+  - Example:
+  ```typescript
+  export type FileStatus = "added"
+  ...
+  export { FileStatus }
+  ```
+- Use `import type` when importing type
+
+### 12. Use optional chaining

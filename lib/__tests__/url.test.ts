@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parsePRUrl } from "@/lib/url";
 
 describe("parsePRUrl", () => {
@@ -14,8 +14,7 @@ describe("parsePRUrl", () => {
     });
 
     it("should handle URLs with query parameters", () => {
-      const url =
-        "https://github.com/owner/repo/pull/999?files=1&sort=modified";
+      const url = "https://github.com/owner/repo/pull/999?files=1&sort=modified";
       const result = parsePRUrl(url);
 
       expect(result).not.toBeNull();

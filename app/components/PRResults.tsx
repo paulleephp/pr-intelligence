@@ -1,34 +1,37 @@
-"use client";
-
-import { PRMetadata, ChangedFile } from "@/types/github";
-import { PRInfoCard } from "./PRInfoCard";
-import { ChangedFilesCard } from "./ChangedFilesCard";
+import type { PRReport } from "@/types/ui/report";
+import { ChangedFilesTable } from "./ChangedFilesTable";
+import { PRDashboard } from "./PRDashboard";
 import { PRResultsSkeleton } from "./PRResultsSkeleton";
+import { PRSummary } from "./PRSummary";
+import { RiskIndicator } from "./RiskIndicator";
 
 interface PRResultsProps {
-  prMetadata: PRMetadata | null;
-  changedFiles: ChangedFile[];
+  report: PRReport | null;
   loading: boolean;
 }
 
-export function PRResults({
-  prMetadata,
-  changedFiles,
-  loading,
-}: PRResultsProps) {
+export function PRResults({ report, loading }: PRResultsProps) {
   if (loading) {
     return <PRResultsSkeleton />;
   }
 
-  if (!prMetadata) {
+  if (!report) {
     return null;
   }
 
+  const { analysis } = report;
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 mt-12 duration-500">
-      <div className="grid gap-8 lg:grid-cols-3">
-        <PRInfoCard prMetadata={prMetadata} />
-        <ChangedFilesCard changedFiles={changedFiles} />
+    <div className="mt-12 space-y-8">
+      <PRSummary report={report} />
+      <PRDashboard analysis={analysis} />
+      <div className="grid items-start gap-8 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <RiskIndicator aggregate={analysis.analysis.aggregate} />
+        </div>
+        <div className="min-w-0 lg:col-span-3">
+          <ChangedFilesTable analysis={analysis} />
+        </div>
       </div>
     </div>
   );
