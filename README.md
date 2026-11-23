@@ -142,15 +142,9 @@ Decided 2026-11-22: the rules target JavaScript and TypeScript projects. Support
 - **Existing checks for other languages aren't maintained.** Some are already in place, for example Python, Go, Rust, Ruby and Gradle dependency manifests (R005), Alembic migrations (R003/R004) and `os.environ` in secret detection (R007). They still run for now, but gaps in them won't be fixed. If one of them ever needs its tests changed, for any reason, the check and its tests are removed instead of updated.
 - **Behaviour is designed around JS/TS rules.** Where languages disagree (for example, whether `"$name"` inside double quotes reads a variable), the JS/TS meaning wins.
 
-### Changed files capped at 30 per PR
+### Changed files capped at 3,000 per PR
 
-The GitHub changed-files request (`pulls.listFiles` in `lib/github/client.ts`) fetches only the first page of results, and GitHub returns 30 files per page by default. For a PR with more than 30 changed files:
-
-1. **Files after the 30th aren't analyzed.** Rules don't run on them, so risks in those files are missed.
-2. **Summary numbers cover only the first 30 files.** File counts, line counts and the severity breakdown are understated.
-3. **There's no warning.** The report doesn't say the list was cut short.
-
-Planned fix: use Octokit pagination (`paginate` with `per_page: 100`) to fetch every page.
+`fetchChangedFiles` in `lib/github/client.ts` pages through `pulls.listFiles` 100 files at a time, but GitHub returns at most 3,000 files per PR. Files beyond that aren't analyzed, and the report doesn't warn that the list was cut short.
 
 ### Dependency detection (R005)
 

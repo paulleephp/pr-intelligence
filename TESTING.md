@@ -173,7 +173,7 @@ vi.mock("@octokit/rest", () => ({ Octokit: mockOctokit }));
 
 **Mocking constructors (Vitest 4+):** if code under test calls `new X()` on a mock (e.g. `new Octokit()`), the mock implementation must be a `function` or `class`, **not an arrow function**. Otherwise you get `... is not a constructor`.
 
-**Octokit specifics:** `lib/github/client.ts` creates its Octokit at module load, before any test runs. To assert on the constructor call: `mockOctokit.mockClear(); vi.resetModules(); await import("@/lib/github/client")`. `mocks/octokit.ts` also mocks `paginate` and a page-aware `listFiles` (`serveFiles`), so pagination tests pass whether the client uses `paginate()` or loops over pages itself.
+**Octokit specifics:** `lib/github/client.ts` creates its Octokit at module load, before any test runs. To assert on the constructor call: `mockOctokit.mockClear(); vi.resetModules(); await import("@/lib/github/client")`. `fetchChangedFiles` pages through `listFiles` with `paginate()`. `mocks/octokit.ts` mocks `paginate` to request pages until one comes back short, and `serveFiles(files)` makes `listFiles` serve a file list page by page. Clear `mockPaginate` with `mockClear()`, not `mockReset()`, or its implementation is dropped. Real Octokit follows GitHub's `Link` header instead, so don't assert the request count for a PR that is an exact multiple of the page size.
 
 **Cleanup:** reset per-test mocks in `afterEach` with `mockReset()` (it also drops queued `mockResolvedValueOnce` values). `vi.restoreAllMocks()` only restores `vi.spyOn` spies; it doesn't reset `vi.fn()` mocks.
 
@@ -220,7 +220,6 @@ npm test -- --run && npx tsc --noEmit && npm run lint && npm run build
 |---|---|---|
 | Rule coverage incomplete | R001, R012 and R014 have only a few cases (in `aggregate.test.ts` / `rules.js-ts-scope.test.ts`); R011 has none | Add a `rules.<RULE_ID>.test.ts` file for each |
 | No browser E2E tests | Playwright isn't installed. Component and integration tests run in happy-dom, so they can't catch real layout, CSS or `next/image` behavior | Add Playwright for a smoke flow once the UI settles |
-| Changed files capped at 30 per PR (deferred) | Documented in README → Known Limitations. Two `it.fails` tests, one each in `github.client.test.ts` and `github.pr-metadata.test.ts` | Flip them to `it` when pagination lands |
 | `.vue` / `.svelte` / `.astro` not scanned for HTML injection (KNOWN GAP) | Decided 2026-11-23: the other code-pattern rules stay off for these files, but they should be scanned for the innerHTML part of R016. 6 `it.fails` in `rules.R016.test.ts`: 3 DOM sinks in `<script>` and 3 framework raw-HTML directives (`v-html`, `{@html}`, `set:html`) | Run R016's HTML-injection patterns on these files; add patterns for the three directives |
 | Dockerfile edge cases (untested, low priority) | `Dockerfile.md` and `Dockerfile.json` count as Dockerfiles. The old `ENV KEY value` form and `*.Dockerfile` names aren't detected | Not decided |
 | camelCase secret names (deferred) | Some real camelCase names are missed and camelCase placeholders are flagged. See README → Known Limitations | Add tests with the fix |
