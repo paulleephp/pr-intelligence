@@ -69,8 +69,29 @@ describe("R005 - dependency changes", () => {
       ["src/version.ts", '+appVersion = "1.2.3";'],
       ["src/fixtures/data.json", '+  "schemaVersion": "2.0.1",'],
       ["src/i18n/en.json", '+  "release": "1.0.0"'],
+      ["k8s/config.json", '+  "apiVersion": "2.1",'],
+      ["tsconfig.json", '+  "apiVersion": "2.1",'],
+      ["k8s/config.json", '+    "lodash": "^4.17.21",'],
+      ["tsconfig.json", '+    "lodash": "^4.17.21",'],
     ])("%s: %s", (filename, patch) => {
       expect(deps(filename, patch)).toBeNull();
+    });
+
+    // These lines look like dependency entries, so only the filename keeps them from being R005.
+    it("reports the same dependency line in package.json but not in other JSON files", () => {
+      const apiVersion = '+  "apiVersion": "2.1",';
+      const lodash = '+    "lodash": "^4.17.21",';
+      const patch = (...lines: string[]) => `@@ -1 +1,${lines.length} @@\n${lines.join("\n")}`;
+
+      const { aggregate } = analyzeDiff([
+        file({ filename: "k8s/config.json", patch: patch(apiVersion, lodash) }),
+        file({ filename: "tsconfig.json", patch: patch(apiVersion, lodash) }),
+        file({ filename: "package.json", patch: patch(lodash) }),
+      ]);
+
+      expect(aggregate.findings.filter((p) => p.ruleId === "R005")).toEqual([
+        expect.objectContaining({ filename: "package.json", message: "Dependency changes in package.json: added lodash" }),
+      ]);
     });
 
     it("does not report version-looking lines in source files through analyzeDiff", () => {

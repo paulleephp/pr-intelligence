@@ -10,13 +10,12 @@ Decision (2026-11-23): impact analysis via GitHub code search moved to Sprint 4.
   1.4 Add pagination for Github PR files request. Now it's currently using 30 which is default value
 
   1.5 Tech debt items:
-  - R005 can misfire: with no file-name check, a line like "apiVersion": "2.1" in any JSON file counts as a dependency.
-    - Already fixed in code: `isDependencyManifest` gate in lib/diff/dependency.ts. Remaining: regression test.
+  - add regression test for R005. R005 was reported to misfire on any JSON file (e.g. "apiVersion": "2.1") but this wasn't true.
   - R015 matches on text, so it flags guarded fetch calls too.
     - Decided: guardrails (validation, abort) can't be detected reliably from a diff, so fetch/axios/HTTP/document.createElement patterns are removed. R015 keeps only unsafe window.location assignment (javascript: URL injection), with severity raised to high. eval() stays in R016, which already covers it.
   - Code-pattern rules only run on JS/TS files. Already done (lib/diff/core.ts, JS_TS_FILE_PATTERN).
 
-2. Frontend deliverables:
+1. Frontend deliverables:
   2.1 Affected areas section (merged with former 2.3).
   - Group changed files by the categories we already detect (e.g. Auth, Database, CI/CD).
   - Potentially affected files (from impact analysis) are added in Sprint 4.
