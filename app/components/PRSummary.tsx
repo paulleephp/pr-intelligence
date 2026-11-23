@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { PRSummaryProps } from "@/types/ui/components";
+import { countChangedFiles } from "./_lib/change-summary";
 import { PR_STATE_STYLES } from "./_lib/file-display";
 import { SEVERITY_ORDER } from "./_lib/severity";
 import { StatTile } from "./report/StatTile";
@@ -8,7 +9,8 @@ import { SeverityBar } from "./severity/SeverityBar";
 
 export function PRSummary({ report }: PRSummaryProps) {
   const { metadata, analysis } = report;
-  const { filesChanged, totalLinesAdded, totalLinesRemoved } = analysis.prChangeSummary;
+  const { totalLinesAdded, totalLinesRemoved } = analysis.prChangeSummary;
+  const changedCount = countChangedFiles(analysis.prChangeSummary);
   const { severityCounts, totalFindings, overallSeverity } = analysis.analysis.aggregate;
   const stateStyle = PR_STATE_STYLES[metadata.state];
   const linesChanged = totalLinesAdded + totalLinesRemoved;
@@ -52,7 +54,7 @@ export function PRSummary({ report }: PRSummaryProps) {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatTile label="Files changed" value={filesChanged} />
+        <StatTile label="Files changed" value={changedCount} />
         <StatTile
           label="Lines changed"
           value={linesChanged}

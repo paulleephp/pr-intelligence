@@ -54,6 +54,8 @@ export const UNSCANNED = {
     patch: "Binary files a/assets/logo.png and b/assets/logo.png differ",
   },
   noPatch: { filename: "src/old.ts", status: "removed", additions: 0, deletions: 40, patch: "" },
+  /** GitHub sends no patch for a file it lists as unchanged. */
+  unchanged: { filename: "src/same.ts", status: "unchanged", additions: 0, deletions: 0, patch: "" },
   /** No patch, but a path rule still fires (R004, high). */
   deletedMigration: { filename: "db/migrations/001_init.sql", status: "removed", additions: 0, deletions: 30, patch: "" },
 } satisfies Record<string, ChangedFile>;

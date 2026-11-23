@@ -16,7 +16,7 @@ app/page.tsx (Server Component)
 
 usePRReport → lib/api.ts (guarded fetch) → GET /api/pr, GET /api/pr/analysis
   → lib/github (Octokit) → lib/diff (analysis engine) → JSON response
-  → lib/api-guards.ts (shape validation) → components
+  → lib/schemas (Zod shape validation) → components
 ```
 
 ## app/
@@ -54,7 +54,7 @@ usePRReport → lib/api.ts (guarded fetch) → GET /api/pr, GET /api/pr/analysis
 | Path | Purpose |
 |------|---------|
 | `api.ts` | Guarded client fetch: endpoint allowlist, timeout, cancellation, JSON check |
-| `api-guards.ts` | Runtime type guards for the API responses |
+| `schemas/` | Zod schemas for API responses, error body and the `url` query param; each tied to its TS type with `satisfies` |
 | `api-constants.ts` | Endpoints, timeout and client error messages |
 | `constants.ts`, `response.ts`, `url.ts` | HTTP statuses, response helpers, PR URL parsing |
 | `github/` | Octokit client, error mapping, metadata and changed-file fetching |
