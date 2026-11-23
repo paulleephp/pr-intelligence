@@ -65,6 +65,22 @@ describe("PRDashboard", () => {
       expect(severityRow("None")).toHaveTextContent(/1$/);
     });
 
+    // Regression: GitHub sends no patch for an unchanged file, so it was counted under "Not scanned".
+    it("leaves unchanged files out of the 'Not scanned' note and out of None", () => {
+      render(<PRDashboard analysis={buildAnalysis([UNSCANNED.binary, UNSCANNED.unchanged, FILES.clean])} />);
+
+      expect(screen.getByText(/Not scanned: 1 file \(/)).toBeInTheDocument();
+      expect(severityRow("None")).toHaveTextContent(/1$/); // README only
+    });
+
+    it("shows no 'Not scanned' note when the only patchless file is unchanged", () => {
+      render(<PRDashboard analysis={buildAnalysis([FILES.high, UNSCANNED.unchanged])} />);
+
+      expect(screen.queryByText(/Not scanned/)).not.toBeInTheDocument();
+      expect(severityRow("High")).toHaveTextContent(/1$/);
+      expect(severityRow("None")).toHaveTextContent(/0$/);
+    });
+
     it("adds up to the number of changed files with flagged, unflagged-unscanned and clean files", () => {
       render(
         <PRDashboard
@@ -90,6 +106,13 @@ describe("PRDashboard", () => {
       expect(screen.getByText("27 total")).toBeInTheDocument();
     });
 
+    // Regression: the average used to divide by every listed file, unchanged ones included.
+    it("averages lines over the files that changed, leaving out an unchanged file", () => {
+      render(<PRDashboard analysis={buildAnalysis([FILES.high, UNSCANNED.unchanged])} />);
+
+      expect(statValue("Avg / file")).toHaveTextContent(/^8$/); // 8 lines over 1 file, not 2
+    });
+
     it("shows a negative net without a plus sign", () => {
       const analysis = buildAnalysis([{ ...FILES.clean, additions: 1, deletions: 9 }]);
       render(<PRDashboard analysis={analysis} />);
@@ -111,11 +134,14 @@ describe("PRDashboard", () => {
     });
   });
 
-  it("renders zeros, not NaN, for a PR with no files", () => {
-    const { container } = render(<PRDashboard analysis={buildAnalysis([])} />);
+  it.each([
+    ["no files", []],
+    ["only unchanged files", [UNSCANNED.unchanged]],
+  ])("renders zeros, not NaN, for a PR with %s", (_, files) => {
+    const { container } = render(<PRDashboard analysis={buildAnalysis(files)} />);
 
     expect(container.innerHTML).not.toContain("NaN");
     expect(container.innerHTML).not.toContain("Infinity");
-    expect(statValue("Avg / file")).toHaveTextContent("0");
+    expect(statValue("Avg / file")).toHaveTextContent(/^0$/);
   });
 });

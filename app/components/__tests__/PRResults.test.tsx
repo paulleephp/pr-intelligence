@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SEVERITY_SCORES } from "@/lib/diff/constants/patterns";
 import { PRResults } from "../PRResults";
-import { mixedReport } from "./fixtures";
+import { buildReport, FILES, mixedReport, UNSCANNED } from "./fixtures";
 
 describe("PRResults", () => {
   it("renders nothing before a report exists", () => {
@@ -30,6 +30,21 @@ describe("PRResults", () => {
   });
 
   // Key decision (AGENTS.md): color-coded severity groups, NO raw scores shown to users.
+  // Regression: unchanged files were counted in some of these numbers and not others.
+  it("counts the same files everywhere on the page when the PR has an unchanged file", () => {
+    render(<PRResults report={buildReport([FILES.high, UNSCANNED.binary, UNSCANNED.unchanged])} loading={false} />);
+    const filesBySeverity = within(screen.getByRole("heading", { name: "Files by severity" }).parentElement as HTMLElement)
+      .getAllByRole("listitem")
+      .reduce((sum, item) => sum + Number(item.lastElementChild?.textContent), 0);
+    const notScanned = Number(screen.getByText(/Not scanned: \d+ file/).textContent?.match(/(\d+) file/)?.[1]);
+
+    expect({
+      filesChanged: Number(screen.getByText("Files changed").nextElementSibling?.textContent),
+      tableRows: within(screen.getByRole("table")).getAllByRole("row").length - 1,
+      bySeverityPlusNotScanned: filesBySeverity + notScanned,
+    }).toEqual({ filesChanged: 2, tableRows: 2, bySeverityPlusNotScanned: 2 });
+  });
+
   describe("never exposes raw risk scores", () => {
     it("does not mention scores anywhere", () => {
       render(<PRResults report={mixedReport()} loading={false} />);

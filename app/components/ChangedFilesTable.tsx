@@ -1,6 +1,7 @@
 import type { PRAnalysisResponse } from "@/lib/types/pr/metadata";
 import type { ChangedFilesTableProps } from "@/types/ui/components";
 import type { ChangedFileRow } from "@/types/ui/report";
+import { isUnchangedFile } from "./_lib/change-summary";
 import {
   DEFAULT_STATUS_STYLE,
   FALLBACK_FILE_TYPE,
@@ -12,7 +13,8 @@ import { FileSeverityCell } from "./severity/FileSeverityCell";
 
 const toRows = ({ changedFiles, analysis }: PRAnalysisResponse): ChangedFileRow[] => {
   const unscanned = new Map(analysis.unscannedFiles.map((f) => [f.filename, f.reason]));
-  const rows: ChangedFileRow[] = changedFiles.map(({ filename, status, additions, deletions }) => ({
+  const visibleFiles = changedFiles.filter((file) => !isUnchangedFile(file));
+  const rows: ChangedFileRow[] = visibleFiles.map(({ filename, status, additions, deletions }) => ({
     filename,
     status,
     additions,

@@ -61,6 +61,7 @@ app/__tests__/
 app/components/__tests__/
   ├── fixtures.ts                # buildReport()/buildAnalysis() via the REAL engine; FILES per severity
   ├── severity.test.tsx          # SeverityBadge, SeverityBar, severity ordering helpers
+  ├── change-summary.test.ts     # helpers that keep unchanged files out of the page's counts and lists
   ├── PRForm.test.tsx            # input, enable/disable, trim, Enter, loading, error alert
   ├── PRSummary.test.tsx         # header, stats, overall risk = highest severity
   ├── PRDashboard.test.tsx       # files by severity, line stats, empty PR (no NaN)

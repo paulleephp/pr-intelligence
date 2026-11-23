@@ -119,6 +119,23 @@ describe("ChangedFilesTable", () => {
     });
   });
 
+  describe("unchanged files", () => {
+    // Regression: the table listed unchanged files, so its heading disagreed with "Files changed".
+    it("leaves an unchanged file out of the table and the heading count", () => {
+      render(<ChangedFilesTable analysis={buildAnalysis([FILES.high, UNSCANNED.unchanged])} />);
+
+      expect(screen.getByRole("heading", { name: "Changed files (1)" })).toBeInTheDocument();
+      expect(bodyRows().map((row) => cells(row)[0])).toEqual(["src/hash.ts"]);
+    });
+
+    it("shows the empty state when every file is unchanged", () => {
+      render(<ChangedFilesTable analysis={buildAnalysis([UNSCANNED.unchanged])} />);
+
+      expect(screen.getByRole("heading", { name: "Changed files (0)" })).toBeInTheDocument();
+      expect(screen.getByText("No changed files found")).toBeInTheDocument();
+    });
+  });
+
   it("shows an empty state instead of a table when no files changed", () => {
     render(<ChangedFilesTable analysis={buildAnalysis([])} />);
 
