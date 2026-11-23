@@ -30,7 +30,7 @@ const flattenCodePatterns = (reports: CodeAnalysis[]): Pattern[] =>
       r.passwordHashingPatterns,
       r.cryptoAlgoPatterns,
       r.prodConfigChanges,
-      r.riskyApiCalls,
+      r.unsafeNavigation,
       r.dangerousCodeCalls,
       r.dependencyChanges,
     ].filter(isPattern),

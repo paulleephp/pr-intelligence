@@ -8,7 +8,7 @@ import {
   DANGEROUS_CODE_PATTERNS,
   PASSWORD_HASHING_PATTERNS,
   PROD_CONFIG_CHANGE_PATTERNS,
-  RISKY_API_PATTERNS,
+  UNSAFE_NAVIGATION_PATTERNS,
 } from "./change-detection";
 import { detectDependencyChanges } from "./dependency";
 import { findRegexFinding } from "./util/regex-finding";
@@ -90,12 +90,12 @@ const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePattern
     "R012",
     (f, m) => `Insecure crypto algorithm detected in ${f}: "${m}"`,
   );
-  const riskyApiCalls = findRegexFinding(
+  const unsafeNavigation = findRegexFinding(
     added,
     filename,
-    RISKY_API_PATTERNS,
+    UNSAFE_NAVIGATION_PATTERNS,
     "R015",
-    (f, m) => `Potentially risky API call detected in ${f}: "${m}"`,
+    (f, m) => `Unsafe navigation: window.location assigned from a dynamic value in ${f}: "${m}"`,
   );
   const dangerousCodeCalls = findRegexFinding(
     added,
@@ -108,7 +108,7 @@ const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePattern
     authPatterns,
     passwordHashingPatterns,
     cryptoAlgoPatterns,
-    riskyApiCalls,
+    unsafeNavigation,
     dangerousCodeCalls,
   };
 };
@@ -117,7 +117,7 @@ const NO_CODE_PATTERN_FINDINGS: CodePatternFindings = {
   authPatterns: null,
   passwordHashingPatterns: null,
   cryptoAlgoPatterns: null,
-  riskyApiCalls: null,
+  unsafeNavigation: null,
   dangerousCodeCalls: null,
 };
 

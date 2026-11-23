@@ -11,7 +11,7 @@ describe("code-pattern rules run on JS/TS files only", () => {
     "-if (!user.hasPermission(req)) {", // R002 (removed auth check)
     "+const h = md5(x);", // R012
     "+await bcrypt.hash(pw, 10);", // R013
-    "+fetch(url);", // R015
+    "+window.location.href = next;", // R015
     "+eval(x);", // R016
   ].join("\n");
 

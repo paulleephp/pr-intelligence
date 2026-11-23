@@ -60,8 +60,8 @@ export const RISK_RULES = {
     severity: "high" as const,
   },
   R015: {
-    condition: "Risky API call introduced",
-    severity: "medium" as const,
+    condition: "Unsafe navigation: window.location assigned from a dynamic value",
+    severity: "high" as const,
   },
   R016: {
     condition: "Dangerous code execution or DOM sink introduced",

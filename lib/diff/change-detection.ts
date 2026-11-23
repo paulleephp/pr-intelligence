@@ -23,15 +23,12 @@ export const PROD_CONFIG_CHANGE_PATTERNS: readonly RegExp[] = [
   /(?:^|\s)--prod(?:uction)?\b/,
 ];
 
-export const RISKY_API_PATTERNS: readonly RegExp[] = [
-  /(?<![\w.])fetch\s*\(/i,
-  /\bwindow\.fetch\s*\(/i,
-  /\baxios(?:\.\w+)?\s*\(/i,
-  /\bhttps?(?:\.\w+)?\s*\(/i,
-  /\bgot(?:\.\w+)?\s*\(/i,
-  /(?<![\w.])request\s*\(/i,
-  /\bwindow\.location\b/i,
-  /\bdocument\.createElement\b/i,
+const LOCATION_OBJECT = String.raw`(?:window|document|self|top)\.location`;
+const SAFE_NAVIGATION_TARGET = String.raw`(["'\x60])(?:\/(?!\/)|\.\.?\/|[?#]|https?:\/\/)(?:(?!\$\{)[^"'\x60\\\n])*\1\s*(?:[;),]|\/\/|$)`;
+
+export const UNSAFE_NAVIGATION_PATTERNS: readonly RegExp[] = [
+  new RegExp(String.raw`(?<![\w.$])(?:${LOCATION_OBJECT}(?:\.href)?|location\.href)\s*=(?!=)(?!\s*${SAFE_NAVIGATION_TARGET})`),
+  new RegExp(String.raw`(?<![\w.$])(?:${LOCATION_OBJECT}|location)\.(?:assign|replace)\s*\((?!\s*${SAFE_NAVIGATION_TARGET})`),
 ];
 
 export const DANGEROUS_CODE_PATTERNS: readonly RegExp[] = [
