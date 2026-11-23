@@ -24,7 +24,7 @@ const ruleIdsOf = (files: ChangedFile[]) =>
 
 /**
  * One file per area rule, each producing only that area rule. Expected severities come from
- * RISK_RULES because R015's severity differs between branches (medium here, high after T4).
+ * RISK_RULES: the rule tests pin each rule's severity, and these check it reaches the area list.
  */
 const MAPPING: [RiskRuleId, string, string, ChangedFile][] = [
   ["R001", "auth", "Auth", file("src/auth/login.ts")],
