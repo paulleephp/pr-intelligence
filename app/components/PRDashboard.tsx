@@ -19,10 +19,6 @@ export function PRDashboard({ analysis }: PRDashboardProps) {
 
   const netLines = summary.totalLinesAdded - summary.totalLinesRemoved;
   const totalLines = summary.totalLinesAdded + summary.totalLinesRemoved;
-  const filesModified = Math.max(
-    summary.filesChanged - summary.filesAdded - summary.filesRemoved,
-    0,
-  );
   const avgLinesPerFile = summary.filesChanged ? Math.round(totalLines / summary.filesChanged) : 0;
 
   return (
@@ -64,7 +60,9 @@ export function PRDashboard({ analysis }: PRDashboardProps) {
           <StatTile label="Avg / file" value={avgLinesPerFile} hint={`${totalLines} total`} />
         </div>
         <p className="mt-3 text-sm text-zinc-500">
-          {summary.filesAdded} added · {filesModified} modified · {summary.filesRemoved} removed
+          {summary.filesAdded} added · {summary.filesModified} modified · {summary.filesRemoved}{" "}
+          removed
+          {summary.filesUnchanged > 0 && ` · ${summary.filesUnchanged} unchanged`}
         </p>
       </div>
     </section>

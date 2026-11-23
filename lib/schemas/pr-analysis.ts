@@ -29,6 +29,8 @@ const changeSummarySchema = z.object({
   totalLinesRemoved: countSchema,
   filesAdded: countSchema,
   filesRemoved: countSchema,
+  filesModified: countSchema,
+  filesUnchanged: countSchema,
 }) satisfies z.ZodType<PrChangeSummary>;
 
 const unscannedFileSchema = z.object({

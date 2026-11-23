@@ -97,10 +97,17 @@ describe("PRDashboard", () => {
       expect(statValue("Net")).toHaveTextContent("-8");
     });
 
-    it("breaks files down into added / modified / removed", () => {
+    it("breaks files down into added / modified / removed, with no unchanged part when there are none", () => {
       render(<PRDashboard analysis={mixedReport().analysis} />);
 
       expect(screen.getByText("1 added · 4 modified · 0 removed")).toBeInTheDocument();
+    });
+
+    // Regression: modified was filesChanged - added - removed, so unchanged files counted as modified.
+    it("lists an unchanged file as unchanged, not modified", () => {
+      render(<PRDashboard analysis={buildAnalysis([FILES.low, UNSCANNED.unchanged])} />);
+
+      expect(screen.getByText("0 added · 1 modified · 0 removed · 1 unchanged")).toBeInTheDocument();
     });
   });
 

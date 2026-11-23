@@ -81,4 +81,24 @@ describe("summarizePr - Change Summary Calculation", () => {
 
     expect(summary.totalLinesAdded).toBe(0); // null/undefined treated as 0
   });
+
+  it("counts an unchanged file as unchanged, not modified", () => {
+    const summary = summarizePr([changedFile({ filename: "src/same.ts", status: "unchanged" })]);
+
+    expect(summary).toMatchObject({ filesUnchanged: 1, filesModified: 0 });
+  });
+
+  it.each(["modified", "renamed", "copied", "changed"] as const)("counts a %s file as modified", (status) => {
+    const summary = summarizePr([changedFile({ filename: "src/a.ts", status })]);
+
+    expect(summary).toMatchObject({ filesModified: 1, filesAdded: 0, filesRemoved: 0, filesUnchanged: 0 });
+  });
+
+  it("puts every file in exactly one of added, modified, removed or unchanged", () => {
+    const statuses = ["added", "modified", "renamed", "copied", "changed", "removed", "deleted", "unchanged"] as const;
+
+    const summary = summarizePr(statuses.map((status) => changedFile({ filename: `src/${status}.ts`, status })));
+
+    expect(summary).toMatchObject({ filesChanged: 8, filesAdded: 1, filesModified: 4, filesRemoved: 2, filesUnchanged: 1 });
+  });
 });

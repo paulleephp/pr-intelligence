@@ -5,7 +5,7 @@ import type { PRMetadata } from "@/types/pr/metdata";
 const repoRefSchema = z.object({ url: z.string() });
 
 export const prMetadataSchema = z.object({
-  number: z.number(),
+  number: z.int().positive(),
   title: z.string(),
   state: z.enum(PR_STATUS_MAP),
   user: z.object({

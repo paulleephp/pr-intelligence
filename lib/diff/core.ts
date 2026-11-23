@@ -14,6 +14,7 @@ export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
   let totalLinesRemoved = 0;
   let filesAdded = 0;
   let filesRemoved = 0;
+  let filesUnchanged = 0;
 
   for (const { status, additions, deletions } of changedFiles) {
     totalLinesAdded += additions ?? 0;
@@ -23,8 +24,12 @@ export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
       filesAdded++;
     } else if (status === PRFileStatus.Removed || status === PRFileStatus.Deleted) {
       filesRemoved++;
+    } else if (status === PRFileStatus.Unchanged) {
+      filesUnchanged++;
     }
   }
+
+  const filesModified = changedFiles.length - filesAdded - filesRemoved - filesUnchanged;
 
   return {
     filesChanged: changedFiles.length,
@@ -32,6 +37,8 @@ export function summarizePr(changedFiles: ChangedFile[]): PrChangeSummary {
     totalLinesRemoved,
     filesAdded,
     filesRemoved,
+    filesModified,
+    filesUnchanged,
   };
 }
 
