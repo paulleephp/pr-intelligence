@@ -82,17 +82,19 @@ describe("pr-metadata/get", () => {
       expect(result.analysis.aggregate.totalFindings).toBe(0);
     });
 
-    // KNOWN BUG: same root cause as the pagination case in github.client.test.ts: files 31+ are never analyzed.
-    it.fails("analyzes every file of a PR with more than 30 files", async () => {
-      const files = Array.from({ length: 35 }, (_, i) => rawFile(i));
-      files[34] = { ...files[34], filename: "src/hash.ts", patch: "+const d = md5(x);" };
+    // Regression: only the first page of files (30 by default) was fetched, so the rest were never
+    // analyzed. Fixed 2026-11-23 by paging through listFiles (see github.client.test.ts).
+    it("analyzes every file of a PR that spans several pages", async () => {
+      const files = Array.from({ length: 150 }, (_, i) => rawFile(i));
+      files[149] = { ...files[149], filename: "src/hash.ts", patch: "+const d = md5(x);" }; // on page 2
       serveFiles(files);
 
       const result = await getFullPRAnalysis("owner", "repo", 123);
 
       if (!("analysis" in result)) throw new Error(`expected analysis, got ${JSON.stringify(result)}`);
-      expect(result.changedFiles).toHaveLength(35);
-      expect(result.analysis.aggregate.totalFindings).toBeGreaterThan(0);
+      expect(result.changedFiles).toHaveLength(150);
+      expect(result.prChangeSummary.filesChanged).toBe(150);
+      expect(Object.keys(result.analysis.aggregate.fileSeverity)).toEqual(["src/hash.ts"]);
     });
 
     it("returns an ErrorResponse instead of throwing", async () => {
