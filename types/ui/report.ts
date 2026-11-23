@@ -40,3 +40,24 @@ export interface PRStateStyle {
   label: string;
   text: string;
 }
+
+export type AffectedArea =
+  | "auth"
+  | "database"
+  | "cicd"
+  | "configuration"
+  | "tests"
+  | "infrastructure"
+  | "security";
+
+export interface AffectedAreaFile {
+  filename: string;
+  status: string;
+  severity: FileSeverity;
+}
+
+export interface AffectedAreaGroup {
+  area: AffectedArea;
+  label: string;
+  files: AffectedAreaFile[];
+}
