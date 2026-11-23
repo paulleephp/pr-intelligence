@@ -5,8 +5,9 @@ import { defineConfig } from "vitest/config";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 /**
- * Frontend-owned tests. lib/api.ts (+ api-guards / api-constants) is the browser fetch
- * client used by the UI, so its test belongs to the frontend project even though it lives in lib/.
+ * Frontend-owned tests. lib/api.ts (+ api-constants) is the browser fetch client used by the UI,
+ * so its test belongs to the frontend project even though it lives in lib/. The Zod schemas it
+ * uses (lib/schemas/) are plain functions, so the schemas.*.test.ts files run in the backend project.
  */
 const FRONTEND_TESTS = ["app/components/**/*.test.{ts,tsx}", "lib/__tests__/api.test.ts"];
 

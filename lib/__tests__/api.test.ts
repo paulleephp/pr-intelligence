@@ -1,11 +1,16 @@
+/**
+ * lib/api.ts: the browser fetch client (fetch stubbed). The response schemas it validates with are
+ * tested rule by rule in schemas.<endpoint>.test.ts; here only how a failed parse reaches the caller.
+ */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockPRMetadataSuccess } from "@/app/__tests__/fixtures";
 import { buildAnalysis } from "@/app/components/__tests__/fixtures";
 import { fetchPrAnalysis, fetchPrMetadata } from "@/lib/api";
 import { API_ERROR_MESSAGES } from "@/lib/api-constants";
-import { isPRAnalysisResponse, isPRMetadata, readErrorMessage } from "@/lib/api-guards";
 
 const PR_URL = "https://github.com/owner/repo/pull/123";
+
+type Analysis = ReturnType<typeof buildAnalysis>;
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -65,6 +70,12 @@ describe("fetchPrMetadata / fetchPrAnalysis", () => {
     expect((await fetchPrMetadata(PR_URL)).error).toBe(API_ERROR_MESSAGES.UNKNOWN);
   });
 
+  it("falls back to a generic message when the error field is not a string", async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ error: 500 }, 500));
+
+    expect((await fetchPrMetadata(PR_URL)).error).toBe(API_ERROR_MESSAGES.UNKNOWN);
+  });
+
   it("rejects a 200 response that is not JSON", async () => {
     mockFetch.mockResolvedValueOnce(
       new Response("<html></html>", { status: 200, headers: { "content-type": "text/html" } }),
@@ -77,6 +88,28 @@ describe("fetchPrMetadata / fetchPrAnalysis", () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ unexpected: true }));
 
     expect((await fetchPrAnalysis(PR_URL)).error).toBe(API_ERROR_MESSAGES.INVALID_SHAPE);
+  });
+
+  // Sprint 3 T2 acceptance: these give the "unexpected format" error instead of reaching the UI.
+  it.each([
+    ["a missing fileTypes", (a: Analysis) => ({ ...a, analysis: { ...a.analysis, fileTypes: undefined } })],
+    ["a negative count", (a: Analysis) => ({ ...a, prChangeSummary: { ...a.prChangeSummary, filesChanged: -1 } })],
+    ["a fractional count", (a: Analysis) => ({ ...a, prChangeSummary: { ...a.prChangeSummary, totalLinesAdded: 1.5 } })],
+  ])("rejects an analysis response with %s and logs the schema issues", async (_, corrupt) => {
+    mockFetch.mockResolvedValueOnce(jsonResponse(corrupt(buildAnalysis([]))));
+
+    expect(await fetchPrAnalysis(PR_URL)).toEqual({ ok: false, data: null, error: API_ERROR_MESSAGES.INVALID_SHAPE });
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Unexpected response shape"), [
+      expect.objectContaining({ path: expect.any(Array) }),
+    ]);
+  });
+
+  // The schemas are the one place the response shape is defined: a field must be added there
+  // before the UI can see it.
+  it("returns the parsed data, without fields the schema doesn't define", async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ ...mockPRMetadataSuccess, impact: { modules: [] } }));
+
+    expect((await fetchPrMetadata(PR_URL)).data).toEqual(mockPRMetadataSuccess);
   });
 
   it.each([
@@ -103,38 +136,5 @@ describe("fetchPrMetadata / fetchPrAnalysis", () => {
     controller.abort();
 
     expect((await pending).error).toBe(API_ERROR_MESSAGES.ABORTED);
-  });
-});
-
-describe("response guards", () => {
-  it("accepts real PR metadata and rejects incomplete objects", () => {
-    expect(isPRMetadata(mockPRMetadataSuccess)).toBe(true);
-    expect(isPRMetadata({ ...mockPRMetadataSuccess, user: null })).toBe(false);
-    expect(isPRMetadata({ number: "123", title: "x" })).toBe(false);
-    expect(isPRMetadata([])).toBe(false);
-    expect(isPRMetadata(null)).toBe(false);
-  });
-
-  it("accepts a real engine-produced analysis response", () => {
-    expect(isPRAnalysisResponse(buildAnalysis([]))).toBe(true);
-  });
-
-  it("rejects an analysis response with a malformed changed file", () => {
-    const analysis = buildAnalysis([]);
-
-    expect(isPRAnalysisResponse({ ...analysis, changedFiles: [{ filename: "a.ts" }] })).toBe(false);
-  });
-
-  it("rejects an analysis response missing aggregate fields", () => {
-    const analysis = buildAnalysis([]);
-    const { fileSeverity: _, ...aggregate } = analysis.analysis.aggregate;
-
-    expect(isPRAnalysisResponse({ ...analysis, analysis: { ...analysis.analysis, aggregate } })).toBe(false);
-  });
-
-  it("reads an error message only when it is a string", () => {
-    expect(readErrorMessage({ error: "nope" })).toBe("nope");
-    expect(readErrorMessage({ error: 500 })).toBeNull();
-    expect(readErrorMessage(undefined)).toBeNull();
   });
 });
