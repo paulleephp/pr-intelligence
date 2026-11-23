@@ -57,7 +57,7 @@ const codeAnalysisSchema = z.object({
   passwordHashingPatterns: optionalPattern,
   cryptoAlgoPatterns: optionalPattern,
   prodConfigChanges: optionalPattern,
-  riskyApiCalls: optionalPattern,
+  unsafeNavigation: optionalPattern,
   dangerousCodeCalls: optionalPattern,
   dependencyChanges: optionalPattern,
 }) satisfies z.ZodType<CodeAnalysis>;
