@@ -51,7 +51,7 @@ export const codeRuleIds = (patch: string, filename?: string) => {
     r.passwordHashingPatterns,
     r.cryptoAlgoPatterns,
     r.prodConfigChanges,
-    r.riskyApiCalls,
+    r.unsafeNavigation,
     r.dangerousCodeCalls,
   ]
     .filter((p) => p !== null)

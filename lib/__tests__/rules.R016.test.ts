@@ -34,7 +34,7 @@ describe("R016 - dangerous code execution / DOM sinks", () => {
   });
 
   it("is independent of R015 - a line can trigger both", () => {
-    expect(codeRuleIds("+fetch(url).then((r) => r.text()).then((t) => eval(t));")).toEqual(["R015", "R016"]);
+    expect(codeRuleIds("+window.location.href = next; eval(next);")).toEqual(["R015", "R016"]);
   });
 
   it("raises the overall PR severity to high", () => {

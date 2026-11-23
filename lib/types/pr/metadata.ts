@@ -26,14 +26,14 @@ export interface CodeAnalysis {
   passwordHashingPatterns: Pattern | null;
   cryptoAlgoPatterns: Pattern | null;
   prodConfigChanges: Pattern | null;
-  riskyApiCalls: Pattern | null;
+  unsafeNavigation: Pattern | null;
   dangerousCodeCalls: Pattern | null;
   dependencyChanges: Pattern | null;
 }
 
 export type CodePatternFindings = Pick<
   CodeAnalysis,
-  "authPatterns" | "passwordHashingPatterns" | "cryptoAlgoPatterns" | "riskyApiCalls" | "dangerousCodeCalls"
+  "authPatterns" | "passwordHashingPatterns" | "cryptoAlgoPatterns" | "unsafeNavigation" | "dangerousCodeCalls"
 >;
 
 export interface CategoryAnalysis {
