@@ -17,5 +17,6 @@ export type PRFileStatus =
   | "renamed"
   | "copied"
   | "changed"
-  | "deleted";
+  | "deleted"
+  | "unchanged";
   

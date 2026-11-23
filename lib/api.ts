@@ -1,13 +1,15 @@
 import type { PRAnalysisResponse } from "@/lib/types/pr/metadata";
 import type { PRMetadata } from "@/types/pr/metdata";
-import type { ApiEndpoint, ApiRequestOptions, ApiResult, ResponseGuard } from "@/types/ui/api";
+import type { ApiEndpoint, ApiRequestOptions, ApiResult, ResponseSchema } from "@/types/ui/api";
 import {
   API_ENDPOINTS,
   API_ERROR_MESSAGES,
   API_TIMEOUT_MS,
   JSON_CONTENT_TYPE,
 } from "./api-constants";
-import { isPRAnalysisResponse, isPRMetadata, readErrorMessage } from "./api-guards";
+import { errorBodySchema } from "./schemas/common";
+import { prAnalysisResponseSchema } from "./schemas/pr-analysis";
+import { prMetadataSchema } from "./schemas/pr-metadata";
 
 const failure = <T>(error: string): ApiResult<T> => ({ data: null, error, ok: false });
 
@@ -23,6 +25,11 @@ const toRequestError = (err: unknown): string => {
   return API_ERROR_MESSAGES.UNKNOWN;
 };
 
+const readErrorMessage = (body: unknown): string | null => {
+  const parsed = errorBodySchema.safeParse(body);
+  return parsed.success ? parsed.data.error : null;
+};
+
 const readJson = async (response: Response): Promise<unknown> => {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes(JSON_CONTENT_TYPE)) return undefined;
@@ -32,7 +39,7 @@ const readJson = async (response: Response): Promise<unknown> => {
 export async function fetchPrData<T>(
   endpoint: ApiEndpoint,
   url: string,
-  isValid: ResponseGuard<T>,
+  schema: ResponseSchema<T>,
   { signal }: ApiRequestOptions = {},
 ): Promise<ApiResult<T>> {
   const query = new URLSearchParams({ url });
@@ -56,23 +63,24 @@ export async function fetchPrData<T>(
 
   if (!response.ok) return failure(readErrorMessage(body) ?? API_ERROR_MESSAGES.UNKNOWN);
   if (body === undefined) return failure(API_ERROR_MESSAGES.NON_JSON);
-  if (!isValid(body)) {
-    console.error(`Unexpected response shape from ${endpoint}`);
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    console.error(`Unexpected response shape from ${endpoint}:`, parsed.error.issues);
     return failure(API_ERROR_MESSAGES.INVALID_SHAPE);
   }
-  return { data: body, error: null, ok: true };
+  return { data: parsed.data, error: null, ok: true };
 }
 
 export function fetchPrMetadata(
   url: string,
   options?: ApiRequestOptions,
 ): Promise<ApiResult<PRMetadata>> {
-  return fetchPrData(API_ENDPOINTS.PR_METADATA, url, isPRMetadata, options);
+  return fetchPrData(API_ENDPOINTS.PR_METADATA, url, prMetadataSchema, options);
 }
 
 export function fetchPrAnalysis(
   url: string,
   options?: ApiRequestOptions,
 ): Promise<ApiResult<PRAnalysisResponse>> {
-  return fetchPrData(API_ENDPOINTS.PR_ANALYSIS, url, isPRAnalysisResponse, options);
+  return fetchPrData(API_ENDPOINTS.PR_ANALYSIS, url, prAnalysisResponseSchema, options);
 }

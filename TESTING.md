@@ -41,7 +41,9 @@ lib/__tests__/
   ├── github.errors.test.ts      # lib/github/errors.ts: toGitHubErrorResponse (pure, nothing mocked)
   ├── github.pr-metadata.test.ts # lib/github/pr-metadata/get.ts: getPRMetadata, getFullPRAnalysis (Octokit mocked)
   ├── integration.test.ts        # URL parsing + constants working together
-  ├── api.test.ts                # lib/api.ts fetch client + lib/api-guards.ts (fetch stubbed)
+  ├── api.test.ts                # lib/api.ts fetch client (fetch stubbed): request, errors, failed schema parse
+  ├── schemas.<endpoint>.test.ts # one file per endpoint's response schema: schemas.pr-metadata, schemas.pr-analysis
+  ├── schemas.common.test.ts     # schemas every endpoint shares: { error } body, url query param
   ├── response.test.ts           # lib/response.ts helpers
   ├── url.test.ts                # parsePRUrl
   ├── fixtures/
@@ -59,6 +61,7 @@ app/__tests__/
 app/components/__tests__/
   ├── fixtures.ts                # buildReport()/buildAnalysis() via the REAL engine; FILES per severity
   ├── severity.test.tsx          # SeverityBadge, SeverityBar, severity ordering helpers
+  ├── change-summary.test.ts     # helpers that keep unchanged files out of the page's counts and lists
   ├── PRForm.test.tsx            # input, enable/disable, trim, Enter, loading, error alert
   ├── PRSummary.test.tsx         # header, stats, overall risk = highest severity
   ├── PRDashboard.test.tsx       # files by severity, line stats, empty PR (no NaN)
@@ -72,6 +75,8 @@ test/setup.ts                    # jest-dom matchers + RTL cleanup (vitest setup
 ```
 
 Rule tests go in `lib/__tests__/rules.<RULE_ID>.test.ts`, one file per rule. If a rule's file grows past Biome's 10 KB limit, split it by topic as `rules.<RULE_ID>.<topic>.test.ts` (as R007 is). Tests that cover several rules at once go in a named file such as `rules.js-ts-scope.test.ts`. Shared builders and test data live in `fixtures/rules.ts`: import them instead of redefining them.
+
+Schema tests (`lib/schemas/`) follow the same idea: one `schemas.<endpoint>.test.ts` per endpoint's response schema, named after its file in `lib/schemas/`. A new endpoint gets its own file. Schemas that every endpoint uses go in `schemas.common.test.ts`. Test each rule with one changed field on a valid response, ideally real engine output (`buildAnalysis`), so a rejection can only come from that field. Each endpoint file also has one round-trip test: the route's real output (`getPRMetadata` / `getFullPRAnalysis` with only Octokit mocked) must parse to itself. `lib/api.ts` gives the UI the parsed data and Zod drops keys a schema doesn't define, so a field added to the response but not to the schema fails that test instead of silently never reaching the UI. Keep its input full, with no field left null and no array left empty, or a dropped field can hide there.
 
 **Fake secrets in tests:** assemble token-shaped strings at runtime (`"sk_" + "live_" + "…"`, see `FAKE` in `fixtures/rules.ts`). A literal `sk_live_…`, `xoxb-…` or `AKIA…` in the source can trip GitHub push protection and block the push. AWS access keys are `AKIA`/`ASIA` + 16 characters (20 total); shorter strings are correctly *not* matched.
 

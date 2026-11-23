@@ -107,7 +107,7 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 | Analysis Engine | TypeScript |
 | GitHub Integration | Octokit |
 | Severity Rules | Deterministic rule table (`lib/diff/util/risk-scoring.ts`) |
-| Validation | Hand-written type guards (`lib/api-guards.ts`); Zod is installed but not yet used |
+| Validation | Zod v4 schemas (`lib/schemas/`) for API responses and the `url` query param |
 | Database | PostgreSQL (planned, not set up yet) |
 | ORM | Prisma (planned, not set up yet) |
 | Testing | Vitest (Playwright planned) |

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PRSummary } from "../PRSummary";
-import { buildReport, cleanReport, FILES, mixedReport } from "./fixtures";
+import { buildReport, cleanReport, FILES, mixedReport, UNSCANNED } from "./fixtures";
 
 const statValue = (label: string) => screen.getByText(label).nextElementSibling;
 /** The "PR #123 · Open" line; the state is wrapped in its own coloured span. */
@@ -55,6 +55,16 @@ describe("PRSummary", () => {
     expect(statValue("Lines changed")).toHaveTextContent("27");
     expect(screen.getByText("+20 / −7")).toBeInTheDocument();
     expect(statValue("Risk findings")).toHaveTextContent("4");
+  });
+
+  // Regression: "Files changed" used to count unchanged files too.
+  it.each([
+    ["1, leaving out an unchanged file", [FILES.high, UNSCANNED.unchanged], /^1$/],
+    ["0 for a PR where every file is unchanged", [UNSCANNED.unchanged], /^0$/],
+  ])("shows 'Files changed' as %s", (_, files, expected) => {
+    render(<PRSummary report={buildReport(files)} />);
+
+    expect(statValue("Files changed")).toHaveTextContent(expected);
   });
 
   it("uses the highest severity found as the overall risk", () => {

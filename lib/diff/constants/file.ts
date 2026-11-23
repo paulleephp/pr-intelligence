@@ -6,6 +6,7 @@ export enum PRFileStatus {
   Copied = 'copied',
   Changed = 'changed',
   Deleted = 'deleted',
+  Unchanged = 'unchanged',
 }
 
 export const MIGRATION_MODIFIED_STATUSES: readonly string[] = [

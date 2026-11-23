@@ -4,4 +4,6 @@ export interface PrChangeSummary {
   totalLinesRemoved: number;
   filesAdded: number;
   filesRemoved: number;
+  filesModified: number;
+  filesUnchanged: number;
 }

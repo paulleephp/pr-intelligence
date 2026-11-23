@@ -90,7 +90,7 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 | Analysis Engine | TypeScript |
 | GitHub Integration | Octokit |
 | Severity Rules | Deterministic rule table (`lib/diff/util/risk-scoring.ts`) |
-| Validation | Hand-written type guards (`lib/api-guards.ts`); Zod is installed but not yet used |
+| Validation | Zod v4 schemas (`lib/schemas/`) for API responses and the `url` query param |
 | Database | PostgreSQL (planned, not set up yet) |
 | ORM | Prisma (planned, not set up yet) |
 | Testing | Vitest (Playwright planned) |
@@ -134,7 +134,7 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 8. **Severity display**: Critical is its own level in bright red; high is orange, medium yellow, low sky, none grey. In per-file counts, "None" means scanned with no findings; unscanned files without findings appear only in a separate "Not scanned" note
 9. **PR state**: `open`, `closed` or `merged`. GitHub reports merged PRs as `closed` plus a `merged` flag; the client maps that to `merged`
 10. **API contract**: The frontend uses only `GET /api/pr?url=<PR URL>` (metadata) and `GET /api/pr/analysis?url=<PR URL>` (changed files, summary, findings). There is no summary endpoint. Errors return `{ error }` with 400, 401, 403, 404, 405, 429 or 500
-11. **Guarded client fetches**: All frontend requests go through `lib/api.ts`, which uses an endpoint allowlist, a 20s timeout, cancellation of superseded requests, a JSON content-type check, and runtime validation of the response shape (`lib/api-guards.ts`) before the UI uses it
+11. **Guarded client fetches**: All frontend requests go through `lib/api.ts`, which uses an endpoint allowlist, a 20s timeout, cancellation of superseded requests, a JSON content-type check, and Zod validation of the response shape (`lib/schemas/`) before the UI uses it
 
 <!-- BEGIN:nextjs-agent-rules -->
 
