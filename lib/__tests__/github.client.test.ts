@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchChangedFiles, fetchPRMetadata } from "@/lib/github/client";
 import { errors, mappedPRMetadata, octokit } from "./fixtures/github";
 
-const { mockOctokit, mockPullsGet, mockListFiles, rawFile, serveFiles } = await vi.hoisted(
+const { mockOctokit, mockPaginate, mockPullsGet, mockListFiles, rawFile, serveFiles } = await vi.hoisted(
   () => import("./mocks/octokit"),
 );
 
@@ -17,6 +17,7 @@ vi.mock("@octokit/rest", () => ({ Octokit: mockOctokit }));
 afterEach(() => {
   mockPullsGet.mockReset();
   mockListFiles.mockReset();
+  mockPaginate.mockClear(); // keeps the page-walking implementation, drops recorded calls
 });
 
 describe("client", () => {
@@ -111,21 +112,42 @@ describe("client", () => {
       expect(file).toMatchObject({ additions: 0, deletions: 0, patch: "" });
     });
 
-    it("returns every file of a PR with fewer than 30 files", async () => {
+    it("fetches the files through paginate, 100 per page (GitHub's maximum)", async () => {
+      serveFiles([rawFile(0)]);
+
+      await fetchChangedFiles("owner", "repo", 123);
+
+      expect(mockPaginate).toHaveBeenCalledWith(mockListFiles, {
+        owner: "owner",
+        repo: "repo",
+        pull_number: 123,
+        per_page: 100,
+      });
+    });
+
+    it("returns every file of a PR that fits on one page", async () => {
       serveFiles(Array.from({ length: 11 }, (_, i) => rawFile(i)));
 
       expect(await fetchChangedFiles("owner", "repo", 123)).toHaveLength(11);
     });
 
-    // KNOWN BUG: GitHub returns 30 files per page by default (max 100, up to 3000 in total).
-    // fetchChangedFiles makes a single listFiles call, so files after the first page are dropped.
-    it.fails("returns every file of a PR with more than 30 files (pagination)", async () => {
-      serveFiles(Array.from({ length: 75 }, (_, i) => rawFile(i)));
+    // Regression: fetchChangedFiles made a single listFiles call, so only the first page (30 files
+    // by default) came back. Fixed 2026-11-23 by fetching every page through paginate.
+    it("returns every file of a PR that spans several pages, in order", async () => {
+      const files = Array.from({ length: 250 }, (_, i) => rawFile(i));
+      serveFiles(files);
 
       const result = await fetchChangedFiles("owner", "repo", 123);
 
-      expect(result).toHaveLength(75);
-      expect(result.at(-1)?.filename).toBe("src/file-74.ts");
+      expect(mockListFiles.mock.calls.map(([params]) => params.page)).toEqual([1, 2, 3]); // 100 + 100 + 50
+      expect(result.map((f) => f.filename)).toEqual(files.map((f) => f.filename));
+    });
+
+    it("returns an empty list for a PR with no changed files", async () => {
+      serveFiles([]);
+
+      expect(await fetchChangedFiles("owner", "repo", 123)).toEqual([]);
+      expect(mockListFiles).toHaveBeenCalledTimes(1);
     });
 
     it("lets Octokit errors propagate", async () => {

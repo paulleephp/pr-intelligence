@@ -1,7 +1,7 @@
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 import type { ChangedFile } from "@/types/pr/metadata";
 import type { PRLabel, PRMetadata, PRStatus } from "@/types/pr/metdata";
-import { GITHUB_API_VERSION, PR_STATUS_MAP } from "./constants";
+import { CHANGED_FILES_PER_PAGE, GITHUB_API_VERSION, PR_STATUS_MAP } from "./constants";
 
 const githubClient = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -54,14 +54,14 @@ export async function fetchChangedFiles(
   repo: string,
   prNumber: number,
 ): Promise<ChangedFile[]> {
-  const filesResponse: RestEndpointMethodTypes["pulls"]["listFiles"]["response"] =
-    await githubClient.pulls.listFiles({
-      owner,
-      repo,
-      pull_number: prNumber,
-    });
+  const files = await githubClient.paginate(githubClient.pulls.listFiles, {
+    owner,
+    repo,
+    pull_number: prNumber,
+    per_page: CHANGED_FILES_PER_PAGE,
+  });
 
-  const transformedFiles: ChangedFile[] = filesResponse.data.map((file) => ({
+  const transformedFiles: ChangedFile[] = files.map((file) => ({
     filename: file.filename,
     status: file.status as ChangedFile["status"],
     additions: file.additions ?? 0,
