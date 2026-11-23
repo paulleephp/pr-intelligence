@@ -22,6 +22,10 @@ describe("R015 - unsafe navigation", () => {
     "+window.location.replace(next);",
     "+location.replace(next);",
     "+location.href = next;",
+    "+window.top.location = next;",
+    "+parent.location.href = next;",
+    "+globalThis.location.href = next;",
+    "+window.parent.location.assign(next);",
     '+window.location.href = "//evil.com";', // protocol-relative: goes to another site
     String.raw`+window.location.href = "/\\evil.com";`, // browsers read /\ as // too
     '+window.location.href = "/x" + q;',
@@ -58,8 +62,13 @@ describe("R015 - unsafe navigation", () => {
     "+router.location.replace(x);",
     "+this.location.assign(x);",
     "+router.location.href = x;",
+    "+foo.parent.location = x;",
   ])("does not flag another object's location: %s", (patch) => {
     expect(codeRuleIds(patch)).not.toContain("R015");
+  });
+
+  it("does not flag appending to the current URL with +=", () => {
+    expect(codeRuleIds("+window.location.href += x;")).not.toContain("R015");
   });
 
   // Decided 2026-11-23: a bare `location = …` is left out, because `location` is often a local variable.
