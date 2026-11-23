@@ -15,6 +15,8 @@ export const STATUS_STYLES: Record<string, string> = {
 
 export const DEFAULT_STATUS_STYLE = STATUS_STYLES.changed;
 
+export const UNKNOWN_STATUS = "unknown";
+
 export const FALLBACK_FILE_TYPE: FileType = "backend";
 
 export const FILE_TYPE_LABELS: Record<FileType, string> = {
