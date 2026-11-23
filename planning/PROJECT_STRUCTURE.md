@@ -11,6 +11,7 @@ app/page.tsx (Server Component)
        └─ PRResults
             ├─ PRSummary
             ├─ PRDashboard
+            ├─ AffectedAreas
             ├─ RiskIndicator
             └─ ChangedFilesTable
 
@@ -39,6 +40,7 @@ usePRReport → lib/api.ts (guarded fetch) → GET /api/pr, GET /api/pr/analysis
 | `PRResults.tsx` | Loading skeleton, then the four report sections |
 | `PRSummary.tsx` | Title, author, state, overall risk, stat tiles, severity distribution |
 | `PRDashboard.tsx` | Files by severity, line-change stats, "Not scanned" note |
+| `AffectedAreas.tsx` | Files grouped by area (Auth, Database, CI/CD, …) from area rule findings; hidden when none |
 | `RiskIndicator.tsx` | Findings grouped by severity, then by rule, expandable to files and messages |
 | `ChangedFilesTable.tsx` | Per-file type, status, lines and severity, sorted by severity |
 | `severity/` | `SeverityBadge`, `SeverityBar`, `FileSeverityCell` |
@@ -46,6 +48,8 @@ usePRReport → lib/api.ts (guarded fetch) → GET /api/pr, GET /api/pr/analysis
 | `icons/` | `SpinnerIcon` |
 | `_lib/severity.ts` | Severity order, ranks and colour styles |
 | `_lib/file-display.ts` | Status, file-type, PR-state and "Not scanned" display constants |
+| `_lib/areas.ts` | Rule-to-area mapping (`AREA_BY_RULE`) and `buildAffectedAreas` |
+| `_lib/change-summary.ts` | `countChangedFiles` and unchanged-file helpers |
 | `_lib/use-pr-report.ts` | Fetches both endpoints in parallel and cancels superseded requests |
 | `__tests__/` | Component tests (owned by the tester) |
 

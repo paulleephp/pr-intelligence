@@ -1,4 +1,5 @@
 import type { PRResultsProps } from "@/types/ui/components";
+import { AffectedAreas } from "./AffectedAreas";
 import { ChangedFilesTable } from "./ChangedFilesTable";
 import { PRDashboard } from "./PRDashboard";
 import { PRResultsSkeleton } from "./PRResultsSkeleton";
@@ -20,6 +21,7 @@ export function PRResults({ report, loading }: PRResultsProps) {
     <div className="mt-12 space-y-8">
       <PRSummary report={report} />
       <PRDashboard analysis={analysis} />
+      <AffectedAreas analysis={analysis} />
       <div className="grid items-start gap-8 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <RiskIndicator aggregate={analysis.analysis.aggregate} />

@@ -41,6 +41,10 @@ export interface PRSummaryProps {
   report: PRReport;
 }
 
+export interface AffectedAreasProps {
+  analysis: PRAnalysisResponse;
+}
+
 export interface RiskIndicatorProps {
   aggregate: PRAggregate;
 }

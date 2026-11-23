@@ -25,8 +25,17 @@ describe("PRResults", () => {
     expect(screen.getByRole("heading", { name: "Test PR" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Files by severity" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Line changes" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Affected areas" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Risk indicators" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Changed files (5)" })).toBeInTheDocument();
+  });
+
+  it("leaves out Affected areas, and keeps the other sections, when no file is in an area", () => {
+    render(<PRResults report={buildReport([FILES.clean, FILES.low])} loading={false} />);
+
+    expect(screen.queryByRole("heading", { name: "Affected areas" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Risk indicators" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Changed files (2)" })).toBeInTheDocument();
   });
 
   // Key decision (AGENTS.md): color-coded severity groups, NO raw scores shown to users.
