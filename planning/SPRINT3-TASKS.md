@@ -115,7 +115,7 @@ Status: T1–T5 are all ready and can run in parallel (no shared files). Impact 
   - R010 → Tests
   - R011 → Infrastructure
   - R014 → Security
-- Show each area with its file count and the list of changed files (path, status, highest severity badge). A file can appear in more than one area.
+- Show each area with its file count and the list of changed files (path, status, severity badge). The badge shows the file's **area severity**: the highest severity among that area's findings for the file, not its overall severity. The changed-files table already shows overall severity. (Decided 2026-11-24 after a coder/tester disagreement; see commit 929637b.). A file can appear in more than one area.
 - Files with no area finding aren't shown in this section. The changed-files table already lists everything.
 - The section is hidden when no files map to an area.
 - Follow `STYLEGUIDE.md` and the existing severity components (`SeverityBadge`), including critical as its own bright-red level.
