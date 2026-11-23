@@ -4,19 +4,13 @@ import { severityRank } from "./severity";
 
 export const AREA_BY_RULE: Readonly<Record<string, AffectedArea>> = {
   R001: "auth",
-  R002: "auth",
   R003: "database",
   R004: "database",
   R006: "cicd",
-  R007: "security",
   R009: "configuration",
   R010: "tests",
   R011: "infrastructure",
-  R012: "security",
-  R013: "security",
   R014: "security",
-  R015: "security",
-  R016: "security",
 };
 
 export const AREA_ORDER: readonly AffectedArea[] = [

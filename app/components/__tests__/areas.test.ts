@@ -28,20 +28,9 @@ const ruleIdsOf = (files: ChangedFile[]) =>
  */
 const MAPPING: [RiskRuleId, string, string, ChangedFile][] = [
   ["R001", "auth", "Auth", file("src/auth/login.ts")],
-  [
-    "R002",
-    "auth",
-    "Auth",
-    file("src/api/users.ts", {
-      additions: 0,
-      deletions: 1,
-      patch: "@@ -1 +0,0 @@\n-if (!user.hasPermission(req)) {",
-    }),
-  ],
   ["R003", "database", "Database", file("db/migrations/002_users.sql", { status: "added" })],
   ["R004", "database", "Database", UNSCANNED.deletedMigration],
   ["R006", "cicd", "CI/CD", FILES.medium],
-  ["R007", "security", "Security", FILES.critical],
   ["R009", "configuration", "Configuration", file("tsconfig.json")],
   [
     "R010",
@@ -55,32 +44,12 @@ const MAPPING: [RiskRuleId, string, string, ChangedFile][] = [
     }),
   ],
   ["R011", "infrastructure", "Infrastructure", file("infra/main.tf")],
-  ["R012", "security", "Security", FILES.high],
-  [
-    "R013",
-    "security",
-    "Security",
-    file("src/users/register.ts", { patch: "@@ -1 +1 @@\n+await bcrypt.hash(pw, 10);" }),
-  ],
   ["R014", "security", "Security", file("src/security/policy.ts")],
-  [
-    "R015",
-    "security",
-    "Security",
-    file("src/nav.ts", { patch: "@@ -1 +1 @@\n+window.location.href = next;" }),
-  ],
-  [
-    "R016",
-    "security",
-    "Security",
-    file("src/render.ts", { patch: "@@ -1 +1 @@\n+el.innerHTML = html;" }),
-  ],
 ];
 
+// R002, R007, R012, R013, R015 and R016 have no area yet. Their mapping was taken back out on
+// 2026-11-24 until the orchestrator settles the wording and scope, so they have no rows here.
 describe("buildAffectedAreas", () => {
-  // Regression: the content rules about auth and security (R002, R007, R012, R013, R015, R016) had
-  // no area, so a PR that removed a permission check or added a secret showed nothing under Auth or
-  // Security. Fixed 2026-11-23 (decided: R002 → auth, the others → security; R005 gets no area).
   it.each(MAPPING)("maps %s to %s", (ruleId, area, label, changed) => {
     expect(ruleIdsOf([changed])).toContain(ruleId);
     expect(areasOf([changed])).toEqual([
