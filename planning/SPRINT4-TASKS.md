@@ -6,6 +6,7 @@ Spec: `SPRINT4.md`. The rules there are the source of truth; these briefs say wh
 - **Part 2: Line numbers and R017** (S4-T4 to S4-T6)
 - **Optional:** rule tests and CI (S4-T7)
 - **Part 3: R018** script permission change (S4-T8)
+- **Part 4: Rule matching gaps** in R001, R014 and R011 (S4-T9)
 
 Parts 1, 2 and 3 are independent and can run in parallel.
 
@@ -147,3 +148,22 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 - Lint, type check and existing tests pass. Don't edit test files.
 
 **Tester follow-up:** `rules.R018.test.ts` with the cases above, plus case variations (`Scripts/`, `.SH`) and nested folders. The detector is `detectPermissionChange(file)` in `lib/diff/mode-change.ts`, with constants `RUNNABLE_EXTENSIONS` and `RUNNABLE_FOLDER_PATTERN` in `lib/diff/constants/mode-change.ts`. `core.ts` adds it to each file's path-rule report via `getPathReport`. Don't use the fixtures' `pathRuleIds(filename, status)`: it builds files with 0 additions and 10 deletions, so it never triggers R018. Use `analyzeDiff([file({ filename, status: "modified", additions: 0, deletions: 0, patch: "" })])`, or call `detectPermissionChange(file(...))` directly. Also cover: status `changed` isn't flagged; the exact message with double quotes. Remove the stale R017 comment in `findings.ids.test.ts` (line 104) in the same PR.
+
+# Part 4: Rule matching gaps (S4-T9)
+
+## S4-T9. R001, R014 and R011 matching gaps (backend, S)
+**Role:** Coder (backend)
+**Files:** the path patterns for R001, R014 and R011 (`lib/diff/constants/` and wherever the rules match paths); README rules table and Known Limitations via mochi.
+
+**Scope** (SPRINT4.md "Rule matching gaps")
+- R001 and R014: an uppercase letter or a digit after the keyword counts as a boundary, as well as the existing separators. A lowercase letter doesn't.
+- R014: add `cryptography` as a keyword.
+- R011: also match `.tfvars` and `.tf.json`, and Helm chart files under `charts/<name>/` (`Chart.yaml`, `values*.yaml`, `templates/**`).
+- Match case as the rules do today.
+
+**Acceptance**
+- Flagged: `src/AuthProvider.tsx` (R001), `lib/SecurityHeaders.ts` (R014), `oauth2/callback.ts`, `login2.ts`, `cryptography/aes.ts`, `infra/prod.tfvars`, `infra/main.tf.json`, `charts/api/Chart.yaml`, `charts/api/values-prod.yaml`, `charts/api/templates/deployment.yaml`.
+- Not flagged: `src/author.ts`, `authority/index.ts`, `charts/README.md`, a `charts/` folder with no chart files (e.g. `docs/charts/sales.png`).
+- `npm run check`, tsc and existing tests pass. Don't edit test files.
+
+**Tester follow-up:** kimchi adds the cases above to `rules.R001`, `rules.R011` and `rules.R014` tests; add them as `it.fails` first if written before the fix merges.

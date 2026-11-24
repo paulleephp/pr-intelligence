@@ -142,6 +142,19 @@ interface BlastRadius {
   - `DiffHunks.addedLineNumbers` is optional; findings from hand-built hunks without it have no line.
   - **`id` stays optional** in the type and schema this sprint (making it required breaks existing tests). Making it required is a Sprint 5 prerequisite; see S5-T1.
 
+## Rule matching gaps: R001, R014, R011 (decided 2026-11-25)
+
+Found by kimchi while writing the S4-T7 rule tests. User decisions:
+
+- **R001 and R014: keyword boundaries.** A keyword currently matches only when a separator (`/`, `.`, `-`, `_`) follows it. Also treat these as a boundary:
+  - an **uppercase letter** after the keyword: `AuthProvider.tsx`, `SecurityHeaders.ts` are flagged
+  - a **digit** after the keyword: `oauth2/`, `login2.ts` are flagged
+  - A **lowercase** letter is still not a boundary: `author.ts`, `authority/` stay unflagged.
+- **R014: add `cryptography`** as its own keyword, so `cryptography/` is flagged. The boundary rule above can't catch it, because a lowercase letter follows `crypto`.
+- **R011: Terraform.** Flag `.tfvars` and `.tf.json` files as well as `.tf`.
+- **R011: Helm without a `helm/` folder.** Flag files inside a `charts/<name>/` chart folder: `Chart.yaml`, `values*.yaml`, and anything under `templates/`.
+- Severities don't change. README Known Limitations and the rules table are updated if the wording changes.
+
 ## Optional if there's room: tests and CI (carried over)
 
 | Item | Detail | Plan |
