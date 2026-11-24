@@ -5,6 +5,7 @@ import type {
   TestSignalState,
 } from "@/lib/types/diff/blast-radius";
 import type { ModuleSplit } from "@/types/ui/report";
+import { pluralize } from "./format";
 import { SEVERITY_STYLES } from "./severity";
 
 export const MODULE_PREVIEW_LIMIT = 6;
@@ -25,9 +26,6 @@ export const SHOW_LESS_LABEL = "Show less";
 
 export const EXCLUDED_FILES_HINT =
   "Not counted: lockfiles, test snapshots, images and other assets, files with no diff (binaries, empty files, renames without changes) and unchanged files";
-
-export const pluralize = (count: number, singular: string): string =>
-  `${count} ${count === 1 ? singular : `${singular}s`}`;
 
 const TEST_SIGNAL_TEXT: Readonly<Record<TestSignalState, (tests: BlastRadiusTests) => string>> = {
   "no-source-changes": () => "No source changes",
