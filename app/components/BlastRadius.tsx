@@ -3,6 +3,7 @@ import {
   describeFileCount,
   describeSpread,
   describeTests,
+  EXCLUDED_FILES_HINT,
   isTestWarning,
   WARNING_TEXT_STYLE,
 } from "./_lib/blast-radius";
@@ -15,6 +16,7 @@ export function BlastRadiusCard({ blastRadius }: BlastRadiusCardProps) {
   const { level, fileCount, spread, tests } = blastRadius;
   const testWarning = isTestWarning(tests);
   const testTone = testWarning ? WARNING_TEXT_STYLE : "text-zinc-200";
+  const excludedHint = fileCount.excluded > 0 ? EXCLUDED_FILES_HINT : undefined;
 
   return (
     <div>
@@ -24,7 +26,7 @@ export function BlastRadiusCard({ blastRadius }: BlastRadiusCardProps) {
       </div>
       <dl className="divide-y divide-zinc-800/70 rounded-md border border-zinc-800 bg-zinc-950/40 text-sm">
         <MetricRow label="Files" level={fileCount.level}>
-          {describeFileCount(fileCount)}
+          <span title={excludedHint}>{describeFileCount(fileCount)}</span>
         </MetricRow>
         <MetricRow label="Modules" level={spread.level}>
           <div className="space-y-2">
