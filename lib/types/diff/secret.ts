@@ -31,6 +31,6 @@ export interface SecretScan {
 }
 
 export type GetSecretReportArg = {
-  hunks: DiffHunks; 
+  hunks: DiffHunks;
   filename: string;
-}
+};

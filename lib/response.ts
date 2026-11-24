@@ -5,10 +5,7 @@ export function successResponse<T>(data: T, status: number = HTTP_STATUS.OK) {
   return NextResponse.json(data, { status });
 }
 
-export function errorResponse(
-  message: string,
-  status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR,
-) {
+export function errorResponse(message: string, status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR) {
   return NextResponse.json({ error: message }, { status });
 }
 

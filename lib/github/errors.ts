@@ -11,7 +11,10 @@ import {
 const asGitHubError = (error: unknown): GitHubRequestError =>
   typeof error === "object" && error !== null ? error : {};
 
-const isRateLimited = (status: number | undefined, headers: GitHubResponseHeaders | undefined): boolean => {
+const isRateLimited = (
+  status: number | undefined,
+  headers: GitHubResponseHeaders | undefined,
+): boolean => {
   if (status === HTTP_STATUS.TOO_MANY_REQUESTS) {
     return true;
   }
