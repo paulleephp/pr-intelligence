@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { analyzeDiff } from "@/lib/diff/core";
+import type { Pattern } from "@/lib/types/diff/pattern";
 import type { ChangedFile } from "@/lib/types/pr/metadata";
 import { patchLines } from "./fixtures/diff";
 import { FAKE, file } from "./fixtures/rules";
@@ -33,7 +34,18 @@ const DOCKERFILE = file({
 const MIXED: ChangedFile[] = [
   FOUR_SECRETS,
   DOCKERFILE,
-  file({ filename: "src/api.ts", patch: "@@ -1 +1,2 @@\n x\n+eval(code);" }),
+  file({
+    filename: "src/api.ts",
+    patch: patchLines(
+      "@@ -1 +1,6 @@",
+      " x",
+      "+if (user.isAdmin) {", // R002
+      "+const d = md5(input);", // R012
+      "+const hash = await bcrypt.hash(pw, 10);", // R013
+      "+window.location.href = next;", // R015
+      "+eval(code);", // R016
+    ),
+  }),
   file({ filename: "package.json", patch: '@@ -1 +1,2 @@\n {\n+    "zod": "^3.22.0",' }),
   file({
     filename: "db/migrations/001_init.sql",
@@ -89,17 +101,31 @@ describe("finding ids", () => {
   // Decided 2026-11-24 (PR #21): ids live on aggregate.findings only, the list the UI reads.
   it("puts ids only on aggregate.findings; the per-file reports keep line but no id", () => {
     const analysis = analyzeDiff(MIXED);
+    // Every finding field of each report, so a field added later (R017) is checked too.
+    const findingFields = (report: object) =>
+      Object.values(report).filter(
+        (v): v is Pattern => typeof v === "object" && v !== null && "ruleId" in v,
+      );
     const perFile = [
-      ...analysis.secret.flatMap((r) => [r.secret, r.apiKey, r.password, r.ssh]),
-      ...analysis.code.flatMap((r) => [
-        r.dangerousCodeCalls,
-        r.prodConfigChanges,
-        r.dependencyChanges,
-      ]),
+      ...analysis.secret.flatMap(findingFields),
+      ...analysis.code.flatMap(findingFields),
       ...analysis.category.flatMap((r) => r.category),
     ].filter((p) => p !== null);
 
-    expect(perFile.filter((p) => p.line !== undefined).length).toBeGreaterThan(5);
+    const rulesWithLines = new Set(
+      perFile.filter((p) => p.line !== undefined).map((p) => p.ruleId),
+    );
+
+    expect([...rulesWithLines].sort()).toEqual([
+      "R002",
+      "R005",
+      "R007",
+      "R009",
+      "R012",
+      "R013",
+      "R015",
+      "R016",
+    ]);
     for (const pattern of perFile) {
       expect(pattern).not.toHaveProperty("id");
     }
