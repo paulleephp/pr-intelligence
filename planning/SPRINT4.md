@@ -90,7 +90,7 @@ interface BlastRadius {
 
 ## R017: exported signature changed (DROPPED)
 
-**Dropped 2026-11-24, before merge (PR #23 closed unmerged).** User decision: it only adds value for plain JavaScript. In TypeScript, a changed signature already fails the type check (`tsc`) for every caller in the repo. The rule ID R017 is retired and won't be reused. The text below is kept for the record.
+**Dropped 2026-11-24, before merge (R017 code removed from PR #23, which was reused for the code.ts refactor).** User decision: it only adds value for plain JavaScript. In TypeScript, a changed signature already fails the type check (`tsc`) for every caller in the repo. The rule ID R017 is retired and won't be reused. The text below is kept for the record.
 
 - **R017 "Exported function signature changed"**, JS/TS only, severity low (proposed). Flags a patch that removes an `export function name(…)` / `export const name = (…) =>` line and adds one with the same name but different parameters, or removes the export entirely.
 - Message: "Public API changed: code outside this PR that uses `name` may break." We can't see the callers (Key Decision 15), so the finding tells the reviewer to check.
