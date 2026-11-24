@@ -54,8 +54,8 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 - Verdict cache (Supabase), reconsidered only once Sprints 4 and 5 are done
 - Download the assessment JSON when it's over the 10,000-character send limit (up to 30,000 characters)
 - Review workflow that runs stages in order and retries from the failed stage (`LATER-REVIEW-WORKFLOW.md`, outdated draft)
-- Fix camelCase secret names (R007; see README Known Limitations)
-- R001/R014: match keywords inside names (`useAuth.ts`), all-caps acronyms (`SSOConfig.ts`) and `AccessControl`; R011: `*.tfvars.json` (see README Known Limitations)
+- Fix camelCase secret names (R007; see `docs/KNOWN-LIMITATIONS.md`)
+- R001/R014: match keywords inside names (`useAuth.ts`), all-caps acronyms (`SSOConfig.ts`) and `AccessControl`; R011: `*.tfvars.json` (see `docs/KNOWN-LIMITATIONS.md`)
 - Complexity increase detection and change metrics
 - UI backlog candidates for a lighter sprint: `PENDING_NEW_FEATURES.md`
 
