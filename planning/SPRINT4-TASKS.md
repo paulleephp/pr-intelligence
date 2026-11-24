@@ -91,6 +91,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 **Acceptance:** for a fixture patch, R015's finding reports the exact new-file line of the matching `window.location` line; IDs are identical across two runs; existing response fields unchanged. Don't edit test files.
 
 ## S4-T5. R017: exported signature changed (DROPPED)
+**Repurposed (2026-11-24):** PR #23 is reused for the refactor only: the finders in `lib/diff/code.ts` take `hunks` directly, bringing the file back under ~150 lines. All R017 code is removed from the PR; the PR is renamed and squash-merged. No behaviour change, so existing tests must pass unchanged.
 **Dropped 2026-11-24, before merge (PR #23 closed unmerged).** User decision: it only adds value for plain JavaScript. In TypeScript, a changed signature already fails the type check (`tsc`) for every caller in the repo. The rule ID R017 is retired and won't be reused. The text below is kept for the record.
 **Role:** Coder (backend)
 **Files:** `lib/diff/util/risk-scoring.ts`, `lib/diff/code.ts` or a new detector file, `lib/diff/change-detection.ts`, `lib/schemas/` if the rule ID is enumerated; README "Rules" table and Known Limitations, AGENTS.md Key Decisions
