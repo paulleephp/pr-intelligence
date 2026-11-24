@@ -124,7 +124,7 @@ Several agents work on this repo at the same time. Agents message each other by 
 - Work only in your own worktree. Never check out a branch, stage or commit in another agent's folder, including the main checkout.
 - Each worktree has its own `node_modules` (install with `npm ci`, which never modifies `package-lock.json`) and its own copy of `.env` (gitignored; copy it from the main checkout). In a fresh worktree, run `npx next typegen` once so `npx tsc --noEmit` can find the generated route types (otherwise it reports missing types such as `LayoutProps`). If two agents run the dev server at once, use different ports.
 - Biome skips any file over 10 KB (`files.maxSize` in `biome.json`) without a warning, so keep source and test files under it; split by topic rather than raising the limit.
-- `npm run lint` runs lint rules only and never checks formatting. Until a `check` script lands (S4-T7), also run `npx biome check` on the files you changed before opening a PR.
+- Before opening a PR, run `npm run check` (Biome lint, formatting and import order; fails on problems), not just `npm run lint`, which misses formatting. `npm run check:fix` applies fixes; read its diff before committing. Biome doesn't check `.md` files.
 
 ### Branches
 Git checks out a branch in only one worktree at a time, so:
