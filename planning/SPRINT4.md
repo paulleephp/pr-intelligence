@@ -154,6 +154,11 @@ Found by kimchi while writing the S4-T7 rule tests. User decisions:
 - **R011: Terraform.** Flag `.tfvars` and `.tf.json` files as well as `.tf`.
 - **R011: Helm without a `helm/` folder.** Flag files inside a `charts/<name>/` chart folder: `Chart.yaml`, `values*.yaml`, and anything under `templates/`.
 - Severities don't change. README Known Limitations and the rules table are updated if the wording changes.
+- Decided with the user in S4-T9 (PR #29):
+  - **camelCase only:** an uppercase letter is a boundary only after a lowercase one. `AUTHORS` and `AUTHORS.md` aren't flagged; the trade-off is that `SSOConfig.ts` is missed.
+  - **Helm `templates/`** is narrowed to `yaml`, `yml`, `tpl` and `txt` files (so `NOTES.txt` and `_helpers.tpl` are flagged, UI code under a `templates/` folder isn't). Values files can be `.yaml` or `.yml`.
+  - Newly flagged as intended: camelCase names such as `src/sessionStore.ts` and `src/permissionsTable.ts`.
+  - **Still not flagged (README Known Limitations):** a keyword that doesn't start a path segment (`src/useAuth.ts`), all-caps acronyms followed by a word (`SSOConfig.ts`), and `AccessControl.ts` (the keyword is `access-control`).
 
 ## Optional if there's room: tests and CI (carried over)
 
