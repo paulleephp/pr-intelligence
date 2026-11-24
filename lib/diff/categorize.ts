@@ -37,12 +37,13 @@ export const getCategoryReport = ({
   status,
 }: CategorizerArg): CategoryAnalysis => {
   const filename = `/${rawFilename.toLowerCase()}`;
+  const casedPath = `/${rawFilename}`;
 
   const detections = [
     detectConfigChanges({ filename, status }),
-    detectAuthChanges({ filename, status }),
+    detectAuthChanges({ filename: casedPath, status }),
     detectCIChanges({ filename, status }),
-    detectSecurityChanges({ filename, status }),
+    detectSecurityChanges({ filename: casedPath, status }),
     detectInfraChanges({ filename, status }),
     detectTestChanges({ filename, status }),
     detectMigrationChanges({ filename, status }),
