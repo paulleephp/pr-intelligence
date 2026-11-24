@@ -180,6 +180,16 @@ Secret detection was built around `snake_case`, `SCREAMING_SNAKE` and `dot.case`
 Token values with a known format (`ghp_…`, `AKIA…`, `xoxb-…`, `sk_live_…`, private key headers) are detected whatever the variable is called.
 
 Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` and `.`) touches every name rule and the placeholder filter.
+### Path keywords (R001, R014) and infrastructure files (R011)
+
+- **R001 and R014 match keywords at the start of a path segment.** A keyword counts when it's followed by a separator (`/`, `.`, `-`, `_`), a digit (`oauth2/`), or a camelCase capital (`AuthProvider.tsx`). A lowercase letter doesn't count, so `author.ts` and `authority/` aren't flagged.
+- **Missed:**
+  - a keyword in the middle of a name (`useAuth.ts`)
+  - an all-caps acronym followed by a word (`SSOConfig.ts`, `AUTHProvider.ts`)
+  - `AccessControl.ts`, because the keyword is `access-control`
+- **Flagged, though not always sensitive:** camelCase names that start with a keyword, such as `sessionStorage.ts` or `loginIcon.svg`. This matches how `session-storage.ts` was already treated.
+- **R011** covers Terraform (`.tf`, `.tfvars`, `.tf.json`) and Helm charts, including charts under `charts/<name>/` (`Chart.yaml`, `values*.yaml`/`.yml`, and `yaml`, `yml`, `tpl` and `txt` files under `templates/`). Terraform's `*.tfvars.json` isn't matched.
+
 ### Script permission changes (R018)
 
 - GitHub's changed-file data doesn't include file modes, so R018 is a heuristic: it flags a modified file with no diff and 0 lines changed that looks runnable. That means a shell-script extension (`sh`, `bash`, `zsh`, `ksh`, `fish`, `command`) or any file under `bin/`, `scripts/`, `.husky/` or `.githooks/`. The message always says "likely".

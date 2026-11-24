@@ -159,6 +159,7 @@ Found by kimchi while writing the S4-T7 rule tests. User decisions:
   - **Helm `templates/`** is narrowed to `yaml`, `yml`, `tpl` and `txt` files (so `NOTES.txt` and `_helpers.tpl` are flagged, UI code under a `templates/` folder isn't). Values files can be `.yaml` or `.yml`.
   - Newly flagged as intended: camelCase names such as `src/sessionStore.ts` and `src/permissionsTable.ts`.
   - **Still not flagged (README Known Limitations):** a keyword that doesn't start a path segment (`src/useAuth.ts`), all-caps acronyms followed by a word (`SSOConfig.ts`), and `AccessControl.ts` (the keyword is `access-control`).
+  - **Optional, not decided:** `*.tfvars.json` (Terraform's JSON variables file) isn't matched; adding it is a one-line change to the R011 extension pattern (found in the PR #29 post-merge check).
 
 ## Optional if there's room: tests and CI (carried over)
 
