@@ -19,9 +19,9 @@ Goal: show how widely a PR spreads, from the changed-file list the analysis alre
 
 ### 1. File count
 - Count changed files, **excluding**:
-  - lockfiles: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `npm-shrinkwrap.json`, `bun.lockb`
+  - lockfiles: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `npm-shrinkwrap.json`, `bun.lockb`, matched by file name in any folder (e.g. `packages/api/package-lock.json`)
   - test snapshots: `*.snap`, anything under `__snapshots__/`
-  - images and other assets by extension: images (`png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `svg`, `ico`, `bmp`), fonts (`woff`, `woff2`, `ttf`, `otf`, `eot`), media (`mp4`, `webm`, `mov`, `mp3`, `wav`), `pdf`, archives (`zip`, `gz`, `tar`)
+  - images and other assets by extension, in any case (`LOGO.PNG` is excluded): images (`png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `svg`, `ico`, `bmp`), fonts (`woff`, `woff2`, `ttf`, `otf`, `eot`), media (`mp4`, `webm`, `mov`, `mp3`, `wav`), `pdf`, archives (`zip`, `gz`, `tar`)
   - binary files (the diff says "Binary files … differ", same check as `lib/diff/util/is-binary.ts`; run only on files that have a patch, because `isBinaryFile` treats an empty patch as binary)
   - **files with no patch and 0 lines added and 0 removed** (decided with the user 2026-11-24, from review of PR #14): binaries of any extension (GitHub leaves out the patch for binaries), empty files, renames with no content change, and mode-only changes such as `chmod`
   - files with status `unchanged`
@@ -43,7 +43,7 @@ Goal: show how widely a PR spreads, from the changed-file list the analysis alre
 
 ### 3. Test-to-code ratio (separate signal)
 - **Source files:** JS/TS files (`JS_TS_FILE_PATTERN`) that aren't test files. Language scope: JS/TS only.
-- **Test files:** JS/TS files matching `*.test.*` or `*.spec.*`, or inside `__tests__/`, `test/`, `tests/` or `e2e/`. Fixture files (`fixtures/`) count as neither.
+- **Test files:** JS/TS files matching `*.test.*` or `*.spec.*`, or inside `__tests__/`, `test/`, `tests/` or `e2e/`. Folder names must match a whole folder: `src/contest/` isn't a test folder. Fixture files (`fixtures/`) count as neither.
 - Only **added, modified or renamed** files count (decided with the user 2026-11-24; `copied` and `changed` aren't counted). Deleted tests are already flagged by R010; deleted source files aren't counted either.
 - **Same exclusion as §1:** files with no patch and 0 lines added and removed (pure renames, empty files) count as neither source nor test (decided with the user 2026-11-24, from review of PR #14). Otherwise 4 pure renames would show "No tests changed for 4 source files" while the file count is 0.
 - Unlike the spread, the ratio counts only JS/TS files: a `.json` under `tests/` is neither source nor test here.

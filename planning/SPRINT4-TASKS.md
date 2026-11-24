@@ -63,7 +63,7 @@ Order: S4-T1 → S4-T2 and S4-T3 can run in parallel once S4-T1's response shape
 **Depends on:** S4-T1 merged (unit tests); S4-T2 merged (component tests).
 
 **Scope**
-- `lib/__tests__/blast-radius.test.ts`, one `describe` per metric:
+- `lib/__tests__/blast-radius*.test.ts`, one file per metric (split because biome skips files over 10,000 bytes), plus `blast-radius.test.ts` for the overall level and `analyzeDiff` wiring:
   - exclusions: each lockfile, `*.snap` and `__snapshots__/`, each asset group, a binary patch, a too-large text file with an empty patch (counted)
   - level boundaries: files 10/11/30/31, modules 1/2/3/4, zero files and zero modules
   - module rule: each container folder, a file directly in a container, root files, uppercase container names, `SRC/Auth` + `src/auth` counted as one module (first spelling shown), case-insensitive sort
