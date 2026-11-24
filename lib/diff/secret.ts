@@ -17,6 +17,7 @@ import {
   SECRET_NAME_RULES,
   SECRET_VALUE_RULES,
 } from "./constants/secret";
+import { withLine } from "./util/finding-id";
 import { stripTrailingComment } from "./util/strip-comment";
 import { isTestPath } from "./util/test-path";
 import {
@@ -108,7 +109,7 @@ const detectRiskyPatterns = ({
     const match = findMatch({ rawLine, type, fileKind });
     if (match) {
       claimedLines.add(index);
-      return formatFn({ filename, pattern: match });
+      return withLine(formatFn({ filename, pattern: match }), hunks.addedLineNumbers?.[index]);
     }
   }
 
