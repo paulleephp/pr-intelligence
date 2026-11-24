@@ -1,11 +1,17 @@
 import type { PrChangeSummary } from "@/types/diff/summary";
-import type { ChangedFile, PRAnalysis, UnscannedReason } from "@/types/pr/metadata";
+import type {
+  CategoryAnalysis,
+  ChangedFile,
+  PRAnalysis,
+  UnscannedReason,
+} from "@/types/pr/metadata";
 import { aggregateData } from "./aggregator";
 import { getBlastRadius } from "./blast-radius";
 import { getCategoryReport } from "./categorize";
 import { getCodeReport } from "./code";
 import { JS_TS_FILE_PATTERN, PRFileStatus } from "./constants/file";
 import { getFileType } from "./file-type";
+import { detectPermissionChange } from "./mode-change";
 import { getSecretsReport } from "./secret";
 import { isBinaryFile } from "./util/is-binary";
 import { parsePatch } from "./util/parse-patch";
@@ -50,6 +56,14 @@ const getUnscannedReason = (patch: string | null | undefined): UnscannedReason |
   return isBinaryFile(patch) ? "binary" : null;
 };
 
+const getPathReport = (file: ChangedFile): CategoryAnalysis => {
+  const report = getCategoryReport({ filename: file.filename, status: file.status });
+  const permissionChange = detectPermissionChange(file);
+  return permissionChange
+    ? { ...report, category: [...report.category, permissionChange] }
+    : report;
+};
+
 export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
   const unscannedFiles: PRAnalysis["unscannedFiles"] = [];
   const secretReports: PRAnalysis["secret"] = [];
@@ -57,9 +71,10 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
   const codeReports: PRAnalysis["code"] = [];
   const fileTypes: PRAnalysis["fileTypes"] = {};
 
-  for (const { patch, filename, status } of changedFiles) {
+  for (const file of changedFiles) {
+    const { patch, filename } = file;
     fileTypes[filename] = getFileType(filename);
-    categoryReports.push(getCategoryReport({ filename, status }));
+    categoryReports.push(getPathReport(file));
 
     const unscannedReason = getUnscannedReason(patch);
     if (unscannedReason) {
