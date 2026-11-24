@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR Intelligence Style Guide</title>
+<link rel="icon" href="brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Visual reference for STYLEGUIDE.md "Colors and brand". Dark-only, matching the app.
+   Source of truth for values is STYLEGUIDE.md; keep both in sync. */
+:root {
+  color-scheme: dark;
+  --bg: #09090b;
+  --card: #141a19;
+  --line: #212827;
+  --fg: #f4f4f5;
+  --muted: #a1a1aa;
+  --faint: #71717a;
+  --emerald: #34d399;
+  --cyan: #22d3ee;
+  --cta: #10b981;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font-body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 40px max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 44px; }
+h1 { font-family: var(--font-display); font-size: 2rem; margin: 0; background: linear-gradient(90deg, var(--emerald), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
+h2 { font-family: var(--font-display); font-size: 1.25rem; margin: 0; }
+h3 { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); margin: 0; font-weight: 600; }
+p { margin: 0; color: var(--muted); max-width: 70ch; }
+code, .mono { font-family: var(--font-mono); font-size: .8rem; }
+section { display: grid; gap: 16px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; border: 1px solid; font-size: .8rem; font-weight: 500; white-space: nowrap; background: transparent; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
+.bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; gap: 2px; }
+.dist { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+@media (max-width: 560px) { .dist { grid-template-columns: 1fr; } }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.sw { display: grid; gap: 4px; font-size: .72rem; color: var(--muted); }
+.sw i { display: block; height: 32px; border-radius: 6px; }
+.math div { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 6px; }
+.math strong { font-family: var(--font-display); }
+.math span { font-size: .85rem; color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--faint); font-weight: 500; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+.scroll { overflow-x: auto; }
+.sizes { display: flex; align-items: flex-end; gap: 16px; }
+.tab { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px 8px 0 0; font-size: .78rem; }
+.tab.dark { background: #202124; color: #e8eaed; }
+.tab.light { background: #e8eaed; color: #202124; }
+.lockup { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); background: #0b0d0d; border-radius: 8px; }
+.lockup .name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: var(--fg); letter-spacing: -.01em; }
+.lockup .sub { font-size: .72rem; color: var(--faint); }
+.rules { margin: 0; padding-left: 18px; color: var(--muted); display: grid; gap: 4px; max-width: 70ch; }
+.rules b { color: var(--fg); font-weight: 600; }
+.status { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--emerald); font-weight: 600; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+    <symbol id="mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="url(#g)"/><path d="M11 16 L21.5 9.5 M11 16 L21.5 22.5" stroke="#06231f" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="11" cy="16" r="3.8" fill="#06231f"/><circle cx="22" cy="9.5" r="2.8" fill="#06231f"/><circle cx="22" cy="22.5" r="2.8" fill="#06231f"/></symbol>
+  </defs>
+</svg>
+<div class="wrap">
+  <header style="display:grid;gap:10px">
+    <div class="status">Adopted 2026-11-24 · implementation: backlog U7 (colors), U8 (logo)</div>
+    <h1>PR Intelligence Style Guide</h1>
+    <p>Colors and brand mark. Every color is derived from two anchors on the home page: the emerald → cyan title gradient and the emerald Analyze button. Rules and exact values are in <code>STYLEGUIDE.md</code>; this page shows them.</p>
+  </header>
+
+  <section>
+    <h2>Brand mark</h2>
+    <p>"Impact nodes": one changed file reaching two dependents, in dark teal on the title gradient. The gradient carries the theme, so the wordmark is plain near-white. File: <code>docs/brand/mark.svg</code>.</p>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Sizes</h3>
+        <div class="sizes"><svg width="64" height="64" role="img" aria-label="Brand mark at 64px"><use href="#mark"/></svg><svg width="32" height="32" aria-hidden="true"><use href="#mark"/></svg><svg width="16" height="16" aria-hidden="true"><use href="#mark"/></svg></div>
+        <h3>Browser tabs</h3>
+        <div class="row"><span class="tab dark"><svg width="16" height="16" aria-hidden="true"><use href="#mark"/></svg>#142 · acme/api</span><span class="tab light"><svg width="16" height="16" aria-hidden="true"><use href="#mark"/></svg>#142 · acme/api</span></div>
+      </div>
+      <div class="panel">
+        <h3>Header lockup</h3>
+        <div class="lockup"><svg width="28" height="28" aria-hidden="true"><use href="#mark"/></svg><span class="name">PR Intelligence</span><span class="sub">GitHub PR Analysis Tool</span></div>
+        <ul class="rules">
+          <li>Mark at 28 px in the header, 16 and 32 px as favicon.</li>
+          <li>Wordmark in Space Grotesk 700, near-white (<code>#f4f4f5</code>), never in theme green.</li>
+          <li><b>Don't</b> recolor the mark, put it on a light card, or add an emoji.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How the colors are derived</h2>
+    <div class="grid3 math">
+      <div><strong>1 · Anchor</strong><span>Title gradient emerald-400 (hue 163°) to cyan-400 (212°). Midpoint <b class="mono">187°</b> teal, lightness 0.785, chroma 0.144 in OKLCH.</span></div>
+      <div><strong>2 · Complement</strong><span>Teal's complement is <b class="mono">7°</b>. Severities sit on the warm arc next to it (15°, 50°, 80°); low (232°) is analogous to the theme.</span></div>
+      <div><strong>3 · Lightness ramp</strong><span>Critical darkest and most saturated, medium lightest, so levels stay distinct with red-green color blindness.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Severity</h2>
+    <p>Outline badges: colored border, dot and text, no tinted fill (orange tinted over near-black renders as brown). Critical alone is a solid badge, as its own level.</p>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Badges</h3>
+        <div class="row">
+          <span class="badge" style="background:#d22c50;border-color:#d22c50;color:#fff">Critical</span>
+          <span class="badge" style="border-color:rgba(250,130,51,.55);color:#feb992"><i class="dot" style="background:#fa8233"></i>High</span>
+          <span class="badge" style="border-color:rgba(254,207,127,.5);color:#fed48c"><i class="dot" style="background:#fecf7f"></i>Medium</span>
+          <span class="badge" style="border-color:rgba(55,178,232,.55);color:#8dd5fb"><i class="dot" style="background:#37b2e8"></i>Low</span>
+          <span class="badge" style="border-color:#3a4241;color:#a1a1aa"><i class="dot" style="background:#52525b"></i>None</span>
+        </div>
+        <h3>Distribution bar (half width, legend right)</h3>
+        <div class="dist">
+          <div class="bar"><span style="flex:1;background:#dd3858"></span><span style="flex:3;background:#fa8233"></span><span style="flex:5;background:#fecf7f"></span><span style="flex:2;background:#37b2e8"></span></div>
+          <div class="legend"><span><i class="dot" style="background:#dd3858"></i>Critical 1</span><span><i class="dot" style="background:#fa8233"></i>High 3</span><span><i class="dot" style="background:#fecf7f"></i>Medium 5</span><span><i class="dot" style="background:#37b2e8"></i>Low 2</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>As seen with deuteranopia (simulated)</h3>
+        <div class="swatches">
+          <div class="sw"><i style="background:#908554"></i>Critical</div>
+          <div class="sw"><i style="background:#c1ad31"></i>High</div>
+          <div class="sw"><i style="background:#eedb81"></i>Medium</div>
+          <div class="sw"><i style="background:#7f9fe7"></i>Low</div>
+        </div>
+        <p class="mono">closest pair ΔE 14.7 (previous palette: 10.5)</p>
+        <p>Severity is never shown by color alone: badges and legends always carry the label.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>File status and PR state</h2>
+    <p>Status colors are muted so severity is the only loud color in a table row. "Modified", the most common status, is neutral. Merged purple is the theme's triad (187° + 120°).</p>
+    <div class="grid2">
+      <div class="panel">
+        <h3>File status</h3>
+        <div class="row">
+          <span class="badge" style="border-color:#2f3a37;color:#7bbb9d">added</span>
+          <span class="badge" style="border-color:#2f3a37;color:#a1a1aa">modified</span>
+          <span class="badge" style="border-color:#2f3a37;color:#d8969d">removed</span>
+          <span class="badge" style="border-color:#2f3a37;color:#76b4d5">renamed</span>
+          <span class="badge" style="border-color:#2f3a37;color:#b89ed3">copied</span>
+        </div>
+        <h3>Table row</h3>
+        <div class="row"><span class="mono" style="color:#d4d4d8">src/auth/session.ts</span><span class="badge" style="border-color:#2f3a37;color:#a1a1aa">modified</span><span class="badge" style="border-color:rgba(254,207,127,.5);color:#fed48c"><i class="dot" style="background:#fecf7f"></i>Medium</span></div>
+      </div>
+      <div class="panel">
+        <h3>PR state</h3>
+        <div class="row" style="gap:16px"><span style="color:#4ad59f">Open</span><span style="color:#cb98f9">Merged</span><span style="color:#f2939f">Closed</span></div>
+        <h3>Theme</h3>
+        <div class="row"><span class="badge" style="background:#10b981;border-color:#10b981;color:#000">Analyze PR</span><span class="mono" style="color:#34d399">emerald-400</span><span class="mono" style="color:#22d3ee">cyan-400</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tokens</h2>
+    <p>All text colors pass WCAG AA on the card background; white on the critical badge is 4.98:1.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Token</th><th>Text</th><th>Mark (dot, bar, border)</th><th>Hue</th><th>Text contrast</th></tr></thead>
+        <tbody>
+          <tr><td>critical</td><td class="mono"><i class="dot" style="background:#f7a3a9"></i> #f7a3a9</td><td class="mono"><i class="dot" style="background:#dd3858"></i> #dd3858 · solid #d22c50</td><td>15°</td><td>9.8:1</td></tr>
+          <tr><td>high</td><td class="mono"><i class="dot" style="background:#feb992"></i> #feb992</td><td class="mono"><i class="dot" style="background:#fa8233"></i> #fa8233</td><td>50°</td><td>11.5:1</td></tr>
+          <tr><td>medium</td><td class="mono"><i class="dot" style="background:#fed48c"></i> #fed48c</td><td class="mono"><i class="dot" style="background:#fecf7f"></i> #fecf7f</td><td>80°</td><td>13.7:1</td></tr>
+          <tr><td>low</td><td class="mono"><i class="dot" style="background:#8dd5fb"></i> #8dd5fb</td><td class="mono"><i class="dot" style="background:#37b2e8"></i> #37b2e8</td><td>232°</td><td>11.9:1</td></tr>
+          <tr><td>none</td><td class="mono">#a1a1aa</td><td class="mono">#52525b</td><td>neutral</td><td>7.5:1</td></tr>
+          <tr><td>state: open / merged / closed</td><td class="mono">#4ad59f / #cb98f9 / #f2939f</td><td></td><td>163° / 307° / 12°</td><td>≥ 8.6:1</td></tr>
+          <tr><td>status: added / modified / removed / renamed / copied</td><td class="mono">#7bbb9d / #a1a1aa / #d8969d / #76b4d5 / #b89ed3</td><td class="mono">border #2f3a37</td><td>chroma 0.08</td><td>≥ 7.5:1</td></tr>
+          <tr><td>brand mark glyph</td><td></td><td class="mono">#06231f on gradient #34d399 → #22d3ee</td><td></td><td></td></tr>
+          <tr><td>neutral surfaces (optional)</td><td class="mono">#0a0e0e · #141a19 · #212827</td><td></td><td>zinc tinted to 187°</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+</body>
+</html>
