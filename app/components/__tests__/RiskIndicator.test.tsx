@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { RiskIndicator } from "../RiskIndicator";
 import { buildAnalysis, FILES, mixedReport } from "./fixtures";
 
-const aggregateOf = (files: Parameters<typeof buildAnalysis>[0]) => buildAnalysis(files).analysis.aggregate;
+const aggregateOf = (files: Parameters<typeof buildAnalysis>[0]) =>
+  buildAnalysis(files).analysis.aggregate;
 
 describe("RiskIndicator", () => {
   it("shows an empty state when nothing was detected", () => {
@@ -23,7 +24,9 @@ describe("RiskIndicator", () => {
   it("groups findings by severity, most severe first, skipping empty levels", () => {
     render(<RiskIndicator aggregate={aggregateOf([FILES.low, FILES.critical])} />);
 
-    const headings = screen.getAllByText(/^\d+ findings?$/).map((el) => el.previousSibling?.textContent);
+    const headings = screen
+      .getAllByText(/^\d+ findings?$/)
+      .map((el) => el.previousSibling?.textContent);
     expect(headings).toEqual(["Critical", "Low"]);
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("No risky changes detected.")).not.toBeInTheDocument();

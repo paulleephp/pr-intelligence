@@ -27,7 +27,11 @@ const fetchChangedFilesSafe = async (
   }
 };
 
-export async function analyzePR(owner: string, repo: string, prNumber: number): Promise<AnalyzePRResult> {
+export async function analyzePR(
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<AnalyzePRResult> {
   try {
     const [prMetadata, changedFiles] = await Promise.all([
       fetchPRMetadata(owner, repo, prNumber),

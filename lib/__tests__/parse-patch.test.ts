@@ -81,7 +81,12 @@ describe("parsePatch - Patch Parsing", () => {
   });
 
   it("should classify lines by leading marker, not by characters inside the line", () => {
-    const patch = patchLines("@@ -1,2 +1,2 @@", " const total = a - b + c;", "-const x = 1;", "+const x = 2;");
+    const patch = patchLines(
+      "@@ -1,2 +1,2 @@",
+      " const total = a - b + c;",
+      "-const x = 1;",
+      "+const x = 2;",
+    );
 
     const result = parsePatch(patch);
 

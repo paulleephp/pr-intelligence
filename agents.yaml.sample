@@ -1,0 +1,77 @@
+# Template for agents.yaml (copy to agents.yaml, which is gitignored, and fill in).
+# Workflow rules: AGENTS.md "Agent Workflow".
+
+github_app:
+  # One shared app for all agents. GitHub shows the same bot for everyone, so agents
+  # identify themselves by convention (see `identity` below).
+  app_id: ${GITHUB_APP_ID}
+  # A number: the last part of https://github.com/settings/installations/<installation_id>
+  installation_id: ${GITHUB_INSTALLATION_ID}
+  private_key_path: ~/path/to/your-app.private-key.pem   # keep outside the repo
+
+repo:
+  main_path: ~/repos/pr-intelligence
+  # Default only. Every agent except mochi overrides it with its own folder below,
+  # so no worktree is created inside the main checkout.
+  worktrees_dir: ~/repos/pr-intelligence
+
+# Branch flow: task branch -> sprint-<n> -> staging -> main. The user merges every PR.
+branches:
+  sprint: sprint-<n>
+  # Git checks out a branch in only one worktree at a time.
+  # No worktree keeps the sprint branch checked out.
+  task_branch_pattern: "sprint-<n>-t<task>"   # e.g. sprint-4-t8
+  start_task: "git fetch && git switch -c sprint-<n>-t<task> origin/sprint-<n>"
+  park_between_tasks: "git switch --detach origin/sprint-<n>"
+  protected: [staging, main]                  # agents never push or merge here
+
+identity:
+  commit_author: "<agent id>"                 # git config --worktree user.name <id>
+  commit_trailer: "Agent: <agent id>"
+  pr_title: "[<agent id>] S<n>-T<task>: <summary>"
+  review_and_comment_prefix: "[<agent id>]"
+
+agents:
+  - id: mochi
+    cmux_session: mochi
+    worktree: main
+    role: orchestrator_intake
+    description: Scopes sprints, writes task briefs, owns all .md docs, routes PRs to review
+    checkout: detached                        # read-only / base-branch work
+    commits: docs only, pushed with `git push origin HEAD:sprint-<n>`, no PR
+
+  - id: boba
+    cmux_session: boba
+    worktree: boba
+    role: backend_engineer
+    description: Builds APIs, database queries, and server-side business logic
+    checkout: task-branch                     # detached between tasks
+    repo:
+      worktrees_dir: ~/repos/pr-intelligence-backend
+
+  - id: takoyaki
+    cmux_session: takoyaki
+    worktree: takoyaki
+    role: frontend_engineer
+    description: Builds UI components, state handling, and client-side interactions
+    checkout: task-branch
+    repo:
+      worktrees_dir: ~/repos/pr-intelligence-frontend
+
+  - id: kimchi
+    cmux_session: kimchi
+    worktree: kimchi
+    role: tester
+    description: Writes and runs unit, integration, and end-to-end tests; owns all test files
+    checkout: task-branch                     # test branch cut after the coder's PR merges
+    repo:
+      worktrees_dir: ~/repos/pr-intelligence-test
+
+  - id: banh-mi
+    cmux_session: banh-mi
+    worktree: banh-mi
+    role: reviewer
+    description: Reviews PRs against the brief and spec; comments only, never merges
+    checkout: detached                        # read-only: `gh pr checkout <n> --detach`
+    repo:
+      worktrees_dir: ~/repos/pr-intelligence-review

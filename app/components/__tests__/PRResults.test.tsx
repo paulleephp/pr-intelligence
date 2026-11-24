@@ -41,11 +41,20 @@ describe("PRResults", () => {
   // Key decision (AGENTS.md): color-coded severity groups, NO raw scores shown to users.
   // Regression: unchanged files were counted in some of these numbers and not others.
   it("counts the same files everywhere on the page when the PR has an unchanged file", () => {
-    render(<PRResults report={buildReport([FILES.high, UNSCANNED.binary, UNSCANNED.unchanged])} loading={false} />);
-    const filesBySeverity = within(screen.getByRole("heading", { name: "Files by severity" }).parentElement as HTMLElement)
+    render(
+      <PRResults
+        report={buildReport([FILES.high, UNSCANNED.binary, UNSCANNED.unchanged])}
+        loading={false}
+      />,
+    );
+    const filesBySeverity = within(
+      screen.getByRole("heading", { name: "Files by severity" }).parentElement as HTMLElement,
+    )
       .getAllByRole("listitem")
       .reduce((sum, item) => sum + Number(item.lastElementChild?.textContent), 0);
-    const notScanned = Number(screen.getByText(/Not scanned: \d+ file/).textContent?.match(/(\d+) file/)?.[1]);
+    const notScanned = Number(
+      screen.getByText(/Not scanned: \d+ file/).textContent?.match(/(\d+) file/)?.[1],
+    );
 
     expect({
       filesChanged: Number(screen.getByText("Files changed").nextElementSibling?.textContent),

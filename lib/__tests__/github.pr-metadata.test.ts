@@ -30,7 +30,10 @@ describe("pr-metadata/get", () => {
     it("returns the metadata on success", async () => {
       mockPullsGet.mockResolvedValueOnce(octokit.pullsGetSuccess);
 
-      expect(await getPRMetadata("owner", "repo", 123)).toMatchObject({ number: 123, title: "Test PR" });
+      expect(await getPRMetadata("owner", "repo", 123)).toMatchObject({
+        number: 123,
+        title: "Test PR",
+      });
     });
 
     it("returns an ErrorResponse instead of throwing", async () => {
@@ -62,9 +65,14 @@ describe("pr-metadata/get", () => {
 
       const result = await getFullPRAnalysis("owner", "repo", 123);
 
-      if (!("analysis" in result)) throw new Error(`expected analysis, got ${JSON.stringify(result)}`);
+      if (!("analysis" in result))
+        throw new Error(`expected analysis, got ${JSON.stringify(result)}`);
       expect(result.changedFiles.map((f) => f.patch)).toEqual(["", ""]);
-      expect(result.prChangeSummary).toMatchObject({ filesRemoved: 2, totalLinesRemoved: 120, totalLinesAdded: 0 });
+      expect(result.prChangeSummary).toMatchObject({
+        filesRemoved: 2,
+        totalLinesRemoved: 120,
+        totalLinesAdded: 0,
+      });
       expect(result.analysis.aggregate.totalFindings).toBe(0);
       expect(result.analysis.unscannedFiles).toEqual([
         { filename: "src/old.ts", reason: "no-patch" },
@@ -77,7 +85,8 @@ describe("pr-metadata/get", () => {
 
       const result = await getFullPRAnalysis("owner", "repo", 123);
 
-      if (!("analysis" in result)) throw new Error(`expected analysis, got ${JSON.stringify(result)}`);
+      if (!("analysis" in result))
+        throw new Error(`expected analysis, got ${JSON.stringify(result)}`);
       expect(result.changedFiles).toEqual([]);
       expect(result.analysis.aggregate.totalFindings).toBe(0);
     });
@@ -91,7 +100,8 @@ describe("pr-metadata/get", () => {
 
       const result = await getFullPRAnalysis("owner", "repo", 123);
 
-      if (!("analysis" in result)) throw new Error(`expected analysis, got ${JSON.stringify(result)}`);
+      if (!("analysis" in result))
+        throw new Error(`expected analysis, got ${JSON.stringify(result)}`);
       expect(result.changedFiles).toHaveLength(150);
       expect(result.prChangeSummary.filesChanged).toBe(150);
       expect(Object.keys(result.analysis.aggregate.fileSeverity)).toEqual(["src/hash.ts"]);

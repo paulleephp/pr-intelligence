@@ -67,6 +67,10 @@ export const RISK_RULES = {
     condition: "Dangerous code execution or DOM sink introduced",
     severity: "high" as const,
   },
+  R018: {
+    condition: "Script changed with no content change: likely a permission change",
+    severity: "medium" as const,
+  },
 } as const;
 
 export const SEVERITY_RANK: Record<PatternSeverity, number> = {

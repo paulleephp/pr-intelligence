@@ -107,13 +107,19 @@ describe("prAnalysisResponseSchema", () => {
     });
 
     it("accepts GitHub's 'unchanged' status", () => {
-      expect(prAnalysisResponseSchema.safeParse(withChangedFile({ status: "unchanged" })).success).toBe(true);
+      expect(
+        prAnalysisResponseSchema.safeParse(withChangedFile({ status: "unchanged" })).success,
+      ).toBe(true);
     });
 
     it.each(
-      ["additions", "deletions"].flatMap((field) => BAD_COUNTS.map(([label, value]) => [field, label, value] as const)),
+      ["additions", "deletions"].flatMap((field) =>
+        BAD_COUNTS.map(([label, value]) => [field, label, value] as const),
+      ),
     )("rejects %s that is %s (guard rule)", (field, _, value) => {
-      expect(prAnalysisResponseSchema.safeParse(withChangedFile({ [field]: value })).success).toBe(false);
+      expect(prAnalysisResponseSchema.safeParse(withChangedFile({ [field]: value })).success).toBe(
+        false,
+      );
     });
   });
 
@@ -121,13 +127,14 @@ describe("prAnalysisResponseSchema", () => {
     const rows = (fields: string[]) =>
       fields.flatMap((field) => BAD_COUNTS.map(([label, value]) => [field, label, value] as const));
     const rejects = (field: string, _: string, value: unknown) => {
-      expect(prAnalysisResponseSchema.safeParse(withSummary({ [field]: value })).success).toBe(false);
+      expect(prAnalysisResponseSchema.safeParse(withSummary({ [field]: value })).success).toBe(
+        false,
+      );
     };
 
-    it.each(rows(["filesChanged", "totalLinesAdded", "totalLinesRemoved", "filesAdded", "filesRemoved"]))(
-      "rejects %s that is %s (guard rule)",
-      rejects,
-    );
+    it.each(
+      rows(["filesChanged", "totalLinesAdded", "totalLinesRemoved", "filesAdded", "filesRemoved"]),
+    )("rejects %s that is %s (guard rule)", rejects);
 
     it.each(rows(["filesModified", "filesUnchanged"]))("rejects %s that is %s", rejects);
   });
@@ -137,8 +144,14 @@ describe("prAnalysisResponseSchema", () => {
       ["a missing fileTypes (guard rule)", { fileTypes: undefined }],
       ["an unknown file type", { fileTypes: { "src/a.ts": "images" } }],
       ["unscannedFiles that is not an array (guard rule)", { unscannedFiles: {} }],
-      ["an unknown unscanned reason (guard rule)", { unscannedFiles: [{ filename: "a.png", reason: "too-large" }] }],
-      ["an unscanned file without filename (guard rule)", { unscannedFiles: [{ reason: "binary" }] }],
+      [
+        "an unknown unscanned reason (guard rule)",
+        { unscannedFiles: [{ filename: "a.png", reason: "too-large" }] },
+      ],
+      [
+        "an unscanned file without filename (guard rule)",
+        { unscannedFiles: [{ reason: "binary" }] },
+      ],
       ["a missing secret report list", { secret: undefined }],
     ])("rejects %s", (_, overrides) => {
       expect(prAnalysisResponseSchema.safeParse(withAnalysis(overrides)).success).toBe(false);
@@ -149,21 +162,31 @@ describe("prAnalysisResponseSchema", () => {
     it.each(["findings", "ruleCounts", "severityCounts", "fileSeverity", "fileSeverityCounts"])(
       "rejects a missing %s (guard rule)",
       (field) => {
-        expect(prAnalysisResponseSchema.safeParse(withAggregate({ [field]: undefined })).success).toBe(false);
+        expect(
+          prAnalysisResponseSchema.safeParse(withAggregate({ [field]: undefined })).success,
+        ).toBe(false);
       },
     );
 
     it.each([
-      ["severityCounts without a critical count", { severityCounts: { low: 0, medium: 0, high: 0 } }],
+      [
+        "severityCounts without a critical count",
+        { severityCounts: { low: 0, medium: 0, high: 0 } },
+      ],
       ["a negative totalFindings", { totalFindings: -1 }],
       ["an unknown overallSeverity", { overallSeverity: "urgent" }],
-      ["a finding with an unknown severity", { findings: [{ ruleId: "R007", severity: "urgent", filename: "a", message: "m" }] }],
+      [
+        "a finding with an unknown severity",
+        { findings: [{ ruleId: "R007", severity: "urgent", filename: "a", message: "m" }] },
+      ],
     ])("rejects %s", (_, overrides) => {
       expect(prAnalysisResponseSchema.safeParse(withAggregate(overrides)).success).toBe(false);
     });
 
     it("accepts overallSeverity: null (no findings)", () => {
-      expect(prAnalysisResponseSchema.safeParse(withAggregate({ overallSeverity: null })).success).toBe(true);
+      expect(
+        prAnalysisResponseSchema.safeParse(withAggregate({ overallSeverity: null })).success,
+      ).toBe(true);
     });
   });
 });

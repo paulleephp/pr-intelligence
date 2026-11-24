@@ -1,6 +1,6 @@
 import type { Pattern } from "@/types/diff/pattern";
-import { RISK_RULES } from "./risk-scoring";
 import type { ApiArgs, FormatDataArgs, PassArgs, SshArgs } from "@/types/diff/util/format-data";
+import { RISK_RULES } from "./risk-scoring";
 
 export const getSecretFoundData = ({ filename, pattern }: PassArgs) => {
   return formatData({

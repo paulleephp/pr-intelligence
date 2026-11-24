@@ -80,7 +80,10 @@ describe("aggregateData", () => {
 
 describe("detector rule IDs", () => {
   it("flags removed test files as R010 and ignores other removed files", () => {
-    const removedTest = getCategoryReport({ filename: "src/__tests__/a.test.ts", status: "removed" });
+    const removedTest = getCategoryReport({
+      filename: "src/__tests__/a.test.ts",
+      status: "removed",
+    });
     const removedSource = getCategoryReport({ filename: "src/util.ts", status: "removed" });
 
     expect(removedTest.category.map((p) => p.ruleId)).toContain("R010");
@@ -126,7 +129,7 @@ describe("detector rule IDs", () => {
 
 describe("isBinaryFile", () => {
   it("treats multi-line text patches with tabs and unicode as text", () => {
-    expect(isBinaryFile("@@ -1,2 +1,2 @@\n-\tconst a = 1;\n+\tconst a = \"héllo ✓\";")).toBe(false);
+    expect(isBinaryFile('@@ -1,2 +1,2 @@\n-\tconst a = 1;\n+\tconst a = "héllo ✓";')).toBe(false);
   });
 
   it("treats missing patches, git binary markers and null bytes as binary", () => {

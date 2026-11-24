@@ -51,7 +51,9 @@ describe("usePRReport", () => {
 
     expect(mockFetchPrMetadata).toHaveBeenCalledWith(PR_URL, { signal: expect.any(AbortSignal) });
     expect(mockFetchPrAnalysis).toHaveBeenCalledWith(PR_URL, { signal: expect.any(AbortSignal) });
-    expect(mockFetchPrMetadata.mock.calls[0][1].signal).toBe(mockFetchPrAnalysis.mock.calls[0][1].signal);
+    expect(mockFetchPrMetadata.mock.calls[0][1].signal).toBe(
+      mockFetchPrAnalysis.mock.calls[0][1].signal,
+    );
   });
 
   it("is loading while requests are in flight, then exposes the combined report", async () => {
@@ -76,7 +78,12 @@ describe("usePRReport", () => {
 
   it.each([
     ["metadata", fail<PRMetadata>("PR not found"), ok(analysis), "PR not found"],
-    ["analysis", ok(mockPRMetadataSuccess), fail<PRAnalysisResponse>("Rate limited"), "Rate limited"],
+    [
+      "analysis",
+      ok(mockPRMetadataSuccess),
+      fail<PRAnalysisResponse>("Rate limited"),
+      "Rate limited",
+    ],
   ])("surfaces the error when the %s request fails", async (_, meta, anal, message) => {
     mockFetchPrMetadata.mockResolvedValue(meta);
     mockFetchPrAnalysis.mockResolvedValue(anal);

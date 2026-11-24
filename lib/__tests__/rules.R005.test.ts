@@ -16,7 +16,11 @@ describe("R005 - dependency changes", () => {
       ["Cargo.toml", '+serde = "1.0.190"', "serde"],
       ["Cargo.toml", '+serde = { version = "1.0", features = ["derive"] }', "serde"],
       ["Gemfile", "+gem 'rails', '~> 7.1'", "rails"],
-      ["build.gradle", "+    implementation 'com.google.guava:guava:32.1.0-jre'", "com.google.guava:guava"],
+      [
+        "build.gradle",
+        "+    implementation 'com.google.guava:guava:32.1.0-jre'",
+        "com.google.guava:guava",
+      ],
     ])("%s: %s", (filename, patch, name) => {
       const finding = deps(filename, patch);
 
@@ -29,12 +33,17 @@ describe("R005 - dependency changes", () => {
   it("classifies added, removed and upgraded in one message", () => {
     const finding = deps(
       "package.json",
-      ['-    "react": "^18.2.0",', '+    "react": "^19.0.0",', '+    "zod": "^3.22.0",', '-    "yup": "^1.0.0",'].join(
-        "\n",
-      ),
+      [
+        '-    "react": "^18.2.0",',
+        '+    "react": "^19.0.0",',
+        '+    "zod": "^3.22.0",',
+        '-    "yup": "^1.0.0",',
+      ].join("\n"),
     );
 
-    expect(finding?.message).toBe("Dependency changes in package.json: added zod; removed yup; upgraded react");
+    expect(finding?.message).toBe(
+      "Dependency changes in package.json: added zod; removed yup; upgraded react",
+    );
   });
 
   it("ignores a line that only moved or gained/lost a trailing comma", () => {
@@ -59,7 +68,12 @@ describe("R005 - dependency changes", () => {
     ]);
 
     expect(aggregate.ruleCounts).toEqual([
-      { ruleId: "R005", condition: "Dependencies added, removed or upgraded", severity: "low", count: 1 },
+      {
+        ruleId: "R005",
+        condition: "Dependencies added, removed or upgraded",
+        severity: "low",
+        count: 1,
+      },
     ]);
     expect(aggregate.overallSeverity).toBe("low");
   });
@@ -90,7 +104,10 @@ describe("R005 - dependency changes", () => {
       ]);
 
       expect(aggregate.findings.filter((p) => p.ruleId === "R005")).toEqual([
-        expect.objectContaining({ filename: "package.json", message: "Dependency changes in package.json: added lodash" }),
+        expect.objectContaining({
+          filename: "package.json",
+          message: "Dependency changes in package.json: added lodash",
+        }),
       ]);
     });
 

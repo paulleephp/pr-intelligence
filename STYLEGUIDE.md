@@ -68,7 +68,7 @@ Zinc tinted slightly toward the theme hue: page `#0a0e0e`, card `#141a19`, borde
 
 ### Brand mark
 
-- File: [docs/brand/mark.svg](./docs/brand/mark.svg). "Impact nodes": dark teal glyph `#06231f` on the title gradient, 8px corner radius at 32px.
+- File: [docs/brand/mark.svg](./docs/brand/mark.svg). "Diff lines": three diff lines, the middle one with a finding marker. Dark teal glyph `#06231f` on the title gradient, 8px corner radius at 32px.
 - Header: mark at 28px + wordmark "PR Intelligence" in near-white (`#f4f4f5`), bold display font. The wordmark is not theme green; the mark carries the theme.
 - Favicon: the same mark. Place it where the App Router expects icon files (check `node_modules/next/dist/docs/`); the old `favicon.ico` at the repo root isn't served.
 - Don't recolor the mark, place it on a light background, or pair it with an emoji.

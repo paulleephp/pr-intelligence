@@ -3,6 +3,7 @@ import type { PRSummaryProps } from "@/types/ui/components";
 import { countChangedFiles } from "./_lib/change-summary";
 import { PR_STATE_STYLES } from "./_lib/file-display";
 import { SEVERITY_ORDER } from "./_lib/severity";
+import { BlastRadiusCard } from "./BlastRadius";
 import { StatTile } from "./report/StatTile";
 import { SeverityBadge } from "./severity/SeverityBadge";
 import { SeverityBar } from "./severity/SeverityBar";
@@ -11,7 +12,8 @@ export function PRSummary({ report }: PRSummaryProps) {
   const { metadata, analysis } = report;
   const { totalLinesAdded, totalLinesRemoved } = analysis.prChangeSummary;
   const changedCount = countChangedFiles(analysis.prChangeSummary);
-  const { severityCounts, totalFindings, overallSeverity } = analysis.analysis.aggregate;
+  const { aggregate, blastRadius } = analysis.analysis;
+  const { severityCounts, totalFindings, overallSeverity } = aggregate;
   const stateStyle = PR_STATE_STYLES[metadata.state];
   const linesChanged = totalLinesAdded + totalLinesRemoved;
 
@@ -63,15 +65,20 @@ export function PRSummary({ report }: PRSummaryProps) {
         <StatTile label="Risk findings" value={totalFindings} />
       </div>
 
-      <div className="mt-6">
-        <h3 className="mb-3 text-sm text-zinc-500 uppercase tracking-wide">
-          Severity distribution
-        </h3>
-        <SeverityBar
-          counts={severityCounts}
-          order={SEVERITY_ORDER}
-          ariaLabel={`${totalFindings} findings by severity`}
-        />
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="min-w-0">
+          <h3 className="mb-3 text-sm text-zinc-500 uppercase tracking-wide">
+            Severity distribution
+          </h3>
+          <SeverityBar
+            counts={severityCounts}
+            order={SEVERITY_ORDER}
+            ariaLabel={`${totalFindings} findings by severity`}
+          />
+        </div>
+        <div className="min-w-0">
+          <BlastRadiusCard blastRadius={blastRadius} />
+        </div>
       </div>
     </section>
   );

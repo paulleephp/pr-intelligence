@@ -12,6 +12,8 @@ export const patternSchema = z.object({
   filename: z.string(),
   message: z.string(),
   evidence: z.string().optional(),
+  line: z.int().positive().optional(),
+  id: z.string().optional(),
 }) satisfies z.ZodType<Pattern>;
 
 export const errorBodySchema = z.object({ error: z.string() });

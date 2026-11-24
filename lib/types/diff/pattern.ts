@@ -16,6 +16,8 @@ export interface Pattern {
   filename: string;
   message: string;
   evidence?: string;
+  line?: number;
+  id?: string;
 }
 
 export type PatternDetail = {

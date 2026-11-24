@@ -8,7 +8,7 @@ This tool automates the initial investigation by fetching PR metadata, analyzing
 
 ## Language Scope
 
-Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the planned impact analysis (Sprint 4).
+Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the test-to-code ratio in the blast-radius metrics.
 
 Files that aren't tied to one language are still analyzed:
 
@@ -58,7 +58,7 @@ PR Intelligence System Flow:
                 │
         ┌───────▼──────────┐
         │ Severity Rules     │
-        │ (R001–R016, no LLM)│
+        │ (R001–R018, no LLM)│
         │ Highest = PR label │
         └───────┬───────────┘
                 │
@@ -92,8 +92,8 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 | GitHub Integration | Octokit |
 | Severity Rules | Deterministic rule table (`lib/diff/util/risk-scoring.ts`) |
 | Validation | Zod v4 schemas (`lib/schemas/`) for API responses and the `url` query param |
-| Database | PostgreSQL via Supabase (planned for Sprint 4, not set up yet) |
-| DB client / ORM | To be decided in Sprint 4 (Supabase client or Prisma) |
+| Database | None yet. A Supabase verdict cache is deferred until after Sprint 5 |
+| DB client / ORM | To be decided if the cache is picked up (recommended: Supabase JS client) |
 | Testing | Vitest (Playwright planned) |
 | CI/CD | GitHub Actions (planned, no workflows yet) |
 
@@ -106,15 +106,57 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 
 ## Project Roadmap
 
-Sprint specs and task briefs live in `planning/`.
+Sprint status, delivered work and plans: `planning/ROADMAP.md`. Specs and task briefs: `planning/SPRINT<n>.md` and `planning/SPRINT<n>-TASKS.md`. Keep sprint and planning detail out of README.md; README is a reader-facing summary of what the app does today.
 
-| Sprint | Focus | Status |
-|--------|-------|--------|
-| **1** | Foundation: Next.js app, repo structure, Octokit integration | Done |
-| **2** | Diff parser, file categorization, change statistics, detection rules R001–R016, severity labels, summary/table/risk UI | Done |
-| **3** | Cleanup: changed-file pagination, Zod validation, R015 narrowed to unsafe `window.location` navigation, R005 regression tests, Affected Areas section | Done |
-| **4** | Impact analysis via GitHub code search (affected files, suggested tests); LLM review with bring-your-own-key; database (Supabase) | Planned (`planning/SPRINT4.md`) |
-| **5** | Review workflow: staged execution, retry from the failed stage, execution history | Tentative draft (`planning/SPRINT5.md`) |
+## Agent Workflow
+
+Several agents work on this repo at the same time. Agents message each other by session name (= agent ID). The local `agents.yaml` (gitignored) holds the GitHub App settings and each agent's worktree.
+
+| Agent | Role | Worktree |
+|-------|------|----------|
+| `mochi` | Orchestrator: scopes sprints, writes briefs, owns all `.md` docs, routes PRs to review | `~/repos/pr-intelligence` (main checkout, detached at `origin/sprint-<n>`) |
+| `boba` | Backend coder | `~/repos/pr-intelligence-backend` |
+| `takoyaki` | Frontend coder | `~/repos/pr-intelligence-frontend` |
+| `kimchi` | Tester: owns all test files | `~/repos/pr-intelligence-test` |
+| `banh-mi` | Reviewer: reviews PRs, comments only; read-only, detached HEAD | its own worktree (see `agents.yaml`) |
+
+### Workspaces
+- Work only in your own worktree. Never check out a branch, stage or commit in another agent's folder, including the main checkout.
+- Each worktree has its own `node_modules` (install with `npm ci`, which never modifies `package-lock.json`) and its own copy of `.env` (gitignored; copy it from the main checkout). In a fresh worktree, run `npx next typegen` once so `npx tsc --noEmit` can find the generated route types (otherwise it reports missing types such as `LayoutProps`). If two agents run the dev server at once, use different ports.
+- Biome skips any file over 10 KB (`files.maxSize` in `biome.json`) without a warning, so keep source and test files under it; split by topic rather than raising the limit.
+- Before opening a PR, run `npm run check` (Biome lint, formatting and import order; fails on problems), not just `npm run lint`, which misses formatting. `npm run check:fix` applies fixes; read its diff before committing. Biome doesn't check `.md` files.
+
+### Branches
+Git checks out a branch in only one worktree at a time, so:
+- **No worktree keeps the sprint branch `sprint-<n>` checked out.** Work that only reads it, or adds commits on top of it, uses a detached HEAD at `origin/sprint-<n>`. `mochi` works this way in the main checkout and pushes doc commits with `git push origin HEAD:sprint-<n>`.
+- **Each task branch is checked out only in its owner's worktree.** Two agents never share a branch; the tester's branch is separate from the coder's.
+- **Start a task from the remote sprint branch:** `git fetch`, then `git switch -c sprint-<n>-t<task> origin/sprint-<n>` (e.g. `sprint-4-t8`). Never base a task on a local `sprint-<n>`; it may be stale.
+- **Between tasks, park on a detached HEAD:** `git switch --detach origin/sprint-<n>`.
+- **Read-only agents (`mochi`, `banh-mi`) only ever use a detached HEAD.** They never create or check out a named branch. `banh-mi` checks out PRs detached (`gh pr checkout <n> --detach`) or reviews from the PR diff.
+- PRs target `sprint-<n>`. Before opening a PR, rebase onto the latest `sprint-<n>`.
+- `sprint-<n>` → `staging` → `main` is merged by the user only. Agents never push to `staging` or `main`, and never merge PRs.
+- `mochi` commits its own doc changes directly to `sprint-<n>`, without a PR.
+
+### Identity
+All agents push through one shared GitHub App, so GitHub shows the same bot for everyone. Identify yourself:
+- **Commits:** author name = your agent ID (set per worktree: `git config extensions.worktreeConfig true`, then `git config --worktree user.name <id>`), and end the message with an `Agent: <id>` trailer.
+- **PR titles:** `[<id>] S<n>-T<task>: <summary>`, e.g. `[boba] S4-T8: R018 script permission change`.
+- **Reviews and PR comments:** start with `[<id>]`.
+
+### Parallel or sequential
+- **Parallel** only when tasks edit different files and neither needs the other's types.
+- **Sequential** when a task uses another task's types or schema: start it after the first task's PR is merged into `sprint-<n>`, not from the unmerged branch.
+- **Conflict-prone files:** `lib/diff/core.ts`, `lib/diff/util/risk-scoring.ts`, `lib/types/pr/metadata.ts`, `lib/schemas/pr-analysis.ts`. Parallel edits are allowed, but whichever PR merges second rebases and re-runs checks before review.
+- Each brief states its dependencies; follow them.
+
+### Hand-offs
+1. The coder opens a PR and messages `mochi` with the link and any decision that goes beyond the spec.
+2. `mochi` records spec decisions in the docs and sends the PR to `banh-mi`.
+3. `banh-mi` reviews against the brief and spec, and works out fixes with the coder directly.
+4. The user merges.
+5. `kimchi` cuts a test branch from the updated `sprint-<n>` and writes the tests.
+
+Only `mochi` edits `.md` files (README, AGENTS.md, planning, STYLEGUIDE). Other agents send doc changes to `mochi`. Only `kimchi` edits test files.
 
 ## Acceptance Criteria
 
@@ -129,9 +171,11 @@ Sprint specs and task briefs live in `planning/`.
 
 ## Key Decisions Made
 
+This list is the authoritative one, including planned decisions. README.md "Design Decisions" is a reader-facing summary of the shipped ones; update it when a shipped decision changes, and move a planned decision there once it ships.
+
 1. **Diff Source**: parse git patch
 2. **Binary Files**: Skipped - focus on text diffs only. Binary files and files without a patch are returned in `analysis.unscannedFiles` and shown as "Not scanned" in the UI, never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them, and their findings still show
-3. **Severity, not scores**: Each rule (R001–R016) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
+3. **Severity, not scores**: Each rule (R001–R016, R018; R017 was dropped and its ID retired) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
 4. **Frontend Display**: Color-coded severity groups (critical/high/medium/low), no raw scores shown to users
 5. **Testing Strategy**: Full test coverage expected from Sprint 2 on, integration tests for UI
 6. **Language Scope**: JavaScript/TypeScript only for source-code analysis; language-agnostic config, infrastructure, migration, dependency and secret checks still apply to all files (see Language Scope)
@@ -142,9 +186,13 @@ Sprint specs and task briefs live in `planning/`.
 11. **Guarded client fetches**: All frontend requests go through `lib/api.ts`, which uses an endpoint allowlist, a 20s timeout, cancellation of superseded requests, a JSON content-type check, and Zod validation of the response shape (`lib/schemas/`) before the UI uses it
 12. **R015 scope**: R015 flags only writes to `window.location` (assignment, `.href =`, `.assign()`, `.replace()`) whose value isn't a plain relative or `http(s)` string literal, because a `javascript:` URL can run script in the user's browser. Severity is high. `fetch`/`axios`/HTTP calls are no longer flagged: whether a call is guarded (validation, timeout) can't be told from a diff. `eval()` and other code-execution sinks are R016
 13. **Affected Areas**: Changed files are grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security) from their path-rule findings. A file can appear in more than one area. Its badge in an area shows the highest severity among that area's findings, not the file's overall severity, which the changed-files table already shows
-14. **LLM keys (planned)**: LLM access will be bring-your-own-key. The user's key is sent per request and never stored, on the server, in the database or in logs
+14. **LLM keys (planned)**: AI assessment uses Claude only ("stick to one idea and do it well"), with the user's own Anthropic API key (bring your own key). No other AI platforms are planned. The app has no AI key of its own. The key is sent per request and never stored, on the server, in the database, in the browser or in logs
+15. **No impact analysis (affected files, suggested tests)**: GitHub code search was rejected for its rate limit (about 10 searches per minute), and downloading or cloning the repository doesn't fit Vercel functions (no `git`, memory and time limits). Sprint 4 measures blast radius from the changed-file list instead, with no extra GitHub requests
+16. **AI assessment (planned) is optional and selective**: deterministic results stand on their own. Only findings where a rule can locate a change but not judge it (R002, R012, R013, R015, R016) are sent, as flagged JS/TS lines with context, public repositories only, capped at 10,000 characters per request. Only JS/TS source code is ever sent: for security reasons, secrets, database schema, production configuration, CI workflows and infrastructure files (R007, R003, R004, R009, R006, R011) are never sent, and neither is any hunk the secret detectors match. Deterministic findings (R001, R005, R010, R014, R018) are deliberately not sent. The UI states both reasons. The AI adds a verdict next to a finding; it never changes the rule's severity
 
 <!-- BEGIN:nextjs-agent-rules -->
+17. **Blast radius**: computed from the changed-file list only, with no extra GitHub requests. File count excludes lockfiles, test snapshots, assets, binaries, files with no patch and 0/0 lines (binaries, empty files, content-free renames, mode-only changes) and `unchanged` files. Directory spread counts top-level modules (first folder, or first two under `src`, `lib`, `app`, `packages`, `apps`, `libs`, `services`, `modules`), ignoring case, and leaves out tests, fixtures, `*.md`/`*.mdx` and a top-level `docs/`. Levels: files 1–10/11–30/31+, modules 1/2–3/4+; the overall level is the higher of the two, with no numeric score. The test-to-code ratio (JS/TS only; added, modified or renamed files with content changes) is a separate signal and doesn't raise the level. Shown with neutral badges, not severity colors
+18. **R018 script permission change**: severity medium. A heuristic, because GitHub doesn't send file modes: status `modified`, no patch, 0/0 lines, and a runnable path (extension `sh`, `bash`, `zsh`, `ksh`, `fish`, `command`, or any file under `bin/`, `scripts/`, `.husky/`, `.githooks/`). Runs on every file, including unscanned ones; not JS/TS-gated; no Affected Area. The message always says "likely". R017 (exported signature changed) was dropped before merge: TypeScript's type check already catches broken callers, so it only helped plain JavaScript
 
 ## This is NOT the Next.js you know
 
