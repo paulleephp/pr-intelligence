@@ -108,6 +108,49 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 
 Sprint status, delivered work and plans: `planning/ROADMAP.md`. Specs and task briefs: `planning/SPRINT<n>.md` and `planning/SPRINT<n>-TASKS.md`. Keep sprint and planning detail out of README.md; README is a reader-facing summary of what the app does today.
 
+## Agent Workflow
+
+Several agents work on this repo at the same time. Agents message each other by session name (= agent ID). The local `agents.yaml` (gitignored) holds the GitHub App settings and each agent's worktree.
+
+| Agent | Role | Worktree |
+|-------|------|----------|
+| `mochi` | Orchestrator: scopes sprints, writes briefs, owns all `.md` docs, routes PRs to review | `~/repos/pr-intelligence` (main checkout, kept on the sprint branch) |
+| `boba` | Backend coder | `~/repos/pr-intelligence-backend` |
+| `takoyaki` | Frontend coder | `~/repos/pr-intelligence-frontend` |
+| `kimchi` | Tester: owns all test files | `~/repos/pr-intelligence-test` |
+| `banh-mi` | Reviewer: reviews PRs, comments only | its own worktree (see `agents.yaml`) |
+
+### Workspaces
+- Work only in your own worktree. Never check out a branch, stage or commit in another agent's folder, including the main checkout.
+- Each worktree has its own `npm install` and its own copy of `.env.local`. If two agents run the dev server at once, use different ports.
+
+### Branches
+- Each sprint has a branch, `sprint-<n>`. Each task gets a branch cut from the latest `sprint-<n>`, named `sprint-<n>-t<task>` (e.g. `sprint-4-t8`).
+- PRs target `sprint-<n>`. Before opening a PR, rebase onto the latest `sprint-<n>`.
+- `sprint-<n>` → `staging` → `main` is merged by the user only. Agents never push to `staging` or `main`, and never merge PRs.
+- `mochi` commits its own doc changes directly to `sprint-<n>`, without a PR.
+
+### Identity
+All agents push through one shared GitHub App, so GitHub shows the same bot for everyone. Identify yourself:
+- **Commits:** author name = your agent ID (set per worktree: `git config extensions.worktreeConfig true`, then `git config --worktree user.name <id>`), and end the message with an `Agent: <id>` trailer.
+- **PR titles:** `[<id>] S<n>-T<task>: <summary>`, e.g. `[boba] S4-T8: R018 script permission change`.
+- **Reviews and PR comments:** start with `[<id>]`.
+
+### Parallel or sequential
+- **Parallel** only when tasks edit different files and neither needs the other's types.
+- **Sequential** when a task uses another task's types or schema: start it after the first task's PR is merged into `sprint-<n>`, not from the unmerged branch.
+- **Conflict-prone files:** `lib/diff/core.ts`, `lib/diff/util/risk-scoring.ts`, `lib/types/pr/metadata.ts`, `lib/schemas/pr-analysis.ts`. Parallel edits are allowed, but whichever PR merges second rebases and re-runs checks before review.
+- Each brief states its dependencies; follow them.
+
+### Hand-offs
+1. The coder opens a PR and messages `mochi` with the link and any decision that goes beyond the spec.
+2. `mochi` records spec decisions in the docs and sends the PR to `banh-mi`.
+3. `banh-mi` reviews against the brief and spec, and works out fixes with the coder directly.
+4. The user merges.
+5. `kimchi` cuts a test branch from the updated `sprint-<n>` and writes the tests.
+
+Only `mochi` edits `.md` files (README, AGENTS.md, planning, STYLEGUIDE). Other agents send doc changes to `mochi`. Only `kimchi` edits test files.
+
 ## Acceptance Criteria
 
 ### Backend
