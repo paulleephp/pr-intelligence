@@ -1,4 +1,4 @@
-Sprint 4 — Blast-radius metrics, R017, R018 and finding line numbers
+Sprint 4 — Blast-radius metrics, R018 and finding line numbers
 
 Status: scoped and briefed 2026-11-24; R018 added the same day. Deterministic work only. The AI assessment moved to Sprint 5 (`SPRINT5.md`) on 2026-11-24 to keep this sprint close to Sprint 3's size.
 
@@ -88,7 +88,9 @@ interface BlastRadius {
 - Card renders all three states of the test signal and all three levels.
 - AGENTS.md Key Decisions, README "Features", "Design Decisions" and "Known Limitations" updated (renames that also change content counted once, under the new path; content-free renames, binaries, empty files and mode-only changes left out).
 
-## R017: exported signature changed (decided 2026-11-24)
+## R017: exported signature changed (DROPPED)
+
+**Dropped 2026-11-24, before merge (PR #23 closed unmerged).** User decision: it only adds value for plain JavaScript. In TypeScript, a changed signature already fails the type check (`tsc`) for every caller in the repo. The rule ID R017 is retired and won't be reused. The text below is kept for the record.
 
 - **R017 "Exported function signature changed"**, JS/TS only, severity low (proposed). Flags a patch that removes an `export function name(…)` / `export const name = (…) =>` line and adds one with the same name but different parameters, or removes the export entirely.
 - Message: "Public API changed: code outside this PR that uses `name` may break." We can't see the callers (Key Decision 15), so the finding tells the reviewer to check.
@@ -128,9 +130,9 @@ interface BlastRadius {
 
 ## Line numbers and stable IDs on findings (decided 2026-11-24)
 
-- Findings that come from a specific added line record that line's number in the new version of the file: R002 (added-line match), R005 (added or upgraded package line; removed-only changes have no line), R007, R009 (code match), R012, R013, R015, R016, and R017 once S4-T5 lands.
+- Findings that come from a specific added line record that line's number in the new version of the file: R002 (added-line match), R005 (added or upgraded package line; removed-only changes have no line), R007, R009 (code match), R012, R013, R015, R016.
 - Every finding gets a stable ID: `<ruleId>:<filename>:<line>`, or `<ruleId>:<filename>` when there's no line.
-- Useful now (R017 needs the line; findings can link to the exact line on GitHub) and a prerequisite for Sprint 5, which sends the flagged line with context and matches AI verdicts back to findings by ID.
+- Useful now (findings can link to the exact line on GitHub) and a prerequisite for Sprint 5, which sends the flagged line with context and matches AI verdicts back to findings by ID.
 - Decided with the user 2026-11-24 (S4-T4, PR #21):
   - **Removed-line findings have no `line`.** R002 matching a removed line has no position in the new file, so its id is `R002:<file>`. R002 matching an added line gets a line.
   - **R007 and R009 (code match) also get lines.** One file can have up to four R007 findings, which would otherwise share an id.

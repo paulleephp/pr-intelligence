@@ -90,7 +90,8 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 
 **Acceptance:** for a fixture patch, R015's finding reports the exact new-file line of the matching `window.location` line; IDs are identical across two runs; existing response fields unchanged. Don't edit test files.
 
-## S4-T5. R017: exported signature changed (backend, S)
+## S4-T5. R017: exported signature changed (DROPPED)
+**Dropped 2026-11-24, before merge (PR #23 closed unmerged).** User decision: it only adds value for plain JavaScript. In TypeScript, a changed signature already fails the type check (`tsc`) for every caller in the repo. The rule ID R017 is retired and won't be reused. The text below is kept for the record.
 **Role:** Coder (backend)
 **Files:** `lib/diff/util/risk-scoring.ts`, `lib/diff/code.ts` or a new detector file, `lib/diff/change-detection.ts`, `lib/schemas/` if the rule ID is enumerated; README "Rules" table and Known Limitations, AGENTS.md Key Decisions
 
@@ -107,7 +108,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 ## S4-T6. Tests for Part 2
 **Role:** Tester
 - S4-T4: line numbers and stable IDs across several patch shapes (multiple hunks, removed lines before the flagged line, a file with no patch). Line numbers come from `parsePatch`; ids from `buildFindingId` / `withFindingId` in `lib/diff/util/finding-id.ts`. Cover: R002 from a removed line has no line and id `R002:<file>`; R002 from an added line has both; several R007 findings in one file get distinct ids; ids appear on `aggregate.findings` only; hunks without `addedLineNumbers` give findings without a line.
-- S4-T5: `rules.R017.test.ts` with the acceptance cases above, plus `export async function`, `export default function`, and a multi-line parameter list (documented as not detected). The detector is `detectExportedSignatureChange(hunks, filename)` in `lib/diff/exported-signature.ts`, wired as `CodeAnalysis.exportedSignatureChanges`; the fixture `code()` helper exposes it, but `codeRuleIds` doesn't include it yet. Also cover the S4-T5 decisions in SPRINT4.md: parameter rename flagged, whitespace and trailing comma ignored, `export` dropped counts as removed, unreadable parameters not flagged, one finding per file, the extra forms (generator, generics, typed-return and no-paren arrows), and line/id for added vs removed. Also the export-list cases: `export { foo }`, `export { x as foo }`, `export { foo } from "…"` and `export default foo` keep `foo` exported (no finding); `export { foo as bar }` is flagged.
+- ~~S4-T5~~ (dropped with R017; skip): `rules.R017.test.ts` with the acceptance cases above, plus `export async function`, `export default function`, and a multi-line parameter list (documented as not detected). The detector is `detectExportedSignatureChange(hunks, filename)` in `lib/diff/exported-signature.ts`, wired as `CodeAnalysis.exportedSignatureChanges`; the fixture `code()` helper exposes it, but `codeRuleIds` doesn't include it yet. Also cover the S4-T5 decisions in SPRINT4.md: parameter rename flagged, whitespace and trailing comma ignored, `export` dropped counts as removed, unreadable parameters not flagged, one finding per file, the extra forms (generator, generics, typed-return and no-paren arrows), and line/id for added vs removed. Also the export-list cases: `export { foo }`, `export { x as foo }`, `export { foo } from "…"` and `export default foo` keep `foo` exported (no finding); `export { foo as bar }` is flagged.
 - Schema test: findings with and without `line` and `id` validate.
 
 ## S4-T7. Optional if there's room: rule tests and CI

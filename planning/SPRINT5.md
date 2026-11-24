@@ -49,7 +49,6 @@ Single source of truth: one constant mapping each rule to `eligible: boolean` an
 | R001 auth files modified, R014 security-sensitive path | The finding is the location itself. |
 | R010 test files removed | The finding is the fact itself. |
 | R008 | Not implemented. |
-| R017 exported signature changed | The finding is the fact itself. |
 | R018 script permission change | The finding is the fact itself. |
 
 ## What is sent

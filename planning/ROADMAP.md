@@ -9,7 +9,7 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 | **1** | Foundation: Next.js app, repo structure, Octokit integration | Done |
 | **2** | Diff parser, file categorization, change statistics, detection rules R001–R016, severity labels, summary/table/risk UI | Done |
 | **3** | Cleanup: changed-file pagination, Zod validation, R015 narrowed to unsafe `window.location` navigation, R005 regression tests, Affected Areas section | Done |
-| **4** | Blast-radius metrics (file count, directory spread, test-to-code ratio); R017 exported signature rule; R018 script permission change; line numbers and IDs on findings | Planned (`SPRINT4.md`) |
+| **4** | Blast-radius metrics (file count, directory spread, test-to-code ratio); R018 script permission change; line numbers and IDs on findings | Planned (`SPRINT4.md`) |
 | **5** | Optional AI assessment of flagged JS/TS findings, bring your own key (Claude first), no database | Planned (`SPRINT5.md`) |
 | Later | See "Later" below | Unscheduled |
 
@@ -39,7 +39,6 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 
 **Sprint 4** (`SPRINT4.md`)
 - Blast-radius metrics: file count (excluding lockfiles, snapshots and assets), directory spread across top-level modules, and test-to-code ratio, from the changed-file list with no extra GitHub requests
-- R017: flags changed or removed exported function signatures in JS/TS
 - R018: flags a script whose only change is likely a permission change (e.g. `chmod +x`)
 - Line numbers and stable IDs on findings
 - Optional: missing rule tests and a CI workflow
