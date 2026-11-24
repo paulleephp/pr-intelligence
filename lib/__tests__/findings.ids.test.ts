@@ -101,7 +101,7 @@ describe("finding ids", () => {
   // Decided 2026-11-24 (PR #21): ids live on aggregate.findings only, the list the UI reads.
   it("puts ids only on aggregate.findings; the per-file reports keep line but no id", () => {
     const analysis = analyzeDiff(MIXED);
-    // Every finding field of each report, so a field added later (R017) is checked too.
+    // Every finding field of each report, so a field added later is checked too.
     const findingFields = (report: object) =>
       Object.values(report).filter(
         (v): v is Pattern => typeof v === "object" && v !== null && "ruleId" in v,
