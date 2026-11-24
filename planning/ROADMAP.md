@@ -9,8 +9,8 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 | **1** | Foundation: Next.js app, repo structure, Octokit integration | Done |
 | **2** | Diff parser, file categorization, change statistics, detection rules R001–R016, severity labels, summary/table/risk UI | Done |
 | **3** | Cleanup: changed-file pagination, Zod validation, R015 narrowed to unsafe `window.location` navigation, R005 regression tests, Affected Areas section | Done |
-| **4** | Blast-radius metrics (file count, directory spread, test-to-code ratio); R018 script permission change; line numbers and IDs on findings | Planned (`SPRINT4.md`) |
-| **5** | Optional AI assessment of flagged JS/TS findings, bring your own key (Claude first), no database | Planned (`SPRINT5.md`) |
+| **4** | Blast-radius metrics (file count, directory spread, test-to-code ratio); R018 script permission change; line numbers and IDs on findings; R001/R014/R011 path matching | Done 2026-11-25 (`SPRINT4.md`; on `sprint-4`, not yet released to `staging`) |
+| **5** | Optional AI assessment of flagged JS/TS findings, bring your own key (Claude only), CI workflow first, no database | Planned (`SPRINT5.md`) |
 | Later | See "Later" below | Unscheduled |
 
 ## Delivered
@@ -35,13 +35,15 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 - R005 regression tests for non-manifest JSON files
 - Affected Areas section: changed files grouped by area, with each file's severity in that area
 
-## Planned
+**Sprint 4: blast radius and rules**
+- Blast-radius card: file count (excluding lockfiles, snapshots, assets and content-free files), directory spread across top-level modules, and a separate test-to-code signal, from the changed-file list with no extra GitHub requests
+- Line numbers and stable IDs on findings (the basis for Sprint 5's AI verdicts)
+- R018: a script whose only change is likely a permission change (e.g. `chmod +x`)
+- R001/R014 keyword matching extended to camelCase names and trailing digits, `cryptography` added; R011 covers `.tfvars`, `.tf.json` and Helm charts under `charts/<name>/`
+- `npm run check` (Biome lint, formatting and import order) with the codebase formatted to pass it; rule tests for R001, R011, R012, R014 and R018
+- Dropped: R017 (exported signature changed), since TypeScript's type check already catches broken callers
 
-**Sprint 4** (`SPRINT4.md`)
-- Blast-radius metrics: file count (excluding lockfiles, snapshots and assets), directory spread across top-level modules, and test-to-code ratio, from the changed-file list with no extra GitHub requests
-- R018: flags a script whose only change is likely a permission change (e.g. `chmod +x`)
-- Line numbers and stable IDs on findings
-- Optional: missing rule tests (R001, R011, R012, R014) and a `npm run check` script that fails on formatting
+## Planned
 
 **Sprint 5** (`SPRINT5.md`)
 - First: CI workflow (carried from Sprint 4): check, type check and tests on every PR
@@ -53,6 +55,7 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 - Download the assessment JSON when it's over the 10,000-character send limit (up to 30,000 characters)
 - Review workflow that runs stages in order and retries from the failed stage (`LATER-REVIEW-WORKFLOW.md`, outdated draft)
 - Fix camelCase secret names (R007; see README Known Limitations)
+- R001/R014: match keywords inside names (`useAuth.ts`), all-caps acronyms (`SSOConfig.ts`) and `AccessControl`; R011: `*.tfvars.json` (see README Known Limitations)
 - Complexity increase detection and change metrics
 - UI backlog candidates for a lighter sprint: `PENDING_NEW_FEATURES.md`
 
