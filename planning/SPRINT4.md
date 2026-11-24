@@ -121,6 +121,12 @@ interface BlastRadius {
 - Findings that come from a specific added line (at minimum R002, R012, R013, R015, R016, R017) record that line's number in the new version of the file.
 - Every finding gets a stable ID: `<ruleId>:<filename>:<line>`, or `<ruleId>:<filename>` when there's no line.
 - Useful now (R017 needs the line; findings can link to the exact line on GitHub) and a prerequisite for Sprint 5, which sends the flagged line with context and matches AI verdicts back to findings by ID.
+- Decided with the user 2026-11-24 (S4-T4, PR #21):
+  - **Removed-line findings have no `line`.** R002 matching a removed line has no position in the new file, so its id is `R002:<file>`. R002 matching an added line gets a line.
+  - **R007 and R009 (code match) also get lines.** One file can have up to four R007 findings, which would otherwise share an id.
+  - **Ids live on `aggregate.findings` only** (the list the UI reads). Per-file secret, code and category reports carry `line` but not `id`.
+  - The schema change is in `lib/schemas/common.ts` (`patternSchema`).
+  - `DiffHunks.addedLineNumbers` is optional; findings from hand-built hunks without it have no line.
 
 ## Optional if there's room: tests and CI (carried over)
 

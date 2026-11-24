@@ -105,7 +105,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 
 ## S4-T6. Tests for Part 2
 **Role:** Tester
-- S4-T4: line numbers and stable IDs across several patch shapes (multiple hunks, removed lines before the flagged line, a file with no patch).
+- S4-T4: line numbers and stable IDs across several patch shapes (multiple hunks, removed lines before the flagged line, a file with no patch). Line numbers come from `parsePatch`; ids from `buildFindingId` / `withFindingId` in `lib/diff/util/finding-id.ts`. Cover: R002 from a removed line has no line and id `R002:<file>`; R002 from an added line has both; several R007 findings in one file get distinct ids; ids appear on `aggregate.findings` only; hunks without `addedLineNumbers` give findings without a line.
 - S4-T5: `rules.R017.test.ts` with the acceptance cases above, plus `export async function`, `export default function`, and a multi-line parameter list (documented as not detected).
 - Schema test: findings with and without `line` and `id` validate.
 

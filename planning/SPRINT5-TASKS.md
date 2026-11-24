@@ -25,6 +25,7 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
   3. Drop any finding whose file isn't JS/TS (`JS_TS_FILE_PATTERN`).
   4. Drop any finding whose file has an R003, R004, R006, R007, R009 or R011 finding, or whose path matches migration, schema, `.env*`, production-config, CI or infrastructure patterns (reuse the existing path constants).
   5. Cut the flagged line with 5 lines of context either side from its patch hunk. Keep the patch's `+`/`-`/space markers and include removed lines inside the window (R002 is about removals). Never reach outside the hunk.
+     - **R002 from a removed line has no `line`** (Sprint 4 decision: no position in the new file). The payload builder must still locate it, e.g. by recording the removed line's position in the old file or in the hunk (an `oldLine` field set by `parsePatch`). Add that here as part of S5-T1; don't send R002 without context.
   6. Run the secret detectors over each snippet. **Any match → drop the finding** with status `possible-secret`. Never redact-and-send.
   7. Serialize to JSON; if over **10,000 characters**, status `too-large` and nothing is sent.
 - **Per-finding outcome** for the UI: `sent`, `excluded-security`, `deterministic`, `not-js-ts`, `excluded-file`, `possible-secret`.
