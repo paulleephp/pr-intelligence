@@ -95,15 +95,17 @@ describe("R001 - authentication files modified", () => {
   });
 });
 
-// Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): an uppercase letter or a digit
-// after the keyword also ends it. A lowercase letter still doesn't.
+// Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): a digit after the keyword also
+// ends it, and so does an uppercase letter that follows a lowercase one (camelCase, PR #29).
+// A lowercase letter doesn't.
 describe("R001 - keyword boundaries (S4-T9)", () => {
-  // KNOWN GAP: agreed 2026-11-25, not built yet (S4-T9). Paths are lowercased before matching,
-  // so "AuthProvider" reads as "authprovider", and a digit isn't a boundary.
-  it.fails.each([
+  // Regression (S4-T9, PR #29): not flagged while paths were lowercased before matching.
+  it.each([
     "src/AuthProvider.tsx",
     "src/components/LoginForm.tsx",
     "src/PermissionGuard.ts",
+    "src/sessionStore.ts",
+    "src/permissionsTable.ts",
     "oauth2/callback.ts",
     "login2.ts",
     "src/sso2/saml.ts",
@@ -120,4 +122,21 @@ describe("R001 - keyword boundaries (S4-T9)", () => {
   ])("still doesn't flag %s, where a lowercase letter follows the keyword", (filename) => {
     expect(ruleIds(filename, "modified")).not.toContain("R001");
   });
+
+  // Decided in PR #29: only camelCase splits a word, so all-caps names aren't split.
+  it.each(["AUTHORS", "AUTHORS.md"])(
+    "doesn't flag %s, where uppercase follows uppercase",
+    (filename) => {
+      expect(ruleIds(filename, "modified")).not.toContain("R001");
+    },
+  );
+
+  // Known limitations (README, PR #29): the keyword must start a path segment, an acronym
+  // followed by a word isn't split, and the keyword is "access-control", not "AccessControl".
+  it.each(["src/useAuth.ts", "src/SSOConfig.ts", "src/AccessControl.ts"])(
+    "doesn't flag %s (known limitation)",
+    (filename) => {
+      expect(ruleIds(filename, "modified")).not.toContain("R001");
+    },
+  );
 });

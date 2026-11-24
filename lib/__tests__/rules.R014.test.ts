@@ -75,12 +75,12 @@ describe("R014 - security-sensitive path modified", () => {
   });
 });
 
-// Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): an uppercase letter or a digit
-// after the keyword also ends it, and "cryptography" is a keyword of its own.
+// Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): the same boundaries as R001 (a
+// digit, or camelCase), and "cryptography" is a keyword of its own.
 describe("R014 - keyword boundaries and cryptography (S4-T9)", () => {
-  // KNOWN GAP: agreed 2026-11-25, not built yet (S4-T9). Paths are lowercased before matching,
-  // so "SecurityHeaders" reads as "securityheaders", and "cryptography" isn't a keyword.
-  it.fails.each([
+  // Regression (S4-T9, PR #29): not flagged while paths were lowercased before matching and
+  // "cryptography" wasn't a keyword.
+  it.each([
     "lib/SecurityHeaders.ts",
     "src/CryptoUtils.ts",
     "src/EncryptionService.ts",

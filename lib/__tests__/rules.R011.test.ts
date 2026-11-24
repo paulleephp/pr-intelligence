@@ -76,25 +76,28 @@ describe("R011 - infrastructure changes", () => {
 });
 
 // Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): .tfvars and .tf.json count as
-// Terraform, and Helm chart files count without a helm/ folder: Chart.yaml, values*.yaml and
-// anything under templates/, inside a charts/<name>/ folder.
+// Terraform. Helm chart files count without a helm/ folder, inside a charts/<name>/ folder:
+// Chart.yaml, values*.yaml or .yml, and yaml, yml, tpl or txt files under templates/ (narrowed
+// in PR #29, so UI code in a templates/ folder isn't flagged).
 describe("R011 - Terraform files and Helm charts (S4-T9)", () => {
-  // KNOWN GAP: agreed 2026-11-25, not built yet (S4-T9). Only .tf files and the four
-  // infrastructure folders match today.
-  it.fails.each(["infra/prod.tfvars", "terraform.tfvars", "infra/main.tf.json"])(
+  // Regression (S4-T9, PR #29): only .tf files and the four infrastructure folders matched.
+  it.each(["infra/prod.tfvars", "terraform.tfvars", "infra/main.tf.json"])(
     "flags the Terraform file %s",
     (filename) => {
       expect(ruleIds(filename, "modified")).toContain("R011");
     },
   );
 
-  // KNOWN GAP: as above.
-  it.fails.each([
+  // Regression: as above.
+  it.each([
     "charts/api/Chart.yaml",
     "charts/api/values.yaml",
     "charts/api/values-prod.yaml",
+    "charts/api/values.yml",
     "charts/api/templates/deployment.yaml",
+    "charts/api/templates/service.yml",
     "charts/api/templates/_helpers.tpl",
+    "charts/api/templates/NOTES.txt",
     "charts/api/templates/tests/test-connection.yaml",
   ])("flags the Helm chart file %s", (filename) => {
     expect(ruleIds(filename, "modified")).toContain("R011");
@@ -106,6 +109,8 @@ describe("R011 - Terraform files and Helm charts (S4-T9)", () => {
     "charts/values.yaml",
     "charts/api/README.md",
     "app/charts/line/Chart.tsx",
+    "charts/api/templates/Button.tsx",
+    "charts/web/templates/index.html",
     "infra/main.json",
   ])("still doesn't flag %s, which isn't a chart or Terraform file", (filename) => {
     expect(ruleIds(filename, "modified")).not.toContain("R011");
