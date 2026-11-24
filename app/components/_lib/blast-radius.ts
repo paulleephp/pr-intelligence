@@ -23,6 +23,9 @@ export const NO_MODULES_LABEL = "No modules";
 
 export const SHOW_LESS_LABEL = "Show less";
 
+export const EXCLUDED_FILES_HINT =
+  "Not counted: lockfiles, test snapshots, images and other assets, files with no diff (binaries, empty files, renames without changes) and unchanged files";
+
 export const pluralize = (count: number, singular: string): string =>
   `${count} ${count === 1 ? singular : `${singular}s`}`;
 
