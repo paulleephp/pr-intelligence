@@ -1,3 +1,4 @@
+import type { BlastRadius } from "../diff/blast-radius";
 import type { PRFileStatus } from "../diff/file";
 import type { DiffHunks } from "../diff/hunk";
 import type { FileType } from "../diff/file";
@@ -61,6 +62,7 @@ export interface PRAnalysis {
   code: CodeAnalysis[];
   fileTypes: Record<string, FileType>;
   aggregate: PRAggregate;
+  blastRadius: BlastRadius;
 }
 
 export type SeverityCounts = Record<PatternSeverity, number>;

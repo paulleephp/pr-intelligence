@@ -1,6 +1,7 @@
 import type { PrChangeSummary } from "@/types/diff/summary";
 import type { ChangedFile, PRAnalysis, UnscannedReason } from "@/types/pr/metadata";
 import { aggregateData } from "./aggregator";
+import { getBlastRadius } from "./blast-radius";
 import { getCategoryReport } from "./categorize";
 import { getCodeReport } from "./code";
 import { JS_TS_FILE_PATTERN, PRFileStatus } from "./constants/file";
@@ -73,6 +74,7 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
   }
 
   const aggregate = aggregateData({ secretReports, categoryReports, codeReports });
+  const blastRadius = getBlastRadius(changedFiles);
 
   return {
     unscannedFiles,
@@ -81,5 +83,6 @@ export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {
     code: codeReports,
     fileTypes,
     aggregate,
+    blastRadius,
   };
 };
