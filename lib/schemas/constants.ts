@@ -1,3 +1,4 @@
+import type { TestSignalState } from "@/lib/types/diff/blast-radius";
 import type { FileType } from "@/lib/types/diff/file";
 import type { PatternSeverity } from "@/lib/types/diff/pattern";
 import type { UnscannedReason } from "@/lib/types/pr/metadata";
@@ -21,3 +22,9 @@ export const UNSCANNED_REASONS = [
   "binary",
   "no-patch",
 ] as const satisfies readonly UnscannedReason[];
+
+export const TEST_SIGNAL_STATES = [
+  "no-source-changes",
+  "no-tests",
+  "tests-changed",
+] as const satisfies readonly TestSignalState[];
