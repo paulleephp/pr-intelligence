@@ -1,3 +1,4 @@
+import { BLAST_RADIUS_LEVELS } from "@/lib/schemas/constants";
 import type {
   BlastRadius,
   BlastRadiusFileCount,
@@ -9,7 +10,6 @@ import type {
 import type { ChangedFile } from "@/lib/types/pr/metadata";
 import {
   ASSET_EXTENSIONS,
-  BLAST_RADIUS_LEVELS,
   CONTAINER_FOLDERS,
   DOCS_PATTERNS,
   FILE_COUNT_THRESHOLDS,
@@ -20,7 +20,7 @@ import {
   SPREAD_THRESHOLDS,
   TEST_SIGNAL_STATUSES,
 } from "./constants/blast-radius";
-import { JS_TS_FILE_PATTERN } from "./constants/file";
+import { JS_TS_FILE_PATTERN, PRFileStatus } from "./constants/file";
 import { isBinaryFile } from "./util/is-binary";
 import { isTestFile } from "./util/test-path";
 
@@ -35,11 +35,20 @@ const extension = (filename: string): string => {
 const matchesAny = (patterns: readonly RegExp[], filename: string): boolean =>
   patterns.some((pattern) => pattern.test(filename));
 
-const isExcludedFromCount = ({ filename, patch }: ChangedFile): boolean =>
-  LOCKFILES.has(basename(filename).toLowerCase()) ||
-  matchesAny(SNAPSHOT_PATTERNS, filename) ||
-  ASSET_EXTENSIONS.has(extension(filename)) ||
-  (Boolean(patch) && isBinaryFile(patch));
+const hasNoContentChange = ({ patch, additions, deletions }: ChangedFile): boolean =>
+  !patch && !additions && !deletions;
+
+const isExcludedFromCount = (file: ChangedFile): boolean => {
+  const { filename, patch, status } = file;
+  return (
+    status === PRFileStatus.Unchanged ||
+    hasNoContentChange(file) ||
+    LOCKFILES.has(basename(filename).toLowerCase()) ||
+    matchesAny(SNAPSHOT_PATTERNS, filename) ||
+    ASSET_EXTENSIONS.has(extension(filename)) ||
+    (Boolean(patch) && isBinaryFile(patch))
+  );
+};
 
 const isExcludedFromSpread = (filename: string): boolean =>
   isTestFile(filename) || FIXTURE_PATTERN.test(filename) || matchesAny(DOCS_PATTERNS, filename);
