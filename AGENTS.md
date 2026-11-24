@@ -8,7 +8,7 @@ This tool automates the initial investigation by fetching PR metadata, analyzing
 
 ## Language Scope
 
-Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the planned impact analysis (Sprint 4).
+Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the test-to-code ratio in the planned blast-radius metrics (Sprint 4).
 
 Files that aren't tied to one language are still analyzed:
 
@@ -92,8 +92,8 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 | GitHub Integration | Octokit |
 | Severity Rules | Deterministic rule table (`lib/diff/util/risk-scoring.ts`) |
 | Validation | Zod v4 schemas (`lib/schemas/`) for API responses and the `url` query param |
-| Database | PostgreSQL via Supabase (planned for Sprint 4, not set up yet) |
-| DB client / ORM | To be decided in Sprint 4 (Supabase client or Prisma) |
+| Database | None yet. A Supabase verdict cache is deferred until after Sprint 5 |
+| DB client / ORM | To be decided if the cache is picked up (recommended: Supabase JS client) |
 | Testing | Vitest (Playwright planned) |
 | CI/CD | GitHub Actions (planned, no workflows yet) |
 
@@ -106,15 +106,7 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 
 ## Project Roadmap
 
-Sprint specs and task briefs live in `planning/`.
-
-| Sprint | Focus | Status |
-|--------|-------|--------|
-| **1** | Foundation: Next.js app, repo structure, Octokit integration | Done |
-| **2** | Diff parser, file categorization, change statistics, detection rules R001–R016, severity labels, summary/table/risk UI | Done |
-| **3** | Cleanup: changed-file pagination, Zod validation, R015 narrowed to unsafe `window.location` navigation, R005 regression tests, Affected Areas section | Done |
-| **4** | Impact analysis via GitHub code search (affected files, suggested tests); LLM review with bring-your-own-key; database (Supabase) | Planned (`planning/SPRINT4.md`) |
-| **5** | Review workflow: staged execution, retry from the failed stage, execution history | Tentative draft (`planning/SPRINT5.md`) |
+Sprint status, delivered work and plans: `planning/ROADMAP.md`. Specs and task briefs: `planning/SPRINT<n>.md` and `planning/SPRINT<n>-TASKS.md`. Keep sprint and planning detail out of README.md; README is a reader-facing summary of what the app does today.
 
 ## Acceptance Criteria
 
@@ -129,6 +121,8 @@ Sprint specs and task briefs live in `planning/`.
 
 ## Key Decisions Made
 
+This list is the authoritative one, including planned decisions. README.md "Design Decisions" is a reader-facing summary of the shipped ones; update it when a shipped decision changes, and move a planned decision there once it ships.
+
 1. **Diff Source**: parse git patch
 2. **Binary Files**: Skipped - focus on text diffs only. Binary files and files without a patch are returned in `analysis.unscannedFiles` and shown as "Not scanned" in the UI, never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them, and their findings still show
 3. **Severity, not scores**: Each rule (R001–R016) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
@@ -142,7 +136,9 @@ Sprint specs and task briefs live in `planning/`.
 11. **Guarded client fetches**: All frontend requests go through `lib/api.ts`, which uses an endpoint allowlist, a 20s timeout, cancellation of superseded requests, a JSON content-type check, and Zod validation of the response shape (`lib/schemas/`) before the UI uses it
 12. **R015 scope**: R015 flags only writes to `window.location` (assignment, `.href =`, `.assign()`, `.replace()`) whose value isn't a plain relative or `http(s)` string literal, because a `javascript:` URL can run script in the user's browser. Severity is high. `fetch`/`axios`/HTTP calls are no longer flagged: whether a call is guarded (validation, timeout) can't be told from a diff. `eval()` and other code-execution sinks are R016
 13. **Affected Areas**: Changed files are grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security) from their path-rule findings. A file can appear in more than one area. Its badge in an area shows the highest severity among that area's findings, not the file's overall severity, which the changed-files table already shows
-14. **LLM keys (planned)**: LLM access will be bring-your-own-key. The user's key is sent per request and never stored, on the server, in the database or in logs
+14. **LLM keys (planned)**: AI assessment is bring your own key: the user chooses the provider (Claude by default; Gemini and ChatGPT later) and enters their own API key. The app has no AI key of its own. The key is sent per request and never stored, on the server, in the database, in the browser or in logs
+15. **No impact analysis (affected files, suggested tests)**: GitHub code search was rejected for its rate limit (about 10 searches per minute), and downloading or cloning the repository doesn't fit Vercel functions (no `git`, memory and time limits). Sprint 4 measures blast radius from the changed-file list instead, with no extra GitHub requests
+16. **AI assessment (planned) is optional and selective**: deterministic results stand on their own. Only findings where a rule can locate a change but not judge it (R002, R012, R013, R015, R016) are sent, as flagged JS/TS lines with context, public repositories only, capped at 10,000 characters per request. Only JS/TS source code is ever sent: for security reasons, secrets, database schema, production configuration, CI workflows and infrastructure files (R007, R003, R004, R009, R006, R011) are never sent, and neither is any hunk the secret detectors match. Deterministic findings (R001, R005, R010, R014) are deliberately not sent. The UI states both reasons. The AI adds a verdict next to a finding; it never changes the rule's severity
 
 <!-- BEGIN:nextjs-agent-rules -->
 

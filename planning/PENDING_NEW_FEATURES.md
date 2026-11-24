@@ -57,7 +57,7 @@ Suggested order: **U5 (routing) first**, because it reshapes the page the other 
   - The alternative, `react-markdown` + `remark-gfm` + our own reference-linking, is more work and will differ from GitHub in edge cases.
 - **Security:** rendering HTML means `dangerouslySetInnerHTML`, which our own R016 flags. Sanitize with DOMPurify (or equivalent) before rendering, even though GitHub already sanitizes. Links open in a new tab with `rel="noopener noreferrer"`.
 - **Images:** images uploaded to public repos load fine. Attachments in **private** repos may need GitHub authentication and show as broken. Show a fallback instead of a broken image.
-- **Also useful later:** the plain `body` is needed for the Sprint 5 LLM context (SPRINT5.md §5 notes it isn't fetched yet). Fetch both in the same request.
+- The AI assessment (Sprint 5) doesn't use the PR description; only `body_html` is needed here.
 
 ## U7. Theme-derived color palette (S–M, frontend only)
 - Adopted 2026-11-24. Values and rules: STYLEGUIDE.md "Colors and brand"; visual reference: `docs/style-guide.html`.
@@ -74,5 +74,5 @@ Suggested order: **U5 (routing) first**, because it reshapes the page the other 
 ## U8. Logo and favicon (S, frontend)
 - Replace the 🚀 emoji header mark with an SVG mark; wordmark in near-white, theme color carried by the mark.
 - Replace the favicon (currently a light-blue clip-art magnifier). The current `favicon.ico` sits at the repo root, where Next.js doesn't serve it; the new one goes where the App Router expects it (check `node_modules/next/dist/docs/` for icon file conventions).
-- Decided 2026-11-24: concept B (impact nodes). Asset: `docs/brand/mark.svg`; rules in STYLEGUIDE.md "Brand mark".
+- Decided 2026-11-24: concept A (diff lines), changed from B the same day because B pictured dependency mapping, which was dropped from scope. Asset: `docs/brand/mark.svg`; rules in STYLEGUIDE.md "Brand mark".
 - Header cleanup while there: the "Dashboard" link goes to an empty placeholder page (see U5), and "GitHub ↗" links to github.com's home page rather than the project repo.
