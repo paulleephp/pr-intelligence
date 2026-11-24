@@ -2,9 +2,9 @@
  * app/components/BlastRadius.tsx: the blast radius card (S4-T2). Most cases pass a hand-built
  * BlastRadius so each value can be set on its own. The engine's thresholds and module rule belong
  * to its own unit tests; the last case here renders what the real engine computes.
+ * The module chips and "+N more" are tested in ModuleList.test.tsx.
  */
 import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import type { BlastRadius, BlastRadiusLevel, TestSignalState } from "@/lib/types/diff/blast-radius";
 import type { ChangedFile } from "@/lib/types/pr/metadata";
@@ -97,6 +97,22 @@ describe("BlastRadiusCard", () => {
 
       expect(row("Files").getByText(text)).toBeInTheDocument();
     });
+
+    // The tooltip should name each kind of file the engine leaves out of the count.
+    it("explains what 'excluded' covers in a tooltip, from one excluded file", () => {
+      renderCard({ fileCount: { counted: 12, excluded: 1, level: "contained" } });
+      const hint = row("Files").getByText("12 files · 1 excluded").getAttribute("title");
+
+      for (const reason of [/lockfiles/, /snapshots/, /assets/, /no diff/, /unchanged files/]) {
+        expect(hint).toMatch(reason);
+      }
+    });
+
+    it("has no tooltip when no file is excluded", () => {
+      renderCard({ fileCount: { counted: 12, excluded: 0, level: "contained" } });
+
+      expect(row("Files").getByText("12 files")).not.toHaveAttribute("title");
+    });
   });
 
   describe("modules row", () => {
@@ -108,69 +124,6 @@ describe("BlastRadiusCard", () => {
       renderCard({ spread: { modules: modulesNamed(count), level: "contained" } });
 
       expect(row("Modules").getByText(text)).toBeInTheDocument();
-    });
-
-    it("shows no chips when there are no modules", () => {
-      renderCard({ spread: { modules: [], level: "contained" } });
-
-      expect(row("Modules").queryByRole("list")).toBeNull();
-      expect(document.querySelector("details")).toBeNull();
-    });
-
-    it("shows six modules as chips, each titled with its full name, and no '+N more'", () => {
-      const modules = modulesNamed(6);
-      renderCard({ spread: { modules, level: "wide" } });
-
-      expect(chipNames(screen.getByText("6 modules").parentElement as HTMLElement)).toEqual(
-        modules,
-      );
-      for (const name of modules) {
-        expect(row("Modules").getByText(name)).toHaveAttribute("title", name);
-      }
-      expect(row("Modules").queryByText(/more$/)).toBeNull();
-      expect(document.querySelector("details")).toBeNull();
-    });
-
-    it.each<[number, string]>([
-      [7, "+1 more"],
-      [10, "+4 more"],
-    ])("shows the first six of %i modules and puts the rest behind %j", (count, label) => {
-      const modules = modulesNamed(count);
-      renderCard({ spread: { modules, level: "wide" } });
-      const details = document.querySelector("details") as HTMLDetailsElement;
-      const [preview] = row("Modules").getAllByRole("list");
-
-      expect(chipNames(preview)).toEqual(modules.slice(0, 6));
-      expect(details.open).toBe(false);
-      expect(within(details.querySelector("summary") as HTMLElement).getByText(label)).toBeTruthy();
-      expect(chipNames(details)).toEqual(modules.slice(6));
-      for (const name of modules.slice(6)) {
-        expect(within(details).getByText(name)).toHaveAttribute("title", name);
-      }
-    });
-
-    it("opens the rest of the list from the summary, and closes it again", async () => {
-      const user = userEvent.setup();
-      renderCard({ spread: { modules: modulesNamed(8), level: "wide" } });
-      const details = document.querySelector("details") as HTMLDetailsElement;
-      const summary = details.querySelector("summary") as HTMLElement;
-
-      await user.click(summary);
-      expect(details.open).toBe(true);
-      await user.click(summary);
-      expect(details.open).toBe(false);
-    });
-
-    // happy-dom doesn't apply Tailwind, so both labels are always in the DOM. These classes are
-    // what swaps "+N more" for "Show less" while the list is open.
-    it("swaps '+N more' for 'Show less' with the details' open state", () => {
-      renderCard({ spread: { modules: modulesNamed(8), level: "wide" } });
-      const details = document.querySelector("details") as HTMLDetailsElement;
-      const summary = within(details.querySelector("summary") as HTMLElement);
-
-      expect(details).toHaveClass("group");
-      expect(summary.getByText("+2 more")).toHaveClass("group-open:hidden");
-      expect(summary.getByText("Show less")).toHaveClass("hidden", "group-open:inline");
     });
   });
 
