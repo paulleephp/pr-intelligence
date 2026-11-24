@@ -115,7 +115,11 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 ## S4-T7. Optional if there's room: rule tests and CI
 **Roles:** Tester (rule tests), Coder (CI)
 - Tester: add `rules.R001.test.ts`, `rules.R011.test.ts`, `rules.R012.test.ts`, `rules.R014.test.ts` (SPRINT4.md "Optional if there's room").
-- Coder: a GitHub Actions workflow that runs lint, type check and tests on every PR. Note: our own R006 will flag this PR as "CI/CD workflow modified"; that's expected.
+- Coder, formatting check first (raised in the PR #25 review): `npm run lint` is `biome lint`, which never checks formatting, and the `format` scripts rewrite files instead of failing, so badly formatted files get through (`ChangedFilesTable.test.tsx` on sprint-4 already fails `biome format`).
+  1. Add `"check": "biome check"` to package.json. It runs lint, formatting and import sorting, and fails on problems.
+  2. A one-off formatting pass (`biome check --write`) on existing files, in its own PR with no behaviour change, so the check starts green. Read the diff: one fix turns the Octokit mock's `function` into an arrow (TESTING.md). Test files in that pass go to kimchi.
+  3. Optional: rename `format:fix`, since it runs `biome check --write` and fixes more than formatting.
+- Coder: a GitHub Actions workflow that runs `npm run check`, type check and tests on every PR. Note: our own R006 will flag this PR as "CI/CD workflow modified"; that's expected.
 
 # Part 3: R018 (S4-T8)
 
