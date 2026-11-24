@@ -1,5 +1,10 @@
 import type { PrChangeSummary } from "@/types/diff/summary";
-import type { CategoryAnalysis, ChangedFile, PRAnalysis, UnscannedReason } from "@/types/pr/metadata";
+import type {
+  CategoryAnalysis,
+  ChangedFile,
+  PRAnalysis,
+  UnscannedReason,
+} from "@/types/pr/metadata";
 import { aggregateData } from "./aggregator";
 import { getBlastRadius } from "./blast-radius";
 import { getCategoryReport } from "./categorize";
@@ -54,7 +59,9 @@ const getUnscannedReason = (patch: string | null | undefined): UnscannedReason |
 const getPathReport = (file: ChangedFile): CategoryAnalysis => {
   const report = getCategoryReport({ filename: file.filename, status: file.status });
   const permissionChange = detectPermissionChange(file);
-  return permissionChange ? { ...report, category: [...report.category, permissionChange] } : report;
+  return permissionChange
+    ? { ...report, category: [...report.category, permissionChange] }
+    : report;
 };
 
 export const analyzeDiff = (changedFiles: ChangedFile[]): PRAnalysis => {

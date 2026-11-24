@@ -21,22 +21,12 @@ import {
   TEST_SIGNAL_STATUSES,
 } from "./constants/blast-radius";
 import { JS_TS_FILE_PATTERN, PRFileStatus } from "./constants/file";
+import { basename, extension, hasNoContentChange } from "./util/changed-file";
 import { isBinaryFile } from "./util/is-binary";
 import { isTestFile } from "./util/test-path";
 
-const basename = (filename: string): string => filename.slice(filename.lastIndexOf("/") + 1);
-
-const extension = (filename: string): string => {
-  const name = basename(filename);
-  const dot = name.lastIndexOf(".");
-  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
-};
-
 const matchesAny = (patterns: readonly RegExp[], filename: string): boolean =>
   patterns.some((pattern) => pattern.test(filename));
-
-const hasNoContentChange = ({ patch, additions, deletions }: ChangedFile): boolean =>
-  !patch && !additions && !deletions;
 
 const isExcludedFromCount = (file: ChangedFile): boolean => {
   const { filename, patch, status } = file;
