@@ -8,7 +8,7 @@ This tool automates the initial investigation by fetching PR metadata, analyzing
 
 ## Language Scope
 
-Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the test-to-code ratio in the planned blast-radius metrics (Sprint 4).
+Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the test-to-code ratio in the planned blast-radius metrics (Sprint 4).
 
 Files that aren't tied to one language are still analyzed:
 
