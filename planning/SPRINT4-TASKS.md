@@ -98,6 +98,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 - JS/TS files only. Flags a patch that removes an exported function line (`export function name(…)`, `export async function name(…)`, `export const name = (…) =>`, `export default function name(…)`) and either adds one with the same name but a different parameter list, or doesn't add it back at all.
 - Severity low. Message: "Public API changed: code outside this PR that uses `name` may break." Include the line (S4-T4) and evidence.
 - **Depends on:** S4-T4 for the line number. The detector itself can be written in parallel.
+- **Optional, from the S4-T4 review:** have the finders in `lib/diff/code.ts` take `hunks` directly, which brings the file back under ~150 lines before R017 adds to it.
 - Not mapped to an Affected Area. Deterministic; Sprint 5 lists it as "not sent to AI".
 - **Known limitations (README):** multi-line parameter lists, re-exports (`export { a as b }`), class methods and type-only changes aren't detected.
 

@@ -15,6 +15,7 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 ## S5-T1. Eligibility and payload builder (backend, M)
 **Role:** Coder (backend)
 **Depends on:** S4-T4 (Sprint 4)
+**First step:** make `id` required on findings in `aggregate.findings`, in both the type (e.g. `Finding = Pattern & { id: string }`) and the Zod schema, and update the tests that build findings without ids. Verdicts are matched back by id, so it must always be present (deferred from S4-T4).
 **Files:** new `lib/llm/eligibility.ts`, `lib/llm/payload.ts`, `lib/llm/constants.ts`; types in `lib/types/llm/`; `lib/types/pr/metadata.ts`; `lib/schemas/`; the analysis route
 
 **Scope**
