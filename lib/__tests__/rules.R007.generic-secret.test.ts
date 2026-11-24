@@ -18,7 +18,10 @@ describe("R007 - catch-all *_secret rule (GENERIC_SECRET)", () => {
     const findings = secretFindings(line);
 
     expect(findings).toHaveLength(1);
-    expect(findings[0]).toMatchObject({ severity: "critical", message: expect.stringContaining("SECRET") });
+    expect(findings[0]).toMatchObject({
+      severity: "critical",
+      message: expect.stringContaining("SECRET"),
+    });
   });
 
   // Regression: in a code file an unquoted value is a variable, not a literal. These used to be

@@ -37,7 +37,10 @@ const changed = (
 
 /** One file per severity level, plus one clean file. */
 export const FILES = {
-  critical: changed("src/config.ts", '+const github_token = "abc";', { additions: 10, deletions: 2 }),
+  critical: changed("src/config.ts", '+const github_token = "abc";', {
+    additions: 10,
+    deletions: 2,
+  }),
   high: changed("src/hash.ts", "+const d = md5(input);", { additions: 4, deletions: 4 }),
   medium: changed(".github/workflows/ci.yml", "+  run: npm test", { additions: 3, deletions: 0 }),
   low: changed("package.json", '+    "zod": "^3.22.0",', { additions: 1, deletions: 0 }),
@@ -55,9 +58,21 @@ export const UNSCANNED = {
   },
   noPatch: { filename: "src/old.ts", status: "removed", additions: 0, deletions: 40, patch: "" },
   /** GitHub sends no patch for a file it lists as unchanged. */
-  unchanged: { filename: "src/same.ts", status: "unchanged", additions: 0, deletions: 0, patch: "" },
+  unchanged: {
+    filename: "src/same.ts",
+    status: "unchanged",
+    additions: 0,
+    deletions: 0,
+    patch: "",
+  },
   /** No patch, but a path rule still fires (R004, high). */
-  deletedMigration: { filename: "db/migrations/001_init.sql", status: "removed", additions: 0, deletions: 30, patch: "" },
+  deletedMigration: {
+    filename: "db/migrations/001_init.sql",
+    status: "removed",
+    additions: 0,
+    deletions: 30,
+    patch: "",
+  },
 } satisfies Record<string, ChangedFile>;
 
 export const mixedReport = (): PRReport =>

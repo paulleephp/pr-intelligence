@@ -30,7 +30,13 @@ export const mockOctokit = vi.fn(function () {
   return { pulls: { get: mockPullsGet, listFiles: mockListFiles }, paginate: mockPaginate };
 });
 
-export type RawFile = { filename: string; status: string; additions: number; deletions: number; patch?: string };
+export type RawFile = {
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  patch?: string;
+};
 
 /** A small modified .ts file with no findings: src/file-<i>.ts. */
 export const rawFile = (i: number): RawFile => ({
@@ -43,6 +49,8 @@ export const rawFile = (i: number): RawFile => ({
 
 /** Makes listFiles behave like GitHub: honours page/per_page (default 30) over a fixed file list. */
 export const serveFiles = (files: RawFile[]) =>
-  mockListFiles.mockImplementation(async ({ page = 1, per_page = 30 }: { page?: number; per_page?: number }) => ({
-    data: files.slice((page - 1) * per_page, page * per_page),
-  }));
+  mockListFiles.mockImplementation(
+    async ({ page = 1, per_page = 30 }: { page?: number; per_page?: number }) => ({
+      data: files.slice((page - 1) * per_page, page * per_page),
+    }),
+  );

@@ -38,15 +38,22 @@ describe("R016 - dangerous code execution / DOM sinks", () => {
   });
 
   it("raises the overall PR severity to high", () => {
-    const { aggregate } = analyzeDiff([file({ filename: "src/a.ts", patch: "@@ -1 +1 @@\n+eval(x);" })]);
+    const { aggregate } = analyzeDiff([
+      file({ filename: "src/a.ts", patch: "@@ -1 +1 @@\n+eval(x);" }),
+    ]);
 
     expect(aggregate.ruleCounts).toEqual([
-      { ruleId: "R016", condition: "Dangerous code execution or DOM sink introduced", severity: "high", count: 1 },
+      {
+        ruleId: "R016",
+        condition: "Dangerous code execution or DOM sink introduced",
+        severity: "high",
+        count: 1,
+      },
     ]);
     expect(aggregate.overallSeverity).toBe("high");
   });
 
-  it.each(['+if (el.innerHTML === "") {', '+if (el.outerHTML == prev) {'])(
+  it.each(['+if (el.innerHTML === "") {', "+if (el.outerHTML == prev) {"])(
     "does not flag an innerHTML/outerHTML comparison: %s",
     (patch) => {
       expect(codeRuleIds(patch)).not.toContain("R016");

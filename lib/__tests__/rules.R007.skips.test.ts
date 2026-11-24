@@ -70,7 +70,9 @@ describe("R007 - test paths are ignored", () => {
     "src/api.spec.tsx",
     ...FIXTURE_PATHS,
   ])("does not report secrets in %s", (filename) => {
-    expect(secretFindings(`const t = "${FAKE.ghp}"; const github_token = "abc";`, filename)).toEqual([]);
+    expect(
+      secretFindings(`const t = "${FAKE.ghp}"; const github_token = "abc";`, filename),
+    ).toEqual([]);
   });
 
   // A "test" comment doesn't hide a secret, but a test path does.
@@ -82,17 +84,21 @@ describe("R007 - test paths are ignored", () => {
   );
 
   it("still reports the same 'test fixture' line outside a test path", () => {
-    expect(secretFindings('client_secret = "abcd1234" // test fixture', "src/config.ts")).toHaveLength(1);
+    expect(
+      secretFindings('client_secret = "abcd1234" // test fixture', "src/config.ts"),
+    ).toHaveLength(1);
   });
 
   // Fixtures also count as tests for file type and R010 (shared TEST_PATHS): see rules.R010.test.ts.
 
-  it.each(["src/latest/config.ts", "src/contest.ts", "src/attestation/keys.ts", "src/testimonials.ts"])(
-    "still reports secrets in a non-test path that contains 'test': %s",
-    (filename) => {
-      expect(secretFindings(`const t = "${FAKE.ghp}";`, filename)).toHaveLength(1);
-    },
-  );
+  it.each([
+    "src/latest/config.ts",
+    "src/contest.ts",
+    "src/attestation/keys.ts",
+    "src/testimonials.ts",
+  ])("still reports secrets in a non-test path that contains 'test': %s", (filename) => {
+    expect(secretFindings(`const t = "${FAKE.ghp}";`, filename)).toHaveLength(1);
+  });
 
   it("still applies the other code rules in test files", () => {
     expect(codeRuleIds("+eval(userInput);", "src/__tests__/a.test.ts")).toContain("R016");

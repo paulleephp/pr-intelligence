@@ -28,7 +28,11 @@ describe("stripTrailingComment", () => {
 
   it.each([
     ["after a quoted #", 'c = "#fff" # demo', 'c = "#fff" '],
-    ["after a quoted URL with a fragment", 'u = "https://x.com/#a"; // demo', 'u = "https://x.com/#a"; '],
+    [
+      "after a quoted URL with a fragment",
+      'u = "https://x.com/#a"; // demo',
+      'u = "https://x.com/#a"; ',
+    ],
     ["after an escaped quote", "x = 'it\\'s' # c", "x = 'it\\'s' "],
     ["after a quoted // ", 'x = "a // b" // c', 'x = "a // b" '],
   ])("strips a real comment %s", (_, line, expected) => {

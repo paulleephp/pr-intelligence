@@ -20,7 +20,9 @@ describe("prMetadataSchema", () => {
   // PRMetadata but not to the schema would never reach the UI. The input is exactly what the route
   // sends; it has labels and a non-null mergeable, so no field hides behind an empty array or null.
   it("passes every field of a real /api/pr response through unchanged", async () => {
-    mockPullsGet.mockResolvedValueOnce({ data: { ...octokit.pullsGetWithLabels.data, mergeable: true } });
+    mockPullsGet.mockResolvedValueOnce({
+      data: { ...octokit.pullsGetWithLabels.data, mergeable: true },
+    });
     const real = await getPRMetadata("owner", "repo", 1);
 
     expect(prMetadataSchema.parse(real)).toEqual(real);
@@ -45,7 +47,10 @@ describe("prMetadataSchema", () => {
     ["a missing html_url (guard rule)", meta({ html_url: undefined })],
     ["an unknown state (guard rule)", meta({ state: "draft" })],
     ["user: null (guard rule)", meta({ user: null })],
-    ["a user without login (guard rule)", meta({ user: { ...mockPRMetadataSuccess.user, login: undefined } })],
+    [
+      "a user without login (guard rule)",
+      meta({ user: { ...mockPRMetadataSuccess.user, login: undefined } }),
+    ],
     ["a label without color", meta({ labels: [{ name: "bug" }] })],
     ["a missing base.ref", meta({ base: { repo: mockPRMetadataSuccess.base.repo } })],
   ])("rejects %s", (_, value) => {
