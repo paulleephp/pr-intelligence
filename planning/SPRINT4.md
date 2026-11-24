@@ -93,6 +93,15 @@ interface BlastRadius {
 - **R017 "Exported function signature changed"**, JS/TS only, severity low (proposed). Flags a patch that removes an `export function name(…)` / `export const name = (…) =>` line and adds one with the same name but different parameters, or removes the export entirely.
 - Message: "Public API changed: code outside this PR that uses `name` may break." We can't see the callers (Key Decision 15), so the finding tells the reviewer to check.
 - Deterministic, so not sent to AI (Sprint 5).
+- Decided in S4-T5 (PR #23):
+  - **Parameter lists are compared as text**, ignoring whitespace and a trailing comma. Renaming a parameter is flagged.
+  - **An export that comes back without `export` is flagged as removed.**
+  - **Unreadable parameters aren't flagged.** If the function is still exported under the same name but its parameters can't be read (e.g. a multi-line list), there's no finding, which avoids a false "removed".
+  - **One R017 finding per file** (the first match), like the other code rules.
+  - **The name is in double quotes:** `Public API changed: code outside this PR that uses "name" may break.`, matching the other rule messages.
+  - **Forms covered:** `export function`, `export async function`, `export default function`, `export const name = (…) =>`, plus generators, generics, typed-return arrows and no-paren arrows (`x => …`).
+  - **`line`** is the added line's number. A removed export has no line, so its id is `R017:<file>`.
+  - **Not detected (README Known Limitations):** multi-line parameter lists, re-exports (`export { a }`, `export * from`), class methods, type-only changes.
 
 ## R018: script permission change (decided 2026-11-24)
 
