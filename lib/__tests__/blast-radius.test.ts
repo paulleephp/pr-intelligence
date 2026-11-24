@@ -10,48 +10,32 @@ import type { BlastRadiusLevel } from "@/lib/types/diff/blast-radius";
 import { edited, many } from "./fixtures/blast-radius";
 
 describe("getBlastRadius", () => {
-  // Overall = the higher of the file-count and spread levels (§4).
-  it.each<[string, ReturnType<typeof many>, BlastRadiusLevel, BlastRadiusLevel, BlastRadiusLevel]>([
-    [
-      "2 files in 1 module",
-      many(2, (i) => `src/a/f${i}.ts`),
-      "contained",
-      "contained",
-      "contained",
-    ],
-    [
-      "11 files in 1 module",
-      many(11, (i) => `src/a/f${i}.ts`),
-      "moderate",
-      "contained",
-      "moderate",
-    ],
-    ["2 files in 2 modules", many(2, (i) => `src/m${i}/f.ts`), "contained", "moderate", "moderate"],
-    ["4 files in 4 modules", many(4, (i) => `src/m${i}/f.ts`), "contained", "wide", "wide"],
-    ["31 files in 1 module", many(31, (i) => `src/a/f${i}.ts`), "wide", "contained", "wide"],
-    [
-      "31 files in 2 modules",
-      many(31, (i) => `src/m${i % 2}/f${i}.ts`),
-      "wide",
-      "moderate",
-      "wide",
-    ],
-    [
-      "12 files in 3 modules",
-      many(12, (i) => `src/m${i % 3}/f${i}.ts`),
-      "moderate",
-      "moderate",
-      "moderate",
-    ],
-  ])("rates %s as files %s, modules %s, overall %s", (_, files, fileLevel, spreadLevel, level) => {
-    const radius = getBlastRadius(files);
+  // Overall = the higher of the file-count and spread levels (§4). Each row is a number of files,
+  // spread evenly over a number of modules, then the three expected levels.
+  it.each<[number, number, BlastRadiusLevel, BlastRadiusLevel, BlastRadiusLevel]>([
+    [2, 1, "contained", "contained", "contained"],
+    [11, 1, "moderate", "contained", "moderate"],
+    [2, 2, "contained", "moderate", "moderate"],
+    [4, 4, "contained", "wide", "wide"],
+    [31, 1, "wide", "contained", "wide"],
+    [31, 2, "wide", "moderate", "wide"],
+    [12, 3, "moderate", "moderate", "moderate"],
+  ])(
+    "rates %i files over %i module(s) as files %s, modules %s, overall %s",
+    (fileCount, moduleCount, fileLevel, spreadLevel, level) => {
+      const radius = getBlastRadius(many(fileCount, (i) => `src/m${i % moduleCount}/f${i}.ts`));
 
-    expect([radius.fileCount.level, radius.spread.level, radius.level]).toEqual([
-      fileLevel,
-      spreadLevel,
-      level,
-    ]);
-  });
+      expect([radius.fileCount.counted, radius.spread.modules.length]).toEqual([
+        fileCount,
+        moduleCount,
+      ]);
+      expect([radius.fileCount.level, radius.spread.level, radius.level]).toEqual([
+        fileLevel,
+        spreadLevel,
+        level,
+      ]);
+    },
+  );
 
   // Decided 2026-11-24: the test signal doesn't raise the overall level.
   it("stays contained when source files change with no tests", () => {
