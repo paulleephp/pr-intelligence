@@ -117,7 +117,8 @@ interface BlastRadius {
     - extension `sh`, `bash`, `zsh`, `ksh`, `fish` or `command`, anywhere
     - or any file (with or without an extension) under a `bin/`, `scripts/`, `.husky/` or `.githooks/` folder
 - Extensionless files elsewhere (`LICENSE`, `Makefile`, `Dockerfile`) are not treated as runnable: too noisy.
-- Message: "`<file>` changed with no content change: likely a permission change (e.g. `chmod +x`)". Always "likely": the mode isn't in the data.
+- Message: `"<file>" changed with no content change: likely a permission change (e.g. "chmod +x")`, with double quotes like the other rule messages, since the UI shows plain text (user decision, PR #24). Always "likely": the mode isn't in the data.
+- Only status `modified` is flagged. GitHub's `changed` status isn't (PR #24).
 - Runs on every file (path and metadata only), including files listed as "Not scanned". Not JS/TS-gated. Not mapped to an Affected Area.
 - **Known limitations (README when shipped):**
   - Can't tell whether the executable bit was added or removed.
