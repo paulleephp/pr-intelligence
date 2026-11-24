@@ -118,7 +118,7 @@ Several agents work on this repo at the same time. Agents message each other by 
 | `boba` | Backend coder | `~/repos/pr-intelligence-backend` |
 | `takoyaki` | Frontend coder | `~/repos/pr-intelligence-frontend` |
 | `kimchi` | Tester: owns all test files | `~/repos/pr-intelligence-test` |
-| `banh-mi` | Reviewer: reviews PRs, comments only | its own worktree (see `agents.yaml`) |
+| `banh-mi` | Reviewer: reviews PRs, comments only; read-only, detached HEAD | its own worktree (see `agents.yaml`) |
 
 ### Workspaces
 - Work only in your own worktree. Never check out a branch, stage or commit in another agent's folder, including the main checkout.
@@ -130,7 +130,7 @@ Git checks out a branch in only one worktree at a time, so:
 - **Each task branch is checked out only in its owner's worktree.** Two agents never share a branch; the tester's branch is separate from the coder's.
 - **Start a task from the remote sprint branch:** `git fetch`, then `git switch -c sprint-<n>-t<task> origin/sprint-<n>` (e.g. `sprint-4-t8`). Never base a task on a local `sprint-<n>`; it may be stale.
 - **Between tasks, park on a detached HEAD:** `git switch --detach origin/sprint-<n>`.
-- **The reviewer** checks out PRs detached (`gh pr checkout <n> --detach`) or reviews from the PR diff.
+- **Read-only agents (`mochi`, `banh-mi`) only ever use a detached HEAD.** They never create or check out a named branch. `banh-mi` checks out PRs detached (`gh pr checkout <n> --detach`) or reviews from the PR diff.
 - PRs target `sprint-<n>`. Before opening a PR, rebase onto the latest `sprint-<n>`.
 - `sprint-<n>` → `staging` → `main` is merged by the user only. Agents never push to `staging` or `main`, and never merge PRs.
 - `mochi` commits its own doc changes directly to `sprint-<n>`, without a PR.
