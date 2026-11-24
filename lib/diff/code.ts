@@ -26,14 +26,13 @@ const lineMatches = (lowerLine: string, pattern: string): boolean => {
 };
 
 const findCodeFinding = (
-  addedLines: string[],
+  { added, addedLineNumbers }: DiffHunks,
   filename: string,
   patterns: readonly string[],
   ruleId: RiskRuleId,
   buildMessage: MessageFn,
-  lineNumbers?: readonly number[],
 ): Pattern | null => {
-  for (const [index, line] of addedLines.entries()) {
+  for (const [index, line] of added.entries()) {
     const lowerLine = line.toLowerCase();
     const match = patterns.find((pattern) => lineMatches(lowerLine, pattern));
 
@@ -45,20 +44,21 @@ const findCodeFinding = (
         message: buildMessage(filename, match),
         evidence: line.trim(),
       };
-      return withLine(finding, lineNumbers?.[index]);
+      return withLine(finding, addedLineNumbers?.[index]);
     }
   }
   return null;
 };
 
-const getNetRemovedLines = (hunks: DiffHunks): string[] => {
+const asNetRemovedLines = (hunks: DiffHunks): DiffHunks => {
   const addedTrimmed = new Set(hunks.added.map((line) => line.trim()));
-  return hunks.removed.filter((line) => !addedTrimmed.has(line.trim()));
+  const added = hunks.removed.filter((line) => !addedTrimmed.has(line.trim()));
+  return { added, removed: [], context: [] };
 };
 
 const findAuthCheckChange = (hunks: DiffHunks, filename: string): Pattern | null => {
   const removedAuthCheck = findCodeFinding(
-    getNetRemovedLines(hunks),
+    asNetRemovedLines(hunks),
     filename,
     AUTH_PATTERNS,
     "R002",
@@ -67,50 +67,44 @@ const findAuthCheckChange = (hunks: DiffHunks, filename: string): Pattern | null
   return (
     removedAuthCheck ??
     findCodeFinding(
-      hunks.added,
+      hunks,
       filename,
       AUTH_PATTERNS,
       "R002",
       (f, m) => `Authentication/authorization logic changed in ${f}: "${m}"`,
-      hunks.addedLineNumbers,
     )
   );
 };
 
 const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePatternFindings => {
-  const added = hunks.added;
   const authPatterns = findAuthCheckChange(hunks, filename);
   const passwordHashingPatterns = findCodeFinding(
-    added,
+    hunks,
     filename,
     PASSWORD_HASHING_PATTERNS,
     "R013",
     (f, m) => `Password hashing change detected in ${f}: "${m}"`,
-    hunks.addedLineNumbers,
   );
   const cryptoAlgoPatterns = findCodeFinding(
-    added,
+    hunks,
     filename,
     CRYPTO_ALGO_PATTERNS,
     "R012",
     (f, m) => `Insecure crypto algorithm detected in ${f}: "${m}"`,
-    hunks.addedLineNumbers,
   );
   const unsafeNavigation = findRegexFinding(
-    added,
+    hunks,
     filename,
     UNSAFE_NAVIGATION_PATTERNS,
     "R015",
     (f, m) => `Unsafe navigation: window.location assigned from a dynamic value in ${f}: "${m}"`,
-    hunks.addedLineNumbers,
   );
   const dangerousCodeCalls = findRegexFinding(
-    added,
+    hunks,
     filename,
     DANGEROUS_CODE_PATTERNS,
     "R016",
     (f, m) => `Dangerous code execution or DOM sink introduced in ${f}: "${m}"`,
-    hunks.addedLineNumbers,
   );
   return {
     authPatterns,
@@ -138,12 +132,11 @@ export const getCodeReport = ({
     ? getCodePatternFindings(hunks, filename)
     : NO_CODE_PATTERN_FINDINGS;
   const prodConfigChanges = findRegexFinding(
-    hunks.added,
+    hunks,
     filename,
     PROD_CONFIG_CHANGE_PATTERNS,
     "R009",
     (f, m) => `Production configuration change detected in ${f}: "${m}"`,
-    hunks.addedLineNumbers,
   );
   const dependencyChanges = detectDependencyChanges(hunks, filename);
 
