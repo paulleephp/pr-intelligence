@@ -61,7 +61,7 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 
 ## Planned decisions (not built yet)
 
-These are also in AGENTS.md "Key Decisions" (14 and 16). They move to the README once they ship.
+These are also in AGENTS.md "Key Decisions" (14 and 16). They move to `docs/DESIGN-DECISIONS.md` once they ship.
 
 - **LLM keys:** AI assessment uses Claude only, with the user's own Anthropic API key (bring your own key). No other AI platforms are planned. The app has no AI key of its own. The key is sent per request and never stored, on the server, in a database, in the browser or in logs.
 - **AI assessment is optional and selective:** deterministic results stand on their own. Only findings where a rule can locate a change but not judge it (R002, R012, R013, R015, R016) are sent, as flagged JS/TS lines with context. Secrets, database schema, production configuration, CI workflows and infrastructure files (R007, R003, R004, R009, R006, R011) are never sent, for security reasons. The AI adds a verdict next to a finding; it never changes the rule's severity.

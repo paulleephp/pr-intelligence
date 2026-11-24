@@ -171,7 +171,7 @@ Only `mochi` edits `.md` files (README, AGENTS.md, planning, STYLEGUIDE). Other 
 
 ## Key Decisions Made
 
-This list is the authoritative one, including planned decisions. README.md "Design Decisions" is a reader-facing summary of the shipped ones; update it when a shipped decision changes, and move a planned decision there once it ships.
+This list is the authoritative one, including planned decisions. `docs/DESIGN-DECISIONS.md` is a reader-facing summary of the shipped ones (README links to it); update it when a shipped decision changes, and move a planned decision there once it ships.
 
 1. **Diff Source**: parse git patch
 2. **Binary Files**: Skipped - focus on text diffs only. Binary files and files without a patch are returned in `analysis.unscannedFiles` and shown as "Not scanned" in the UI, never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them, and their findings still show
