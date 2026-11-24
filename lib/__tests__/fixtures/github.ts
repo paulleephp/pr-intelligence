@@ -141,7 +141,9 @@ export const octokit = {
    * listFiles with one file whose patch triggers a rule (R012, md5)
    */
   listFilesWithFinding: {
-    data: [{ filename: "src/hash.ts", status: "modified", additions: 1, deletions: 0, patch: "+md5(x)" }],
+    data: [
+      { filename: "src/hash.ts", status: "modified", additions: 1, deletions: 0, patch: "+md5(x)" },
+    ],
   },
 
   /**

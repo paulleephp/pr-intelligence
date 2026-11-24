@@ -19,7 +19,11 @@ describe("R004 - database migration deleted", () => {
 
   it("surfaces R004 as the overall PR severity through analyzeDiff", () => {
     const { aggregate } = analyzeDiff([
-      file({ filename: "db/migrations/001.sql", status: "removed", patch: "@@ -1 +0,0 @@\n-CREATE TABLE x;" }),
+      file({
+        filename: "db/migrations/001.sql",
+        status: "removed",
+        patch: "@@ -1 +0,0 @@\n-CREATE TABLE x;",
+      }),
       file({ filename: "src/a.ts", patch: "@@ -1 +1 @@\n+const a = 1;" }),
     ]);
 

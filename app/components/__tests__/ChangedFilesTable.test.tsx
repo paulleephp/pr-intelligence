@@ -5,7 +5,10 @@ import { ChangedFilesTable } from "../ChangedFilesTable";
 import { buildAnalysis, FILES, mixedReport, UNSCANNED } from "./fixtures";
 
 const bodyRows = () => screen.getAllByRole("row").slice(1); // drop header row
-const cells = (row: HTMLElement) => within(row).getAllByRole("cell").map((c) => c.textContent);
+const cells = (row: HTMLElement) =>
+  within(row)
+    .getAllByRole("cell")
+    .map((c) => c.textContent);
 
 describe("ChangedFilesTable", () => {
   it("shows the file count in the heading", () => {
@@ -90,12 +93,20 @@ describe("ChangedFilesTable", () => {
     it("keeps the type, status and line counts of an unscanned file", () => {
       render(<ChangedFilesTable analysis={buildAnalysis([UNSCANNED.noPatch])} />);
 
-      expect(cells(bodyRows()[0])).toEqual(["src/old.ts", "Backend", "removed", "+0 −40", "Not scanned"]);
+      expect(cells(bodyRows()[0])).toEqual([
+        "src/old.ts",
+        "Backend",
+        "removed",
+        "+0 −40",
+        "Not scanned",
+      ]);
     });
 
     // Path rules still run on unscanned files (deleting a migration is R004, high); the badge must show it.
     it("still shows the severity of a path finding on an unscanned file", () => {
-      render(<ChangedFilesTable analysis={buildAnalysis([UNSCANNED.deletedMigration, FILES.clean])} />);
+      render(
+        <ChangedFilesTable analysis={buildAnalysis([UNSCANNED.deletedMigration, FILES.clean])} />,
+      );
 
       expect(cells(rowFor("db/migrations/001_init.sql")).at(-1)).toContain("High");
     });
@@ -115,17 +126,29 @@ describe("ChangedFilesTable", () => {
     });
 
     it("adds a 'not scanned' hint with the reason under the severity of a flagged unscanned file", () => {
-      render(<ChangedFilesTable analysis={buildAnalysis([UNSCANNED.deletedMigration, FILES.clean])} />);
-      const cell = within(rowFor("db/migrations/001_init.sql")).getAllByRole("cell").at(-1) as HTMLElement;
+      render(
+        <ChangedFilesTable analysis={buildAnalysis([UNSCANNED.deletedMigration, FILES.clean])} />,
+      );
+      const cell = within(rowFor("db/migrations/001_init.sql"))
+        .getAllByRole("cell")
+        .at(-1) as HTMLElement;
 
-      expect(within(cell).getByText(NOT_SCANNED_HINT)).toHaveAttribute("title", "No diff available");
+      expect(within(cell).getByText(NOT_SCANNED_HINT)).toHaveAttribute(
+        "title",
+        "No diff available",
+      );
       expect(within(cell).queryByText("Not scanned")).not.toBeInTheDocument();
     });
 
     it("sorts a flagged unscanned file by its severity, above clean and unflagged files", () => {
       render(
         <ChangedFilesTable
-          analysis={buildAnalysis([FILES.clean, UNSCANNED.binary, UNSCANNED.deletedMigration, FILES.low])}
+          analysis={buildAnalysis([
+            FILES.clean,
+            UNSCANNED.binary,
+            UNSCANNED.deletedMigration,
+            FILES.low,
+          ])}
         />,
       );
 

@@ -35,16 +35,22 @@ describe("code-pattern rules run on JS/TS files only", () => {
     "types/global.d.ts",
     "src/App.TSX",
   ])("runs all five code-pattern rules on %s", (filename) => {
-    expect(analyzedRuleIds(filename, ONE_OF_EACH)).toEqual(expect.arrayContaining(CODE_PATTERN_RULES));
+    expect(analyzedRuleIds(filename, ONE_OF_EACH)).toEqual(
+      expect.arrayContaining(CODE_PATTERN_RULES),
+    );
   });
 
-  it.each(["app/a.py", "docs/guide.md", "README.md", "config/app.json", "src/a.ts.bak", "src/json.ts.txt"])(
-    "runs none of them on %s",
-    (filename) => {
-      const ids = analyzedRuleIds(filename, ONE_OF_EACH);
-      expect(ids.filter((id) => CODE_PATTERN_RULES.includes(id))).toEqual([]);
-    },
-  );
+  it.each([
+    "app/a.py",
+    "docs/guide.md",
+    "README.md",
+    "config/app.json",
+    "src/a.ts.bak",
+    "src/json.ts.txt",
+  ])("runs none of them on %s", (filename) => {
+    const ids = analyzedRuleIds(filename, ONE_OF_EACH);
+    expect(ids.filter((id) => CODE_PATTERN_RULES.includes(id))).toEqual([]);
+  });
 
   it.each([
     ["R009 on a YAML file", "config/app.yml", "+NODE_ENV: production", "R009"],
