@@ -11,6 +11,7 @@ import {
   UNSAFE_NAVIGATION_PATTERNS,
 } from "./change-detection";
 import { detectDependencyChanges } from "./dependency";
+import { withLine } from "./util/finding-id";
 import { findRegexFinding } from "./util/regex-finding";
 import { RISK_RULES, type RiskRuleId } from "./util/risk-scoring";
 
@@ -30,19 +31,21 @@ const findCodeFinding = (
   patterns: readonly string[],
   ruleId: RiskRuleId,
   buildMessage: MessageFn,
+  lineNumbers?: readonly number[],
 ): Pattern | null => {
-  for (const line of addedLines) {
+  for (const [index, line] of addedLines.entries()) {
     const lowerLine = line.toLowerCase();
     const match = patterns.find((pattern) => lineMatches(lowerLine, pattern));
 
     if (match) {
-      return {
+      const finding: Pattern = {
         ruleId,
         severity: RISK_RULES[ruleId].severity,
         filename,
         message: buildMessage(filename, match),
         evidence: line.trim(),
       };
+      return withLine(finding, lineNumbers?.[index]);
     }
   }
   return null;
@@ -69,6 +72,7 @@ const findAuthCheckChange = (hunks: DiffHunks, filename: string): Pattern | null
       AUTH_PATTERNS,
       "R002",
       (f, m) => `Authentication/authorization logic changed in ${f}: "${m}"`,
+      hunks.addedLineNumbers,
     )
   );
 };
@@ -82,6 +86,7 @@ const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePattern
     PASSWORD_HASHING_PATTERNS,
     "R013",
     (f, m) => `Password hashing change detected in ${f}: "${m}"`,
+    hunks.addedLineNumbers,
   );
   const cryptoAlgoPatterns = findCodeFinding(
     added,
@@ -89,6 +94,7 @@ const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePattern
     CRYPTO_ALGO_PATTERNS,
     "R012",
     (f, m) => `Insecure crypto algorithm detected in ${f}: "${m}"`,
+    hunks.addedLineNumbers,
   );
   const unsafeNavigation = findRegexFinding(
     added,
@@ -96,6 +102,7 @@ const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePattern
     UNSAFE_NAVIGATION_PATTERNS,
     "R015",
     (f, m) => `Unsafe navigation: window.location assigned from a dynamic value in ${f}: "${m}"`,
+    hunks.addedLineNumbers,
   );
   const dangerousCodeCalls = findRegexFinding(
     added,
@@ -103,6 +110,7 @@ const getCodePatternFindings = (hunks: DiffHunks, filename: string): CodePattern
     DANGEROUS_CODE_PATTERNS,
     "R016",
     (f, m) => `Dangerous code execution or DOM sink introduced in ${f}: "${m}"`,
+    hunks.addedLineNumbers,
   );
   return {
     authPatterns,
@@ -135,6 +143,7 @@ export const getCodeReport = ({
     PROD_CONFIG_CHANGE_PATTERNS,
     "R009",
     (f, m) => `Production configuration change detected in ${f}: "${m}"`,
+    hunks.addedLineNumbers,
   );
   const dependencyChanges = detectDependencyChanges(hunks, filename);
 

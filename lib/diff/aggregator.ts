@@ -8,6 +8,7 @@ import type {
   SecretAnalysis,
   SeverityCounts,
 } from "../types/pr/metadata";
+import { withFindingId } from "./util/finding-id";
 import { RISK_RULES, SEVERITY_RANK } from "./util/risk-scoring";
 
 const emptySeverityCounts = (): SeverityCounts => ({ low: 0, medium: 0, high: 0, critical: 0 });
@@ -61,7 +62,7 @@ export const aggregateData = ({
   const secretPatterns = flattenSecretPatterns(secretReports);
   const categoryPatterns = flattenCategoryPatterns(categoryReports);
   const codePatterns = flattenCodePatterns(codeReports);
-  const findings = [...secretPatterns, ...categoryPatterns, ...codePatterns];
+  const findings = [...secretPatterns, ...categoryPatterns, ...codePatterns].map(withFindingId);
 
   const severityCounts = emptySeverityCounts();
   const fileSeverity: Record<string, PatternSeverity> = {};
