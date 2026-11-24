@@ -1,5 +1,4 @@
-import { TEST_FILE_PATTERNS } from "../constants/blast-radius";
-import { TEST_PATHS } from "../constants/paths";
+import { TEST_FILE_PATTERNS, TEST_PATHS } from "../constants/paths";
 
 export const isTestPath = (filename: string): boolean => {
   const path = `/${filename.toLowerCase()}`;

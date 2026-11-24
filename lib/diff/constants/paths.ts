@@ -31,4 +31,9 @@ export const INFRA_PATHS: readonly RegExp[] = [directory("terraform|k8s|kubernet
 
 export const TEST_PATHS: readonly RegExp[] = [directory("__tests__|tests?|e2e|fixtures?"), /\.(?:test|spec)\.[\w]+$/];
 
+export const TEST_FILE_PATTERNS: readonly RegExp[] = [
+  /\.(?:test|spec)\.[^/]+$/i,
+  /(?:^|\/)(?:__tests__|tests?|e2e)\//i,
+];
+
 export const MIGRATION_PATHS: readonly RegExp[] = [directory("migrations?")];

@@ -1,7 +1,5 @@
-import type { BlastRadiusLevel, LevelThresholds } from "@/lib/types/diff/blast-radius";
+import type { LevelThresholds } from "@/lib/types/diff/blast-radius";
 import { PRFileStatus } from "./file";
-
-export const BLAST_RADIUS_LEVELS = ["contained", "moderate", "wide"] as const satisfies readonly BlastRadiusLevel[];
 
 export const FILE_COUNT_THRESHOLDS: LevelThresholds = { contained: 10, moderate: 30 };
 
@@ -57,11 +55,6 @@ export const ASSET_EXTENSIONS: ReadonlySet<string> = new Set([
 ]);
 
 export const DOCS_PATTERNS: readonly RegExp[] = [/\.mdx?$/i, /^docs\//i];
-
-export const TEST_FILE_PATTERNS: readonly RegExp[] = [
-  /\.(?:test|spec)\.[^/]+$/i,
-  /(?:^|\/)(?:__tests__|tests?|e2e)\//i,
-];
 
 export const FIXTURE_PATTERN = /(?:^|\/)fixtures\//i;
 

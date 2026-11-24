@@ -5,8 +5,9 @@ Spec: `SPRINT4.md`. The rules there are the source of truth; these briefs say wh
 - **Part 1: Blast-radius metrics** (S4-T1 to S4-T3)
 - **Part 2: Line numbers and R017** (S4-T4 to S4-T6)
 - **Optional:** rule tests and CI (S4-T7)
+- **Part 3: R018** script permission change (S4-T8)
 
-Parts 1 and 2 are independent and can run in parallel.
+Parts 1, 2 and 3 are independent and can run in parallel.
 
 # Part 1: Blast-radius metrics (S4-T1 to S4-T3)
 
@@ -65,8 +66,10 @@ Order: S4-T1 → S4-T2 and S4-T3 can run in parallel once S4-T1's response shape
 - `lib/__tests__/blast-radius.test.ts`, one `describe` per metric:
   - exclusions: each lockfile, `*.snap` and `__snapshots__/`, each asset group, a binary patch, a too-large text file with an empty patch (counted)
   - level boundaries: files 10/11/30/31, modules 1/2/3/4, zero files and zero modules
-  - module rule: each container folder, a file directly in a container, root files, uppercase container names, tests and docs left out
-  - tests signal: all three states, deleted tests and deleted source not counted, fixtures counted as neither, non-JS/TS files ignored
+  - module rule: each container folder, a file directly in a container, root files, uppercase container names, `SRC/Auth` + `src/auth` counted as one module (first spelling shown), case-insensitive sort
+  - spread exclusions: test files by path whatever their type (a `.json` under `tests/`), fixtures, `*.md`/`*.mdx` anywhere, top-level `docs/` excluded but `app/docs/page.tsx` counted
+  - no patch and 0/0 lines → excluded (binary with an unlisted extension, empty file, content-free rename); no patch with non-zero lines (too-large text file) → counted; status `unchanged` → excluded
+  - tests signal: all three states; only added, modified and renamed count (`copied`, `changed` and deleted don't); fixtures counted as neither; non-JS/TS files ignored; no patch and 0/0 (pure rename, empty file) counted as neither
   - overall level = max of the two
 - Schema test: a response with `blastRadius` validates, and a malformed one is rejected.
 - Component tests for the card: levels, test states, "+N more".
@@ -110,3 +113,30 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 **Roles:** Tester (rule tests), Coder (CI)
 - Tester: add `rules.R001.test.ts`, `rules.R011.test.ts`, `rules.R012.test.ts`, `rules.R014.test.ts` (SPRINT4.md "Optional if there's room").
 - Coder: a GitHub Actions workflow that runs lint, type check and tests on every PR. Note: our own R006 will flag this PR as "CI/CD workflow modified"; that's expected.
+
+# Part 3: R018 (S4-T8)
+
+## S4-T8. R018: script permission change (backend, S)
+**Role:** Coder (backend)
+**Files:** `lib/diff/util/risk-scoring.ts` (rule entry), a new detector (e.g. `lib/diff/mode-change.ts`) with its patterns in `lib/diff/constants/`, `lib/diff/core.ts` (call it), `lib/schemas/` if rule IDs are enumerated
+
+**Scope** (SPRINT4.md "R018: script permission change")
+- Flag a file when status is `modified`, the patch is missing or empty, additions and deletions are both 0, and the path looks runnable (the extensions and folders listed in the spec). Folder matching ignores case and works at any depth (`packages/cli/bin/run`).
+- Severity medium; message exactly as in the spec.
+- Runs for every file, including files that end up in `unscannedFiles` (they have no patch by definition). Its finding must show in the UI like other path-rule findings on unscanned files.
+- Not mapped to an Affected Area. Not JS/TS-gated.
+- Constants for the extensions and folders live in one place.
+
+**Out of scope:** any new GitHub request; detecting mode changes that come with content changes or renames.
+
+**Acceptance**
+- `scripts/deploy.sh`, modified, no patch, 0/0 → flagged.
+- `.husky/pre-commit` (no extension), modified, no patch, 0/0 → flagged.
+- `bin/cli.js`, modified, no patch, 0/0 → flagged.
+- `scripts/deploy.sh` with a patch → not flagged.
+- `scripts/deploy.sh`, status `added` or `renamed`, 0/0 → not flagged.
+- `LICENSE` or `assets/logo.png`, modified, no patch, 0/0 → not flagged.
+- `package-lock.json` with no patch but non-zero line counts → not flagged.
+- Lint, type check and existing tests pass. Don't edit test files.
+
+**Tester follow-up:** `rules.R018.test.ts` with the cases above, plus case variations (`Scripts/`, `.SH`) and nested folders.

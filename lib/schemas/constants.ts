@@ -1,4 +1,4 @@
-import type { TestSignalState } from "@/lib/types/diff/blast-radius";
+import type { BlastRadiusLevel, TestSignalState } from "@/lib/types/diff/blast-radius";
 import type { FileType } from "@/lib/types/diff/file";
 import type { PatternSeverity } from "@/lib/types/diff/pattern";
 import type { UnscannedReason } from "@/lib/types/pr/metadata";
@@ -28,3 +28,9 @@ export const TEST_SIGNAL_STATES = [
   "no-tests",
   "tests-changed",
 ] as const satisfies readonly TestSignalState[];
+
+export const BLAST_RADIUS_LEVELS = [
+  "contained",
+  "moderate",
+  "wide",
+] as const satisfies readonly BlastRadiusLevel[];

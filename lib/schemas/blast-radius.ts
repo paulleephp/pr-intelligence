@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { BLAST_RADIUS_LEVELS } from "@/lib/diff/constants/blast-radius";
 import type { BlastRadius } from "@/lib/types/diff/blast-radius";
 import { countSchema } from "./common";
-import { TEST_SIGNAL_STATES } from "./constants";
+import { BLAST_RADIUS_LEVELS, TEST_SIGNAL_STATES } from "./constants";
 
 const levelSchema = z.enum(BLAST_RADIUS_LEVELS);
 
