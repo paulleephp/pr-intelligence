@@ -101,7 +101,8 @@ interface BlastRadius {
   - **The name is in double quotes:** `Public API changed: code outside this PR that uses "name" may break.`, matching the other rule messages.
   - **Forms covered:** `export function`, `export async function`, `export default function`, `export const name = (…) =>`, plus generators, generics, typed-return arrows and no-paren arrows (`x => …`).
   - **`line`** is the added line's number. A removed export has no line, so its id is `R017:<file>`.
-  - **Not detected (README Known Limitations):** multi-line parameter lists, re-exports (`export { a }`, `export * from`), class methods, type-only changes.
+  - **Moving an export into an export list isn't "removed"** (fixed in PR #23 after review). An added `export { foo }`, `export { x as foo }`, `export { foo } from "…"` or `export default foo` keeps `foo` exported. `export { foo as bar }` is still flagged, because importers of `foo` break.
+  - **Not detected (README Known Limitations):** multi-line parameter lists; a parameter change made in the same move to an export list; re-exports as signatures (`export * from`); class methods; type-only changes; nested generics (`<T extends Array<string>>`) and parameters nested two or more levels deep (`(a = g(h(1)))`). All of these are missed, never misreported.
 
 ## R018: script permission change (decided 2026-11-24)
 
