@@ -12,20 +12,20 @@ import type { SecretAnalysis } from "@/types/pr/metadata";
 import { API_KEY_PATTERNS, PASSWORD_PATTERNS, SSH_PATTERNS } from "./constants/patterns";
 import {
   CONFIG_FILE_PATTERNS,
-  SHELL_FILE_PATTERNS,
   LOW_RISK_LINE,
   SECRET_NAME_RULES,
   SECRET_VALUE_RULES,
+  SHELL_FILE_PATTERNS,
 } from "./constants/secret";
 import { withLine } from "./util/finding-id";
-import { stripTrailingComment } from "./util/strip-comment";
-import { isTestPath } from "./util/test-path";
 import {
   getApiKeyFoundData,
   getPasswordFoundData,
   getSecretFoundData,
   getSSHFoundData,
 } from "./util/format-data";
+import { stripTrailingComment } from "./util/strip-comment";
+import { isTestPath } from "./util/test-path";
 
 const dataFnMap: Record<SecretScanType, GetHandlerFn> = {
   secret: getSecretFoundData,
@@ -74,7 +74,9 @@ const findNameMatch = ({ rawLine, type, fileKind }: SecretLineContext): string |
 };
 
 const findValueMatch = ({ rawLine, type }: SecretLineContext): string | null =>
-  type === "secret" ? (SECRET_VALUE_RULES.find((scan) => scan.regex.test(rawLine))?.name ?? null) : null;
+  type === "secret"
+    ? (SECRET_VALUE_RULES.find((scan) => scan.regex.test(rawLine))?.name ?? null)
+    : null;
 
 const findMatch = (context: SecretLineContext): string | null => {
   const valueMatch = findValueMatch(context);
@@ -88,7 +90,8 @@ const findMatch = (context: SecretLineContext): string | null => {
 
 const getSecretFileKind = (filename: string): SecretFileKind => {
   const basename = (filename.split("/").pop() ?? filename).toLowerCase();
-  const matches = (patterns: readonly RegExp[]) => patterns.some((pattern) => pattern.test(basename));
+  const matches = (patterns: readonly RegExp[]) =>
+    patterns.some((pattern) => pattern.test(basename));
   if (matches(SHELL_FILE_PATTERNS)) return "shell";
   return matches(CONFIG_FILE_PATTERNS) ? "config" : "code";
 };

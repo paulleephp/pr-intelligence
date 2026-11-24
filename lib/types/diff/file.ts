@@ -1,7 +1,6 @@
-
 export type FileType = "frontend" | "backend" | "tests" | "docs" | "config";
 
-export type FileCategory = 
+export type FileCategory =
   | "code"
   | "test"
   | "docs"
@@ -19,4 +18,3 @@ export type PRFileStatus =
   | "changed"
   | "deleted"
   | "unchanged";
-  

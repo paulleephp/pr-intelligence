@@ -4,7 +4,9 @@ const segment = (names: string): RegExp => new RegExp(String.raw`/(?:${names})${
 const directory = (names: string): RegExp => new RegExp(String.raw`/(?:${names})/`);
 
 export const AUTH_PATHS: readonly RegExp[] = [
-  segment("auth|authn|authz|authentication|authorization|oauth|sso|login|logout|sessions?|permissions?|access-control|rbac"),
+  segment(
+    "auth|authn|authz|authentication|authorization|oauth|sso|login|logout|sessions?|permissions?|access-control|rbac",
+  ),
 ];
 
 export const CI_PATHS: readonly RegExp[] = [
@@ -29,7 +31,10 @@ export const SECURITY_PATHS: readonly RegExp[] = [segment("security|crypto|encry
 
 export const INFRA_PATHS: readonly RegExp[] = [directory("terraform|k8s|kubernetes|helm"), /\.tf$/];
 
-export const TEST_PATHS: readonly RegExp[] = [directory("__tests__|tests?|e2e|fixtures?"), /\.(?:test|spec)\.[\w]+$/];
+export const TEST_PATHS: readonly RegExp[] = [
+  directory("__tests__|tests?|e2e|fixtures?"),
+  /\.(?:test|spec)\.[\w]+$/,
+];
 
 export const TEST_FILE_PATTERNS: readonly RegExp[] = [
   /\.(?:test|spec)\.[^/]+$/i,

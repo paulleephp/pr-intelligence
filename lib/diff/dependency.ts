@@ -15,7 +15,9 @@ const TRAILING_COMMA = /,\s*$/;
 
 export const isDependencyManifest = (filename: string): boolean => {
   const basename = (filename.split("/").pop() ?? filename).toLowerCase();
-  return DEPENDENCY_MANIFEST_FILENAMES.includes(basename) || REQUIREMENTS_FILENAME_PATTERN.test(basename);
+  return (
+    DEPENDENCY_MANIFEST_FILENAMES.includes(basename) || REQUIREMENTS_FILENAME_PATTERN.test(basename)
+  );
 };
 
 const normalizeLine = (line: string): string => line.trim().replace(TRAILING_COMMA, "");

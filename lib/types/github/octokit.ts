@@ -14,7 +14,6 @@ export interface PRMetadataResponse {
   changedFiles: unknown[];
 }
 
-
 export interface PRAnalyzeData {
   prMetadata: PRMetadata;
   changedFiles: ChangedFile[];

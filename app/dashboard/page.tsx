@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
+import { Header } from "@/app/components/Header";
 
 export default function Dashboard() {
   return (
@@ -9,12 +9,9 @@ export default function Dashboard() {
 
       <main className="mx-auto max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <div className="space-y-6 text-center">
-          <h1 className="text-3xl font-bold text-white md:text-4xl">
-            Dashboard
-          </h1>
+          <h1 className="text-3xl font-bold text-white md:text-4xl">Dashboard</h1>
           <p className="mx-auto max-w-2xl text-zinc-400">
-            Welcome to the PR Intelligence dashboard. Navigate back to analyze
-            pull requests.
+            Welcome to the PR Intelligence dashboard. Navigate back to analyze pull requests.
           </p>
         </div>
 
@@ -54,8 +51,7 @@ function QuickTips() {
 
       <TipCard title="API Documentation" color="purple">
         <p className="text-sm text-zinc-400">
-          Coming soon: Full API docs, rate limit handling, and caching
-          strategies.
+          Coming soon: Full API docs, rate limit handling, and caching strategies.
         </p>
       </TipCard>
     </div>
@@ -77,9 +73,7 @@ function TipCard({ title, color, children }: TipCardProps) {
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm">
-      <h3 className={`mb-2 text-lg font-semibold ${colorMap[color]}`}>
-        {title}
-      </h3>
+      <h3 className={`mb-2 text-lg font-semibold ${colorMap[color]}`}>{title}</h3>
       {children}
     </div>
   );

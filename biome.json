@@ -7,7 +7,7 @@
   },
   "files": {
     "maxSize": 10000,
-    "includes": ["**", "!public"]
+    "includes": ["**", "!public", "!**/*.md"]
   },
   "formatter": {
     "enabled": true,

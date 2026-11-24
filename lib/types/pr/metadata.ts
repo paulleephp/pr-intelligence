@@ -1,7 +1,6 @@
 import type { BlastRadius } from "../diff/blast-radius";
-import type { PRFileStatus } from "../diff/file";
+import type { FileType, PRFileStatus } from "../diff/file";
 import type { DiffHunks } from "../diff/hunk";
-import type { FileType } from "../diff/file";
 import type { Pattern, PatternSeverity } from "../diff/pattern";
 import type { PrChangeSummary } from "../diff/summary";
 
@@ -34,7 +33,11 @@ export interface CodeAnalysis {
 
 export type CodePatternFindings = Pick<
   CodeAnalysis,
-  "authPatterns" | "passwordHashingPatterns" | "cryptoAlgoPatterns" | "unsafeNavigation" | "dangerousCodeCalls"
+  | "authPatterns"
+  | "passwordHashingPatterns"
+  | "cryptoAlgoPatterns"
+  | "unsafeNavigation"
+  | "dangerousCodeCalls"
 >;
 
 export interface CategoryAnalysis {
