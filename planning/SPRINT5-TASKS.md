@@ -7,11 +7,27 @@ Spec: `SPRINT5.md`. Read the whole spec before starting any of these tasks, espe
 No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliverables").
 
 **Order**
+- First: S5-T0 (CI workflow, carried from Sprint 4), so every later Sprint 5 PR is checked by CI.
 - Wave A, in parallel: S5-T1 (payload builder), S5-T2 (Claude client)
 - Wave B: S5-T3 (route, needs S5-T1 and S5-T2)
 - Wave C: S5-T4 (frontend; can start on S5-T1's preview data, then wire up S5-T3)
 - Tester (S5-T5) follows each wave. Reviewer after each PR.
-- S5-T6 (CI workflow, carried from Sprint 4) is independent: do it first, so every later Sprint 5 PR is checked by CI.
+
+## S5-T0. CI workflow (backend, S; first, carried over from Sprint 4)
+**Role:** Coder (backend)
+**Files:** new `.github/workflows/ci.yml`; README (Tech Stack, Contributing) and AGENTS.md Tech Stack via mochi.
+
+**Scope**
+- A GitHub Actions workflow on pull requests into `sprint-*`, `staging` and `main`, running in order:
+  1. `npm ci`
+  2. `npx next typegen` (without it, `tsc` fails on `LayoutProps` in a fresh checkout)
+  3. `npm run check` (Biome lint, formatting, import order)
+  4. `npx tsc --noEmit`
+  5. `npx vitest run`
+- Pin the Node version to the one the project uses. No secrets are needed: tests don't call GitHub or Claude.
+- Our own R006 will flag this PR as "CI/CD workflow modified". That's expected, and a good live check.
+
+**Acceptance:** the workflow runs on its own PR and passes. `npm run check` starts green (Sprint 4 PRs #26 and #27). Biome's remaining infos (`noUselessStringRaw`) and the `docs/style-guide.html` size warning don't fail it, which the user accepted.
 
 ## S5-T1. Eligibility and payload builder (backend, M)
 **Role:** Coder (backend)
@@ -112,19 +128,3 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 - S5-T2: error mapping, the single retry, no key in logs (spy on `console`), refusal handling.
 - S5-T3: server ignores client-sent findings; private repo rejected before any Claude call; status mapping.
 - S5-T4: every UI state; the key isn't in storage or the URL after submit.
-
-## S5-T6. CI workflow (backend, S; carried over from Sprint 4)
-**Role:** Coder (backend)
-**Files:** new `.github/workflows/ci.yml`; README (Tech Stack, Contributing) and AGENTS.md Tech Stack via mochi.
-
-**Scope**
-- A GitHub Actions workflow on pull requests into `sprint-*`, `staging` and `main`, running in order:
-  1. `npm ci`
-  2. `npx next typegen` (without it, `tsc` fails on `LayoutProps` in a fresh checkout)
-  3. `npm run check` (Biome lint, formatting, import order)
-  4. `npx tsc --noEmit`
-  5. `npx vitest run`
-- Pin the Node version to the one the project uses. No secrets are needed: tests don't call GitHub or Claude.
-- Our own R006 will flag this PR as "CI/CD workflow modified". That's expected, and a good live check.
-
-**Acceptance:** the workflow runs on its own PR and passes. `npm run check` starts green (Sprint 4 PRs #26 and #27). Biome's remaining infos (`noUselessStringRaw`) and the `docs/style-guide.html` size warning don't fail it, which the user accepted.

@@ -150,6 +150,6 @@ interface BlastRadius {
 | Dockerfile edge cases (untested, low priority) | `Dockerfile.md` and `Dockerfile.json` count as Dockerfiles. The old `ENV KEY value` form and `*.Dockerfile` names aren't detected | Not decided |
 | camelCase secret names (deferred) | Some real camelCase names are missed and camelCase placeholders are flagged. See README → Known Limitations | Add tests with the fix |
 
-- ~~Add a GitHub Actions job~~: moved to Sprint 5 (S5-T6) by the user 2026-11-25. The prerequisite is done here: `npm run check` (PR #26) exits 0 on sprint-4 after #27.
+- ~~Add a GitHub Actions job~~: moved to Sprint 5 (S5-T0, its first task) by the user 2026-11-25. The prerequisite is done here: `npm run check` (PR #26) exits 0 on sprint-4 after #27.
 
 Task briefs: `SPRINT4-TASKS.md`.

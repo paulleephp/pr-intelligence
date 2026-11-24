@@ -2,6 +2,10 @@ Sprint 5 — AI assessment of flagged findings (optional, bring your own key)
 
 Status: scoped and briefed 2026-11-24 (moved here from Sprint 4). Prerequisite from Sprint 4: line numbers and stable IDs on findings. Replaces the original Sprint 4 "Core analysis" plan (security invariant analysis and change-impact analysis), which is in git history at commit `44160c8`.
 
+## First: CI workflow (carried over from Sprint 4, decided 2026-11-25)
+
+Before the AI work, add a GitHub Actions workflow that runs `npm run check`, the type check and the tests on every PR, so every Sprint 5 PR is checked by CI. Brief: `SPRINT5-TASKS.md` S5-T0.
+
 ## Bring your own key (decided 2026-11-24)
 
 - AI assessment runs **only with the user's own Anthropic API key**. The app has no AI key of its own and never pays for or proxies AI usage on its own account.

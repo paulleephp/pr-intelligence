@@ -44,8 +44,8 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 - Optional: missing rule tests (R001, R011, R012, R014) and a `npm run check` script that fails on formatting
 
 **Sprint 5** (`SPRINT5.md`)
+- First: CI workflow (carried from Sprint 4): check, type check and tests on every PR
 - Optional AI assessment, bring your own key: Claude only, with the user's own Anthropic API key. Flagged JS/TS lines for findings that need judgment (auth checks, crypto, password hashing, unsafe sinks) are sent for a verdict, public repositories only, capped at 10,000 characters. Only JS/TS source code is ever sent; secrets, schema, production config, CI and infrastructure files never are, for security reasons. No database: nothing is cached
-- CI workflow (carried from Sprint 4): check, type check and tests on every PR
 
 ## Later
 
