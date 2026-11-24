@@ -6,14 +6,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { ModuleList } from "../blast-radius/ModuleList";
-
-const modulesNamed = (count: number) =>
-  Array.from({ length: count }, (_, i) => `src/module-${i + 1}`);
-
-const chipNames = (container: HTMLElement) =>
-  within(container)
-    .getAllByRole("listitem")
-    .map((li) => li.textContent);
+import { chipNames, modulesNamed } from "./blast-radius-utils";
 
 const renderList = (count: number) => {
   const modules = modulesNamed(count);
