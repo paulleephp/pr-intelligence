@@ -1,4 +1,5 @@
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
+import type { BlastRadius, BlastRadiusLevel } from "@/lib/types/diff/blast-radius";
 import type { PRAggregate, PRAnalysisResponse } from "@/lib/types/pr/metadata";
 import type { ChangedFileRow, FileSeverity, PRReport, SeverityCountMap } from "./report";
 
@@ -55,4 +56,22 @@ export interface PRFormProps {
   loading: boolean;
   error: string | null;
   onAnalyze: (url: string) => void;
+}
+
+export interface BlastRadiusCardProps {
+  blastRadius: BlastRadius;
+}
+
+export interface LevelBadgeProps {
+  level: BlastRadiusLevel;
+}
+
+export interface MetricRowProps {
+  label: string;
+  level?: BlastRadiusLevel;
+  children: ReactNode;
+}
+
+export interface ModuleListProps {
+  modules: readonly string[];
 }
