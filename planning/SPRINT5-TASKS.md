@@ -18,7 +18,7 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 **Files:** new `lib/llm/eligibility.ts`, `lib/llm/payload.ts`, `lib/llm/constants.ts`; types in `lib/types/llm/`; `lib/types/pr/metadata.ts`; `lib/schemas/`; the analysis route
 
 **Scope**
-- **Eligibility constant** (single source for backend and UI): every rule R001–R017 → `{ status: "sent" | "excluded-security" | "deterministic", reason: string }`, using the exact user-facing reasons in SPRINT5.md. Sent: R002, R012, R013, R015, R016. Excluded for security: R003, R004, R006, R007, R009, R011. Everything else deterministic.
+- **Eligibility constant** (single source for backend and UI): every rule R001–R018 → `{ status: "sent" | "excluded-security" | "deterministic", reason: string }`, using the exact user-facing reasons in SPRINT5.md. Sent: R002, R012, R013, R015, R016. Excluded for security: R003, R004, R006, R007, R009, R011. Everything else deterministic.
 - **`buildAssessmentPayload(files, findings, repoIsPrivate)`**, a pure function, applying SPRINT5.md "What is sent" in this order:
   1. Private repo → nothing is sent; status `private-repo`.
   2. Keep findings whose rule is `sent`.
