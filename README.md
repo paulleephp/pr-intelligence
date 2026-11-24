@@ -11,7 +11,7 @@ This tool automates the initial investigation. Paste a GitHub PR URL and it fetc
 - **PR overview:** title, author, number and state (open, merged, closed), linked to GitHub, plus change statistics: files changed, lines added and removed, files added, modified and removed.
 - **Overall severity:** the PR gets the highest severity among its findings (critical, high, medium, low or none), with a distribution of findings and files by severity.
 - **Changed files table:** every changed file with its type, status and severity. Binary files and files without a diff are marked "Not scanned", never shown as clean.
-- **Blast radius:** how widely the PR spreads, separate from severity: number of changed files, how many top-level modules they touch, and whether tests changed alongside JS/TS source. Each is rated contained, moderate or wide, and the PR gets the higher of the file and module levels.
+- **Blast radius:** how widely the PR spreads, separate from severity: number of changed files, how many top-level modules they touch, and whether tests changed alongside JS/TS source. The file count and module spread are each rated contained, moderate or wide, and the PR gets the higher of the two. The tests signal says whether source changed without tests.
 - **Affected Areas:** changed files grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security), with each file's severity within that area.
 - **Findings by severity:** findings grouped into critical, high, medium and low, each showing the file and what was detected.
 
