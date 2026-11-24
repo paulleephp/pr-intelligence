@@ -20,6 +20,59 @@ Config in `.prettierrc.json`:
 
 **IDE setup**: Enable "format on save" in VS Code.
 
+## Colors and brand
+
+Adopted 2026-11-24. Visual reference: open [docs/style-guide.html](./docs/style-guide.html) in a browser. Implementation is tracked as U7 (colors) and U8 (logo) in `planning/PENDING_NEW_FEATURES.md`; until then, the code still uses the old palette.
+
+### Anchors (unchanged)
+
+| Role | Value |
+|------|-------|
+| Title gradient | `emerald-400` `#34d399` → `cyan-400` `#22d3ee` |
+| Primary button (CTA) | `emerald-500` `#10b981`, black text, hover `emerald-400` |
+
+Every other color is derived from these in OKLCH: theme hue 187° (teal), complement 7°. Don't introduce new hues; add a token here first.
+
+### Severity
+
+| Level | Text | Mark (dot, bar, border) | Badge |
+|-------|------|-------------------------|-------|
+| critical | `#f7a3a9` | `#dd3858` | **Solid** `#d22c50`, white text |
+| high | `#feb992` | `#fa8233` | Outline: border = mark at ~55% opacity, transparent fill, dot + text |
+| medium | `#fed48c` | `#fecf7f` | Outline |
+| low | `#8dd5fb` | `#37b2e8` | Outline |
+| none | `#a1a1aa` | `#52525b` | Outline, border `#3a4241` |
+
+- **No tinted fills** on high/medium/low badges. Orange or yellow at low opacity over the dark background renders as brown or olive.
+- Critical is the only solid badge, so it reads as its own level.
+- Never show severity by color alone: badges and legends always include the label.
+- Lightness differs by level on purpose (critical darkest, medium lightest) so levels stay distinct with red-green color blindness. Don't equalize them.
+
+### File status and PR state
+
+| Item | Text | Notes |
+|------|------|-------|
+| added | `#7bbb9d` | Muted (low chroma) so severity stays the loudest color in a row |
+| modified | `#a1a1aa` | Neutral: most common status, and must not resemble medium severity |
+| removed / deleted | `#d8969d` | |
+| renamed | `#76b4d5` | |
+| copied | `#b89ed3` | |
+| Status badge border | `#2f3a37` | Transparent fill |
+| PR open | `#4ad59f` | |
+| PR merged | `#cb98f9` | Theme triad (187° + 120°) |
+| PR closed | `#f2939f` | |
+
+### Neutral surfaces (optional)
+
+Zinc tinted slightly toward the theme hue: page `#0a0e0e`, card `#141a19`, border `#212827`. Plain zinc remains acceptable.
+
+### Brand mark
+
+- File: [docs/brand/mark.svg](./docs/brand/mark.svg). "Impact nodes": dark teal glyph `#06231f` on the title gradient, 8px corner radius at 32px.
+- Header: mark at 28px + wordmark "PR Intelligence" in near-white (`#f4f4f5`), bold display font. The wordmark is not theme green; the mark carries the theme.
+- Favicon: the same mark. Place it where the App Router expects icon files (check `node_modules/next/dist/docs/`); the old `favicon.ico` at the repo root isn't served.
+- Don't recolor the mark, place it on a light background, or pair it with an emoji.
+
 ## Next.js Image Component
 
 **Always use `<Image />` from `next/image`, never native `<img>`.**
