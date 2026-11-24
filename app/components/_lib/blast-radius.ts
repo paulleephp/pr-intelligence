@@ -24,6 +24,9 @@ export const NO_MODULES_LABEL = "No modules";
 
 export const SHOW_LESS_LABEL = "Show less";
 
+export const EXCLUDED_FILES_HINT =
+  "Not counted: lockfiles, test snapshots, images and other assets, files with no diff (binaries, empty files, renames without changes) and unchanged files";
+
 const TEST_SIGNAL_TEXT: Readonly<Record<TestSignalState, (tests: BlastRadiusTests) => string>> = {
   "no-source-changes": () => "No source changes",
   "no-tests": ({ sourceFiles }) => `No tests changed for ${pluralize(sourceFiles, "source file")}`,
