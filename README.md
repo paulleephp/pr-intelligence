@@ -184,7 +184,7 @@ Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` a
 
 - GitHub's changed-file data doesn't include file modes, so R018 is a heuristic: it flags a modified file with no diff and 0 lines changed that looks runnable. That means a shell-script extension (`sh`, `bash`, `zsh`, `ksh`, `fish`, `command`) or any file under `bin/`, `scripts/`, `.husky/` or `.githooks/`. The message always says "likely".
 - **Missed:** permission changes on other files, such as an extensionless script outside those folders, or a `.js` or `.py` file made executable. A permission change made together with a content change is also missed.
-- **Possible false positive:** a script under those folders whose only change GitHub reports without a diff for another reason.
+- **Possible false positive:** a file under those folders that GitHub reports without a diff for another reason, such as an updated binary under `bin/`.
 
 ### Blast radius
 
