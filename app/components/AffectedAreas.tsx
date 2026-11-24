@@ -1,6 +1,7 @@
 import type { AffectedAreasProps } from "@/types/ui/components";
 import { buildAffectedAreas } from "./_lib/areas";
 import { DEFAULT_STATUS_STYLE, STATUS_STYLES } from "./_lib/file-display";
+import { pluralize } from "./_lib/format";
 import { SeverityBadge } from "./severity/SeverityBadge";
 
 export function AffectedAreas({ analysis }: AffectedAreasProps) {
@@ -19,7 +20,7 @@ export function AffectedAreas({ analysis }: AffectedAreasProps) {
             <div className="flex items-center justify-between border-zinc-800 border-b px-3 py-2">
               <h3 className="font-medium text-sm text-zinc-200">{label}</h3>
               <span className="rounded-full bg-zinc-800 px-2 py-0.5 font-semibold text-xs text-zinc-200 tabular-nums">
-                {files.length} {files.length === 1 ? "file" : "files"}
+                {pluralize(files.length, "file")}
               </span>
             </div>
             <ul className="divide-y divide-zinc-800/70">

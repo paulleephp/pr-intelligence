@@ -5,6 +5,7 @@ import type {
   TestSignalState,
 } from "@/lib/types/diff/blast-radius";
 import type { ModuleSplit } from "@/types/ui/report";
+import { pluralize } from "./format";
 import { SEVERITY_STYLES } from "./severity";
 
 export const MODULE_PREVIEW_LIMIT = 6;
@@ -22,9 +23,6 @@ export const BLAST_RADIUS_LEVEL_LABELS: Readonly<Record<BlastRadiusLevel, string
 export const NO_MODULES_LABEL = "No modules";
 
 export const SHOW_LESS_LABEL = "Show less";
-
-export const pluralize = (count: number, singular: string): string =>
-  `${count} ${count === 1 ? singular : `${singular}s`}`;
 
 const TEST_SIGNAL_TEXT: Readonly<Record<TestSignalState, (tests: BlastRadiusTests) => string>> = {
   "no-source-changes": () => "No source changes",
