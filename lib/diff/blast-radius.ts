@@ -94,10 +94,11 @@ const getSpread = (countedFiles: ChangedFile[]): BlastRadiusSpread => {
 
 const getTests = (files: ChangedFile[]): BlastRadiusTests => {
   const jsTsFiles = files.filter(
-    ({ filename, status }) =>
-      TEST_SIGNAL_STATUSES.includes(status) &&
-      JS_TS_FILE_PATTERN.test(filename) &&
-      !FIXTURE_PATTERN.test(filename),
+    (file) =>
+      TEST_SIGNAL_STATUSES.includes(file.status) &&
+      JS_TS_FILE_PATTERN.test(file.filename) &&
+      !FIXTURE_PATTERN.test(file.filename) &&
+      !hasNoContentChange(file),
   );
   const testFiles = jsTsFiles.filter(({ filename }) => isTestFile(filename)).length;
   const sourceFiles = jsTsFiles.length - testFiles;
