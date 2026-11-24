@@ -100,6 +100,20 @@ describe("ChangedFilesTable", () => {
       expect(cells(rowFor("db/migrations/001_init.sql")).at(-1)).toContain("High");
     });
 
+    // R018 is a path finding on an unscanned file too: a script whose only change is its mode.
+    it("shows Medium, with the 'not scanned' hint, for a script whose only change is its mode", () => {
+      const chmod = {
+        ...UNSCANNED.unchanged,
+        filename: "scripts/deploy.sh",
+        status: "modified" as const,
+      };
+      render(<ChangedFilesTable analysis={buildAnalysis([chmod, FILES.clean])} />);
+      const cell = within(rowFor("scripts/deploy.sh")).getAllByRole("cell").at(-1) as HTMLElement;
+
+      expect(cell).toHaveTextContent("Medium");
+      expect(within(cell).getByText(NOT_SCANNED_HINT)).toBeInTheDocument();
+    });
+
     it("adds a 'not scanned' hint with the reason under the severity of a flagged unscanned file", () => {
       render(<ChangedFilesTable analysis={buildAnalysis([UNSCANNED.deletedMigration, FILES.clean])} />);
       const cell = within(rowFor("db/migrations/001_init.sql")).getAllByRole("cell").at(-1) as HTMLElement;

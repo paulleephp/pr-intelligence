@@ -187,4 +187,12 @@ describe("buildAffectedAreas", () => {
   ])("returns no areas for %s", (_, files) => {
     expect(areasOf(files)).toEqual([]);
   });
+
+  // SPRINT4.md "R018": not mapped to an Affected Area.
+  it("returns no areas for a script whose only change is its mode (R018)", () => {
+    const chmod = file("scripts/deploy.sh", { additions: 0, patch: "" });
+
+    expect(ruleIdsOf([chmod])).toEqual(["R018"]);
+    expect(areasOf([chmod])).toEqual([]);
+  });
 });
