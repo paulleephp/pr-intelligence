@@ -1,4 +1,5 @@
 import type { RiskIndicatorProps } from "@/types/ui/components";
+import { pluralize } from "./_lib/format";
 import { SEVERITY_ORDER, SEVERITY_STYLES } from "./_lib/severity";
 import { SeverityBadge } from "./severity/SeverityBadge";
 
@@ -24,7 +25,7 @@ export function RiskIndicator({ aggregate }: RiskIndicatorProps) {
               <div className="flex items-center justify-between">
                 <SeverityBadge severity={level} />
                 <span className={`text-sm tabular-nums ${SEVERITY_STYLES[level].text}`}>
-                  {severityCounts[level]} {severityCounts[level] === 1 ? "finding" : "findings"}
+                  {pluralize(severityCounts[level], "finding")}
                 </span>
               </div>
               <ul className="space-y-1.5">

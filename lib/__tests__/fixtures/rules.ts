@@ -10,7 +10,9 @@ import type { PRFileStatus } from "@/lib/types/diff/file";
 import type { ChangedFile } from "@/lib/types/pr/metadata";
 
 /** A ChangedFile with defaults: modified, one added line `x`. */
-export const file = (overrides: Pick<ChangedFile, "filename"> & Partial<ChangedFile>): ChangedFile => ({
+export const file = (
+  overrides: Pick<ChangedFile, "filename"> & Partial<ChangedFile>,
+): ChangedFile => ({
   status: "modified",
   additions: 1,
   deletions: 0,
@@ -24,9 +26,9 @@ export const ruleIds = (filename: string, status: PRFileStatus) =>
 
 /** Rule IDs through analyzeDiff for a file GitHub sent no patch for (deleted / binary). */
 export const pathRuleIds = (filename: string, status: ChangedFile["status"]) =>
-  analyzeDiff([file({ filename, status, additions: 0, deletions: 10, patch: "" })]).aggregate.findings.map(
-    (p) => p.ruleId,
-  );
+  analyzeDiff([
+    file({ filename, status, additions: 0, deletions: 10, patch: "" }),
+  ]).aggregate.findings.map((p) => p.ruleId);
 
 /** Rule IDs through analyzeDiff for one file, so the JS/TS-only gate for code-pattern rules applies. */
 export const analyzedRuleIds = (filename: string, patch: string) =>

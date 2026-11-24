@@ -92,22 +92,38 @@ describe("fetchPrMetadata / fetchPrAnalysis", () => {
 
   // Sprint 3 T2 acceptance: these give the "unexpected format" error instead of reaching the UI.
   it.each([
-    ["a missing fileTypes", (a: Analysis) => ({ ...a, analysis: { ...a.analysis, fileTypes: undefined } })],
-    ["a negative count", (a: Analysis) => ({ ...a, prChangeSummary: { ...a.prChangeSummary, filesChanged: -1 } })],
-    ["a fractional count", (a: Analysis) => ({ ...a, prChangeSummary: { ...a.prChangeSummary, totalLinesAdded: 1.5 } })],
+    [
+      "a missing fileTypes",
+      (a: Analysis) => ({ ...a, analysis: { ...a.analysis, fileTypes: undefined } }),
+    ],
+    [
+      "a negative count",
+      (a: Analysis) => ({ ...a, prChangeSummary: { ...a.prChangeSummary, filesChanged: -1 } }),
+    ],
+    [
+      "a fractional count",
+      (a: Analysis) => ({ ...a, prChangeSummary: { ...a.prChangeSummary, totalLinesAdded: 1.5 } }),
+    ],
   ])("rejects an analysis response with %s and logs the schema issues", async (_, corrupt) => {
     mockFetch.mockResolvedValueOnce(jsonResponse(corrupt(buildAnalysis([]))));
 
-    expect(await fetchPrAnalysis(PR_URL)).toEqual({ ok: false, data: null, error: API_ERROR_MESSAGES.INVALID_SHAPE });
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Unexpected response shape"), [
-      expect.objectContaining({ path: expect.any(Array) }),
-    ]);
+    expect(await fetchPrAnalysis(PR_URL)).toEqual({
+      ok: false,
+      data: null,
+      error: API_ERROR_MESSAGES.INVALID_SHAPE,
+    });
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining("Unexpected response shape"),
+      [expect.objectContaining({ path: expect.any(Array) })],
+    );
   });
 
   // The schemas are the one place the response shape is defined: a field must be added there
   // before the UI can see it.
   it("returns the parsed data, without fields the schema doesn't define", async () => {
-    mockFetch.mockResolvedValueOnce(jsonResponse({ ...mockPRMetadataSuccess, impact: { modules: [] } }));
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ ...mockPRMetadataSuccess, impact: { modules: [] } }),
+    );
 
     expect((await fetchPrMetadata(PR_URL)).data).toEqual(mockPRMetadataSuccess);
   });
@@ -128,7 +144,9 @@ describe("fetchPrMetadata / fetchPrAnalysis", () => {
     mockFetch.mockImplementationOnce(
       (_, init) =>
         new Promise((_, reject) => {
-          init?.signal?.addEventListener("abort", () => reject(new DOMException("a", "AbortError")));
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("a", "AbortError")),
+          );
         }),
     );
 

@@ -13,7 +13,11 @@ describe("countChangedFiles", () => {
     [0, "a PR with no files", []],
     [2, "a PR with no unchanged files", [FILES.high, FILES.clean]],
     [1, "one changed and one unchanged file", [FILES.high, UNSCANNED.unchanged]],
-    [0, "a PR where every file is unchanged", [UNSCANNED.unchanged, { ...UNSCANNED.unchanged, filename: "src/same-2.ts" }]],
+    [
+      0,
+      "a PR where every file is unchanged",
+      [UNSCANNED.unchanged, { ...UNSCANNED.unchanged, filename: "src/same-2.ts" }],
+    ],
   ])("gives %i for %s", (expected, _, files) => {
     expect(countChangedFiles(summarizePr(files))).toBe(expected);
   });
@@ -34,7 +38,9 @@ describe("isUnchangedFile", () => {
 
 describe("getUnchangedFilenames", () => {
   it("returns the names of the unchanged files only", () => {
-    expect(getUnchangedFilenames([FILES.high, UNSCANNED.unchanged, UNSCANNED.binary])).toEqual(new Set(["src/same.ts"]));
+    expect(getUnchangedFilenames([FILES.high, UNSCANNED.unchanged, UNSCANNED.binary])).toEqual(
+      new Set(["src/same.ts"]),
+    );
   });
 
   it("returns an empty set when no file is unchanged", () => {

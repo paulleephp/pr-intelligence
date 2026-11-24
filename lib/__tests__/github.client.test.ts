@@ -8,9 +8,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchChangedFiles, fetchPRMetadata } from "@/lib/github/client";
 import { errors, mappedPRMetadata, octokit } from "./fixtures/github";
 
-const { mockOctokit, mockPaginate, mockPullsGet, mockListFiles, rawFile, serveFiles } = await vi.hoisted(
-  () => import("./mocks/octokit"),
-);
+const { mockOctokit, mockPaginate, mockPullsGet, mockListFiles, rawFile, serveFiles } =
+  await vi.hoisted(() => import("./mocks/octokit"));
 
 vi.mock("@octokit/rest", () => ({ Octokit: mockOctokit }));
 
@@ -47,7 +46,11 @@ describe("client", () => {
       const withExtras = {
         data: {
           ...octokit.pullsGetWithLabels.data,
-          labels: octokit.pullsGetWithLabels.data.labels.map((l) => ({ ...l, id: 1, default: false })),
+          labels: octokit.pullsGetWithLabels.data.labels.map((l) => ({
+            ...l,
+            id: 1,
+            default: false,
+          })),
         },
       };
       mockPullsGet.mockResolvedValueOnce(withExtras);
@@ -75,13 +78,17 @@ describe("client", () => {
       ["closed", true, "merged"],
       ["closed", undefined, "closed"],
     ])("maps state %s with merged=%s to %s", async (state, merged, expected) => {
-      mockPullsGet.mockResolvedValueOnce({ data: { ...octokit.pullsGetSuccess.data, state, merged } });
+      mockPullsGet.mockResolvedValueOnce({
+        data: { ...octokit.pullsGetSuccess.data, state, merged },
+      });
 
       expect((await fetchPRMetadata("owner", "repo", 123)).state).toBe(expected);
     });
 
     it("uses an empty head repo url when the fork was deleted", async () => {
-      mockPullsGet.mockResolvedValueOnce({ data: { ...octokit.pullsGetSuccess.data, head: { repo: null } } });
+      mockPullsGet.mockResolvedValueOnce({
+        data: { ...octokit.pullsGetSuccess.data, head: { repo: null } },
+      });
 
       expect((await fetchPRMetadata("owner", "repo", 123)).head.repo.url).toBe("");
     });
@@ -100,7 +107,13 @@ describe("client", () => {
       const result = await fetchChangedFiles("owner", "repo", 123);
 
       expect(result).toEqual([
-        { filename: "src/index.ts", status: "modified", additions: 10, deletions: 5, patch: "@@ -1 +1 @@\n+x" },
+        {
+          filename: "src/index.ts",
+          status: "modified",
+          additions: 10,
+          deletions: 5,
+          patch: "@@ -1 +1 @@\n+x",
+        },
       ]);
     });
 

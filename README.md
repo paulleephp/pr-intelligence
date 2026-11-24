@@ -1,14 +1,51 @@
 # PR Intelligence
 
-## The problem:
+## The problem
 
 Reviewing a pull request requires understanding of what changed, which parts of the codebase are affected, what tests are relevant, and whether there are potential risks. This is especially challenging if the codebase has long history and/or a lot of inner dependencies.
 
-This tool automates the initial investigation by fetching PR metadata, analyzing the diff with deterministic rule-based detection, identifying potentially affected modules, determining which tests might be relevant, and generating a structured review report with findings and recommendations.
+This tool automates the initial investigation. Paste a GitHub PR URL and it fetches the PR, analyzes the diff with deterministic rules (no AI), and shows what changed, which areas it touches, and which changes deserve a closer look, with a severity for each finding.
+
+## Features
+
+- **PR overview:** title, author, number and state (open, merged, closed), linked to GitHub, plus change statistics: files changed, lines added and removed, files added, modified and removed.
+- **Overall severity:** the PR gets the highest severity among its findings (critical, high, medium, low or none), with a distribution of findings and files by severity.
+- **Changed files table:** every changed file with its type, status and severity. Binary files and files without a diff are marked "Not scanned", never shown as clean.
+- **Blast radius:** how widely the PR spreads, separate from severity: number of changed files, how many top-level modules they touch, and whether tests changed alongside JS/TS source. The file count and module spread are each rated contained, moderate or wide, and the PR gets the higher of the two. The tests signal says whether source changed without tests.
+- **Affected Areas:** changed files grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security), with each file's severity within that area.
+- **Findings by severity:** findings grouped into critical, high, medium and low, each showing the file and what was detected.
+
+## Rules
+
+Each rule has a fixed severity. A file's severity, and the PR's, is the highest severity among its findings. There is no numeric score.
+
+| Rule | Flags | Severity | Applies to |
+|------|-------|----------|------------|
+| R001 | Authentication files modified | medium | Any file (path) |
+| R002 | Authentication check potentially removed | high | JS/TS |
+| R003 | Database migration added or modified | medium | Any file (path) |
+| R004 | Database migration deleted | high | Any file (path) |
+| R005 | Dependencies added, removed or upgraded | low | Dependency manifests |
+| R006 | CI/CD workflow modified | medium | Any file (path) |
+| R007 | Private key, API key or password pattern | critical | Any text file |
+| R008 | More than 500 lines changed | medium | Not implemented |
+| R009 | Production configuration modified | high | Any file |
+| R010 | Test files removed | medium | Any file (path) |
+| R011 | Infrastructure changes | medium | Any file (path) |
+| R012 | Crypto algorithm changed | high | JS/TS |
+| R013 | Password hashing changed | high | JS/TS |
+| R014 | Security-sensitive path modified | high | Any file (path) |
+| R015 | Unsafe navigation: `window.location` assigned from a dynamic value | high | JS/TS |
+| R016 | Dangerous code execution or DOM sink introduced | high | JS/TS |
+| R018 | Script changed with no content change: likely a permission change (e.g. `chmod +x`) | medium | Scripts (path) |
+
+R017 was dropped before release and its ID is retired.
+
+Rules and severities are defined in `lib/diff/util/risk-scoring.ts`.
 
 ## Language Scope
 
-Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, dangerous APIs, crypto and password hashing) and the planned import-based dependency mapping.
+Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing).
 
 Files that aren't tied to one language are still analyzed:
 
@@ -22,7 +59,7 @@ Files in other languages still count toward file and line statistics and path-ba
 
 ## Architecture
 
-Review Orchestrator → Deterministic Rules Engine → Result Validator → Next.js Frontend → Node.js Analysis Service → GitHub API Client (Octokit)
+PR URL → GitHub client (Octokit) → diff parser and deterministic rules engine → Next.js route handlers → React frontend (responses validated with Zod)
 
 ```
 PR Intelligence System Flow:
@@ -58,7 +95,7 @@ PR Intelligence System Flow:
                 │
         ┌───────▼──────────┐
         │ Severity Rules     │
-        │ (R001–R016, no LLM)│
+        │ (R001–R018, no LLM)│
         │ Highest = PR label │
         └───────┬───────────┘
                 │
@@ -72,30 +109,14 @@ PR Intelligence System Flow:
         │ React Frontend    │
         │ (Summary + Tables)│
         │ (Risk Indicators)  │
+        │ (Affected Areas)  │
         └───────────────────┘
 
 Deterministic vs LLM: The deterministic engine handles everything except tasks requiring human reasoning. Rules-based detection and severity assignment are fully automated, not dependent on LLM interpretation.
 
 ```
 
-## Scope Breakdown
-
-### Day 2 Deliverables
-
-**Backend Analysis Engine:**
-- Diff parser for unified Git diffs (TypeScript/Node.js)
-- File categorization using labels with fallback categories
-- Change statistics calculation (line count, file additions/deletions)
-- Sensitive file detection via path patterns and rules
-- Rule-based severity: each rule has a fixed severity, and the highest severity found is the overall PR label (no numeric score)
-
-**Frontend Display Layer:**
-- PR Summary Component: File count, severity distribution, issue mentions
-- Changed Files Table: File count/type/status, severity indicators (color-coded)
-- Risk Indicator Component: Critical/high/medium/low severity groupings
-- Dashboard: Severity file counts + aggregate statistics
-
-### Tech Stack
+## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
@@ -108,35 +129,20 @@ Deterministic vs LLM: The deterministic engine handles everything except tasks r
 | GitHub Integration | Octokit |
 | Severity Rules | Deterministic rule table (`lib/diff/util/risk-scoring.ts`) |
 | Validation | Zod v4 schemas (`lib/schemas/`) for API responses and the `url` query param |
-| Database | PostgreSQL (planned, not set up yet) |
-| ORM | Prisma (planned, not set up yet) |
-| Testing | Vitest (Playwright planned) |
-| CI/CD | GitHub Actions (planned, no workflows yet) |
+| Testing | Vitest |
 
-### Core Principles
 
-1. **Deterministic First**: All detection, parsing, and severity assignment use explicit rules. LLM is reserved only for higher-level reasoning tasks later in the pipeline.
-2. **Label-Based Categorization**: Files categorized by labels with fallback categories (frontend, backend, tests, docs) when no label exists
-3. **Progressive Enhancement**: Start simple - line/file counts, then add complexity incrementally
-4. **Agent-Driven Development**: Tasks assigned to coder, tester, and reviewer roles with clear acceptance criteria
+## Core Principles
 
-### Future Phases
-
-**Phase 3+ (LLM Integration):**
-- Use LLM for module impact analysis on affected codebases
-- Determine which tests might be relevant based on changed code
-- Generate comprehensive review reports with recommendations
-
-**Later Stages:**
-- Complexity increase detection and change metrics
-- Advanced pattern matching beyond rule-based detection
-- Semantic understanding of code changes through LLM reasoning
+1. **Deterministic first:** all detection, parsing and severity assignment use explicit rules. Results are reproducible and don't depend on an AI's interpretation.
+2. **Label-based categorization:** files are categorized by labels, with fallback categories (frontend, backend, tests, docs) when no label exists.
+3. **Severity, not scores:** each rule has a fixed severity, and findings are shown as labelled severity groups. A numeric risk score was tried and removed as arbitrary.
 
 ## Known Limitations
 
 ### Languages: JavaScript and TypeScript only
 
-Decided 2026-11-22: the rules target JavaScript and TypeScript projects. Supporting other languages (Python, PHP, Go, Ruby, Rust, Java/Kotlin, etc.) is out of scope.
+The rules target JavaScript and TypeScript projects. Supporting other languages (Python, PHP, Go, Ruby, Rust, Java/Kotlin, etc.) is out of scope.
 
 - **Still in scope:** the non-code files a JS/TS project normally contains, such as `package.json`, `.env*`, YAML, shell scripts, `.envrc`, Dockerfiles, Terraform and CI workflows.
 - **Existing checks for other languages aren't maintained.** Some are already in place, for example Python, Go, Rust, Ruby and Gradle dependency manifests (R005), Alembic migrations (R003/R004) and `os.environ` in secret detection (R007). They still run for now, but gaps in them won't be fixed. If one of them ever needs its tests changed, for any reason, the check and its tests are removed instead of updated.
@@ -145,6 +151,13 @@ Decided 2026-11-22: the rules target JavaScript and TypeScript projects. Support
 ### Changed files capped at 3,000 per PR
 
 `fetchChangedFiles` in `lib/github/client.ts` pages through `pulls.listFiles` 100 files at a time, but GitHub returns at most 3,000 files per PR. Files beyond that aren't analyzed, and the report doesn't warn that the list was cut short.
+
+### Unsafe navigation (R015)
+
+R015 matches text on changed lines only, so:
+
+1. **It can't tell whether a value was validated.** Any dynamic value assigned to `window.location` is flagged, even if it was checked against an allowlist elsewhere.
+2. **A bare `location = url` isn't flagged.** Only `window.`/`document.`/`self.`/`top.`/`parent.`/`globalThis.` prefixed locations, `location.href =`, and `location.assign()`/`location.replace()` are matched.
 
 ### Dependency detection (R005)
 
@@ -166,32 +179,43 @@ Secret detection was built around `snake_case`, `SCREAMING_SNAKE` and `dot.case`
 
 Token values with a known format (`ghp_…`, `AKIA…`, `xoxb-…`, `sk_live_…`, private key headers) are detected whatever the variable is called.
 
-Planned fix: split names on camelCase boundaries as well as `_` and `.` before matching. This touches every name rule and the placeholder filter, so it's deferred to a later sprint.
+Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` and `.`) touches every name rule and the placeholder filter.
+### Path keywords (R001, R014) and infrastructure files (R011)
 
-## Project Roadmap
+- **R001 and R014 match keywords at the start of a path segment.** A keyword counts when it's followed by a separator (`/`, `.`, `-`, `_`), a digit (`oauth2/`), or a camelCase capital (`AuthProvider.tsx`). A lowercase letter doesn't count, so `author.ts` and `authority/` aren't flagged.
+- **Missed:**
+  - a keyword in the middle of a name (`useAuth.ts`)
+  - an all-caps acronym followed by a word (`SSOConfig.ts`, `AUTHProvider.ts`)
+  - `AccessControl.ts`, because the keyword is `access-control`
+- **Flagged, though not always sensitive:** camelCase names that start with a keyword, such as `sessionStorage.ts` or `loginIcon.svg`. This matches how `session-storage.ts` was already treated.
+- **R011** covers Terraform (`.tf`, `.tfvars`, `.tf.json`) and Helm charts, including charts under `charts/<name>/` (`Chart.yaml`, `values*.yaml`/`.yml`, and `yaml`, `yml`, `tpl` and `txt` files under `templates/`). Terraform's `*.tfvars.json` isn't matched.
 
-| Day | Focus | Deliverables |
-|-----|-------|--------------|
-| **Day 1** | Foundation setup, architecture design, GitHub integration scaffolding | Repo structure, Next.js + Node.js services, Octokit integration |
-| **Day 2** | Diff analysis engine, deterministic rules, basic frontend display | Diff parser, file categorization, severity rules, summary tables |
-| **Day 3+** | LLM integration, impact analysis, comprehensive testing | Module effect mapping, test relevance detection, review generation |
+### Script permission changes (R018)
 
-## Acceptance Criteria
+- GitHub's changed-file data doesn't include file modes, so R018 is a heuristic: it flags a modified file with no diff and 0 lines changed that looks runnable. That means a shell-script extension (`sh`, `bash`, `zsh`, `ksh`, `fish`, `command`) or any file under `bin/`, `scripts/`, `.husky/` or `.githooks/`. The message always says "likely".
+- **Missed:** permission changes on other files, such as an extensionless script outside those folders, or a `.js` or `.py` file made executable. A permission change made together with a content change is also missed.
+- **Possible false positive:** a file under those folders that GitHub reports without a diff for another reason, such as an updated binary under `bin/`.
 
-### Backend
-- Coder: Successfully build diff analysis service with deterministic rule-based detection
-- Tester: Comprehensive unit tests covering all detection rules and severity aggregation logic
-- Reviewer: Code review against CODER.md coding standards and Guide.md best practices
+### Blast radius
 
-### Frontend
-- Coder: Implement React + Tailwind components for PR summary, tables, and indicators
-- Tester: Unit tests verifying component rendering logic with integration tests for UI accuracy
+- **Files that don't count:** lockfiles, test snapshots, images and other assets, and files GitHub sends without a diff and with 0 lines changed: binaries, empty files, renames with no content change, and permission-only changes. A text file whose diff is too large to show still counts.
+- **Renamed files** that also change content count only under their new path, because GitHub doesn't send the old path. A move between modules counts once.
+- **Modules** are detected by folder convention (`src/auth`, `packages/ui`, …). Repos with an unusual layout may show more or fewer modules than a person would.
 
-## Key Decisions Made
+## Design Decisions
 
-1. **Diff Source**: parse git patch
-2. **Binary Files**: Skipped - focus on text diffs only
-3. **Severity, not scores**: Each rule (R001–R016) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
-4. **Frontend Display**: Color-coded severity groups (critical/high/medium/low), no raw scores shown to users
-5. **Testing Strategy**: Full test coverage expected in Day 2+, integration tests for UI
-6. **Languages**: JavaScript and TypeScript only. Other languages are out of scope (see Language Scope and Known Limitations).
+- **Diffs come from the Git patch** GitHub returns for each changed file. Repository source is never downloaded.
+- **Binary files aren't scanned.** They're listed as "Not scanned", never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them.
+- **Severity display:** critical is its own level in bright red; high is orange, medium yellow, low sky, none grey. "None" means scanned with no findings.
+- **PR state:** `open`, `closed` or `merged`. GitHub reports merged PRs as `closed` plus a `merged` flag; the app shows them as merged.
+- **R003 and R004:** R003 flags migrations that are added as well as modified; R004 covers deleted migrations.
+- **R005** runs only on recognised dependency manifests (by filename) and inspects their patch for packages added, removed or upgraded. Lockfiles are excluded.
+- **R015** flags only writes to `window.location` (assignment, `.href =`, `.assign()`, `.replace()`) whose value isn't a plain relative or `http(s)` string literal, because a `javascript:` URL can run script in the user's browser. Code-execution sinks such as `eval()` are R016.
+- **Affected Areas:** a file can appear in more than one area. Its badge in an area shows the highest severity among that area's findings, not the file's overall severity.
+- **Blast radius isn't risk:** a large refactor can be wide but harmless, so blast radius has its own card with neutral colors and doesn't affect severity. There is no numeric score.
+- **No impact analysis:** the app doesn't try to find other files affected by a PR or suggest tests outside it. GitHub code search is rate-limited to about 10 searches per minute, and downloading or cloning the repository doesn't fit the app's serverless hosting.
+- **API:** `GET /api/pr?url=<PR URL>` returns PR metadata and `GET /api/pr/analysis?url=<PR URL>` returns changed files, summary and findings. Errors return `{ error }` with an HTTP status. Responses are validated with Zod before the UI uses them.
+
+## Contributing
+
+Coding standards: `CODER.md` and `STYLEGUIDE.md`. Testing: `TESTING.md`. Work is planned in sprints; plans and progress are in `planning/ROADMAP.md`.

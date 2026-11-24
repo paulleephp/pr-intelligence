@@ -8,7 +8,9 @@ import { FAKE } from "./rules";
  * A ChangedFile with defaults: modified, no lines changed, empty patch. Unlike file() in
  * ./rules.ts, which adds one line, so a file built here has nothing to scan unless a patch is given.
  */
-export const changedFile = (overrides: Pick<ChangedFile, "filename"> & Partial<ChangedFile>): ChangedFile => ({
+export const changedFile = (
+  overrides: Pick<ChangedFile, "filename"> & Partial<ChangedFile>,
+): ChangedFile => ({
   status: "modified",
   additions: 0,
   deletions: 0,
@@ -67,7 +69,11 @@ export const prFiles = {
     filename: "src/old-config.ts",
     additions: 1,
     deletions: 1,
-    patch: patchLines("@@ -1 +1 @@", `-const k = "${FAKE.ghp}";`, '+const k = await vault.read("github");'),
+    patch: patchLines(
+      "@@ -1 +1 @@",
+      `-const k = "${FAKE.ghp}";`,
+      '+const k = await vault.read("github");',
+    ),
   }),
 
   /** Adds a hardcoded token below an unchanged line. */

@@ -1,5 +1,5 @@
 // Types used here are imported from their respective type definition files.
-import { PRFileStatus } from "./file";
+import type { PRFileStatus } from "./file";
 import type { Pattern, PatternSeverity } from "./pattern";
 
 export interface DiffEntry {
@@ -45,7 +45,7 @@ export interface RiskAssessment {
 
 export interface DiffAnalysis {
   files: Array<{ file: string; status: PRFileStatus }>;
-  stats: { 
+  stats: {
     files_added: number;
     files_removed: number;
     lines_added: number;

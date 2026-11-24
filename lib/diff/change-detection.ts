@@ -1,20 +1,21 @@
 export const AUTH_PATTERNS = [
-  "if (!user.hasPermission", 
-  "if (user.isAdmin", 
-  "hasPermission", 
+  "if (!user.hasPermission",
+  "if (user.isAdmin",
+  "hasPermission",
   "permission validation",
 ];
 
 export const PASSWORD_HASHING_PATTERNS = [
-  "bcrypt", "bcryptjs", "argon2", "scrypt", "pbkdf2",
-  "pbkdf2Sync(", "scryptSync("
+  "bcrypt",
+  "bcryptjs",
+  "argon2",
+  "scrypt",
+  "pbkdf2",
+  "pbkdf2Sync(",
+  "scryptSync(",
 ];
 
-export const CRYPTO_ALGO_PATTERNS = [
-  "md5", "sha1", 
-  "des", "3des",
-  "ecb"
-];
+export const CRYPTO_ALGO_PATTERNS = ["md5", "sha1", "des", "3des", "ecb"];
 
 export const PROD_CONFIG_CHANGE_PATTERNS: readonly RegExp[] = [
   /\bNODE_ENV(?:\s*(?::|=(?!=))\s*|\s+)["'`]?prod(?:uction)?\b/i,
@@ -46,7 +47,10 @@ const LOCATION_NAVIGATE_CALL = new RegExp(
   String.raw`${NOT_A_PROPERTY}(?:${LOCATION_OBJECT}|location)\.(?:assign|replace)\s*\(${UNSAFE_VALUE}`,
 );
 
-export const UNSAFE_NAVIGATION_PATTERNS: readonly RegExp[] = [LOCATION_ASSIGNMENT, LOCATION_NAVIGATE_CALL];
+export const UNSAFE_NAVIGATION_PATTERNS: readonly RegExp[] = [
+  LOCATION_ASSIGNMENT,
+  LOCATION_NAVIGATE_CALL,
+];
 
 export const DANGEROUS_CODE_PATTERNS: readonly RegExp[] = [
   /\beval\s*\(/,

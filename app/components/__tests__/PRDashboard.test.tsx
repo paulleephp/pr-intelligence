@@ -38,7 +38,11 @@ describe("PRDashboard", () => {
 
   describe("unscanned files", () => {
     it("lists unscanned files separately and leaves them out of None", () => {
-      render(<PRDashboard analysis={buildAnalysis([UNSCANNED.binary, UNSCANNED.noPatch, FILES.clean])} />);
+      render(
+        <PRDashboard
+          analysis={buildAnalysis([UNSCANNED.binary, UNSCANNED.noPatch, FILES.clean])}
+        />,
+      );
 
       expect(severityRow("None")).toHaveTextContent(/1$/);
       expect(screen.getByText(/Not scanned: 2 files/)).toBeInTheDocument();
@@ -67,7 +71,11 @@ describe("PRDashboard", () => {
 
     // Regression: GitHub sends no patch for an unchanged file, so it was counted under "Not scanned".
     it("leaves unchanged files out of the 'Not scanned' note and out of None", () => {
-      render(<PRDashboard analysis={buildAnalysis([UNSCANNED.binary, UNSCANNED.unchanged, FILES.clean])} />);
+      render(
+        <PRDashboard
+          analysis={buildAnalysis([UNSCANNED.binary, UNSCANNED.unchanged, FILES.clean])}
+        />,
+      );
 
       expect(screen.getByText(/Not scanned: 1 file \(/)).toBeInTheDocument();
       expect(severityRow("None")).toHaveTextContent(/1$/); // README only
@@ -84,7 +92,12 @@ describe("PRDashboard", () => {
     it("adds up to the number of changed files with flagged, unflagged-unscanned and clean files", () => {
       render(
         <PRDashboard
-          analysis={buildAnalysis([UNSCANNED.deletedMigration, UNSCANNED.binary, FILES.clean, FILES.low])}
+          analysis={buildAnalysis([
+            UNSCANNED.deletedMigration,
+            UNSCANNED.binary,
+            FILES.clean,
+            FILES.low,
+          ])}
         />,
       );
 
@@ -130,7 +143,9 @@ describe("PRDashboard", () => {
     it("lists an unchanged file as unchanged, not modified", () => {
       render(<PRDashboard analysis={buildAnalysis([FILES.low, UNSCANNED.unchanged])} />);
 
-      expect(screen.getByText("0 added · 1 modified · 0 removed · 1 unchanged")).toBeInTheDocument();
+      expect(
+        screen.getByText("0 added · 1 modified · 0 removed · 1 unchanged"),
+      ).toBeInTheDocument();
     });
   });
 

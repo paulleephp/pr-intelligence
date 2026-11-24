@@ -1,11 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PRSummary } from "../PRSummary";
 import { buildReport, cleanReport, FILES, mixedReport, UNSCANNED } from "./fixtures";
 
 const statValue = (label: string) => screen.getByText(label).nextElementSibling;
 /** The "PR #123 · Open" line; the state is wrapped in its own coloured span. */
-const prLine = () => screen.getByText((_, el) => el?.tagName === "P" && /^PR #\d+/.test(el.textContent ?? ""));
+const prLine = () =>
+  screen.getByText((_, el) => el?.tagName === "P" && /^PR #\d+/.test(el.textContent ?? ""));
 
 describe("PRSummary", () => {
   it("links the PR title to GitHub in a new tab", () => {
@@ -95,5 +96,29 @@ describe("PRSummary", () => {
     render(<PRSummary report={mixedReport()} />);
 
     expect(screen.getByRole("img", { name: "4 findings by severity" })).toBeInTheDocument();
+  });
+
+  // happy-dom has no layout, so the class stands in for "no layout break with a long module list"
+  // (S4-T2): min-w-0 lets each grid column shrink instead of widening the page.
+  it("lets the severity and blast radius columns shrink, so a long module list can't widen the page", () => {
+    render(<PRSummary report={mixedReport()} />);
+    const severity = screen.getByRole("heading", { name: "Severity distribution" }).parentElement;
+    const columns = [...(severity?.parentElement?.children ?? [])] as HTMLElement[];
+
+    expect(columns).toHaveLength(2);
+    expect(within(columns[1]).getByRole("heading", { name: "Blast radius" })).toBeInTheDocument();
+    for (const column of columns) {
+      expect(column).toHaveClass("min-w-0");
+    }
+  });
+
+  // mixedReport: README.md is counted but left out of the modules; package.json is (root).
+  it("shows the blast radius card for the PR", () => {
+    render(<PRSummary report={mixedReport()} />);
+
+    expect(screen.getByRole("heading", { name: "Blast radius" })).toBeInTheDocument();
+    expect(screen.getByText("5 files")).toBeInTheDocument();
+    expect(screen.getByText("3 modules")).toBeInTheDocument();
+    expect(screen.getByText("No tests changed for 2 source files")).toBeInTheDocument();
   });
 });

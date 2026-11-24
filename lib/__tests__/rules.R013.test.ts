@@ -17,11 +17,15 @@ describe("R013 - password hashing changes", () => {
   it("flags a lowered cost factor (the added line is scanned)", () => {
     const patch = "-const h = await bcrypt.hash(pw, 12);\n+const h = await bcrypt.hash(pw, 4);";
 
-    expect(code(patch).passwordHashingPatterns?.evidence).toBe("const h = await bcrypt.hash(pw, 4);");
+    expect(code(patch).passwordHashingPatterns?.evidence).toBe(
+      "const h = await bcrypt.hash(pw, 4);",
+    );
   });
 
   it("ignores removed and context lines", () => {
-    expect(codeRuleIds("-const h = await bcrypt.hash(pw, 12);\n const x = bcrypt;")).not.toContain("R013");
+    expect(codeRuleIds("-const h = await bcrypt.hash(pw, 12);\n const x = bcrypt;")).not.toContain(
+      "R013",
+    );
   });
 
   it("does not flag general-purpose hashing like createHash('sha256')", () => {

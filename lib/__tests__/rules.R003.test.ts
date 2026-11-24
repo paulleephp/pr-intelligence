@@ -17,7 +17,10 @@ describe("R003 - database migration added or modified", () => {
   });
 
   it("gives R003 medium severity", () => {
-    const [finding] = getCategoryReport({ filename: "db/migrations/1.sql", status: "added" }).category;
+    const [finding] = getCategoryReport({
+      filename: "db/migrations/1.sql",
+      status: "added",
+    }).category;
 
     expect(finding).toMatchObject({ ruleId: "R003", severity: "medium" });
   });

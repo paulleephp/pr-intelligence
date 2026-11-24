@@ -38,7 +38,9 @@ describe("PRAnalysis - Full Analysis", () => {
 
 describe("unscannedFiles - files with no text diff", () => {
   it("marks a file with an empty patch as no-patch and skips content scans for it", () => {
-    const analysis = analyzeDiff([changedFile({ filename: "src/old.ts", status: "removed", deletions: 40 })]);
+    const analysis = analyzeDiff([
+      changedFile({ filename: "src/old.ts", status: "removed", deletions: 40 }),
+    ]);
 
     expect(analysis.unscannedFiles).toEqual([{ filename: "src/old.ts", reason: "no-patch" }]);
     expect(analysis.secret).toEqual([]);
@@ -57,20 +59,26 @@ describe("unscannedFiles - files with no text diff", () => {
   });
 
   it("marks a 'Binary files ... differ' patch as binary", () => {
-    const analysis = analyzeDiff([changedFile({ filename: "assets/logo.png", patch: BINARY_PATCH })]);
+    const analysis = analyzeDiff([
+      changedFile({ filename: "assets/logo.png", patch: BINARY_PATCH }),
+    ]);
 
     expect(analysis.unscannedFiles).toEqual([{ filename: "assets/logo.png", reason: "binary" }]);
   });
 
   it("marks a patch containing a NUL byte as binary and does not scan it for secrets", () => {
-    const analysis = analyzeDiff([changedFile({ filename: "blob.bin", patch: `@@ -1 +1 @@\n${SECRET_LINE}\n+\0\0` })]);
+    const analysis = analyzeDiff([
+      changedFile({ filename: "blob.bin", patch: `@@ -1 +1 @@\n${SECRET_LINE}\n+\0\0` }),
+    ]);
 
     expect(analysis.unscannedFiles).toEqual([{ filename: "blob.bin", reason: "binary" }]);
     expect(analysis.aggregate.totalFindings).toBe(0);
   });
 
   it("still applies path rules to unscanned files", () => {
-    const analysis = analyzeDiff([changedFile({ filename: "db/migrations/001_init.sql", status: "removed" })]);
+    const analysis = analyzeDiff([
+      changedFile({ filename: "db/migrations/001_init.sql", status: "removed" }),
+    ]);
 
     expect(analysis.unscannedFiles).toHaveLength(1);
     expect(analysis.category).toHaveLength(1);
@@ -90,7 +98,10 @@ describe("unscannedFiles - files with no text diff", () => {
 
   it("does not treat an added line that mentions 'Binary files ... differ' as binary", () => {
     const analysis = analyzeDiff([
-      changedFile({ filename: "src/log.ts", patch: '@@ -1 +1 @@\n+log("Binary files a and b differ");' }),
+      changedFile({
+        filename: "src/log.ts",
+        patch: '@@ -1 +1 @@\n+log("Binary files a and b differ");',
+      }),
     ]);
 
     expect(analysis.unscannedFiles).toEqual([]);
@@ -100,7 +111,9 @@ describe("unscannedFiles - files with no text diff", () => {
 describe("Edge Cases", () => {
   // GitHub omits the patch for very large diffs, so a file can report changed lines with no patch.
   it("lists a file with changed lines but an empty patch as not scanned, never as clean", () => {
-    const analysis = analyzeDiff([changedFile({ filename: "x.ts", additions: 1, deletions: 1, patch: "" })]);
+    const analysis = analyzeDiff([
+      changedFile({ filename: "x.ts", additions: 1, deletions: 1, patch: "" }),
+    ]);
 
     expect(analysis.unscannedFiles).toEqual([{ filename: "x.ts", reason: "no-patch" }]);
     expect(analysis.secret).toEqual([]);
@@ -113,7 +126,9 @@ describe("Edge Cases", () => {
     const analysis = analyzeDiff([prFiles.nonAsciiName]);
 
     expect(analysis.unscannedFiles).toEqual([]);
-    expect(analysis.aggregate.findings).toEqual([expect.objectContaining({ ruleId: "R016", filename: "src/文件.ts" })]);
+    expect(analysis.aggregate.findings).toEqual([
+      expect.objectContaining({ ruleId: "R016", filename: "src/文件.ts" }),
+    ]);
     expect(Object.keys(analysis.aggregate.fileSeverity)).toEqual(["src/文件.ts"]);
   });
 });

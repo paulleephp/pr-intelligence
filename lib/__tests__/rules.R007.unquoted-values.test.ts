@@ -45,9 +45,12 @@ describe("R007 - catch-all *_secret rule (GENERIC_SECRET)", () => {
       },
     );
 
-    it.each(["src/a.ts", "src/a.js", "config/app.json"])("still flags a quoted value in %s", (filename) => {
-      expect(secretFindings('"client_secret": "abcd1234"', filename)).toHaveLength(1);
-    });
+    it.each(["src/a.ts", "src/a.js", "config/app.json"])(
+      "still flags a quoted value in %s",
+      (filename) => {
+        expect(secretFindings('"client_secret": "abcd1234"', filename)).toHaveLength(1);
+      },
+    );
 
     it.each([
       // biome-ignore lint/suspicious/noTemplateCurlyInString: config text containing a ${VAR} reference.

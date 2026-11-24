@@ -10,6 +10,7 @@ import type {
   SecretAnalysis,
   UnscannedFile,
 } from "@/lib/types/pr/metadata";
+import { blastRadiusSchema } from "./blast-radius";
 import { countSchema, patternSchema, severitySchema } from "./common";
 import { FILE_TYPES, UNSCANNED_REASONS } from "./constants";
 
@@ -91,5 +92,6 @@ export const prAnalysisResponseSchema = z.object({
     code: z.array(codeAnalysisSchema),
     fileTypes: z.record(z.string(), z.enum(FILE_TYPES)),
     aggregate: aggregateSchema,
+    blastRadius: blastRadiusSchema,
   }),
 }) satisfies z.ZodType<PRAnalysisResponse>;

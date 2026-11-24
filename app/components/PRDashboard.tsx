@@ -2,6 +2,7 @@ import type { PRDashboardProps } from "@/types/ui/components";
 import type { SeverityCountMap } from "@/types/ui/report";
 import { countChangedFiles, getUnchangedFilenames } from "./_lib/change-summary";
 import { NOT_SCANNED_LABEL } from "./_lib/file-display";
+import { pluralize } from "./_lib/format";
 import { FILE_SEVERITY_ORDER, SEVERITY_STYLES } from "./_lib/severity";
 import { StatTile } from "./report/StatTile";
 
@@ -49,8 +50,7 @@ export function PRDashboard({ analysis }: PRDashboardProps) {
         </ul>
         {unscannedCount > 0 && (
           <p className="mt-3 text-sm text-zinc-500">
-            {NOT_SCANNED_LABEL}: {unscannedCount} {unscannedCount === 1 ? "file" : "files"} (binary
-            or no diff)
+            {NOT_SCANNED_LABEL}: {pluralize(unscannedCount, "file")} (binary or no diff)
           </p>
         )}
       </div>

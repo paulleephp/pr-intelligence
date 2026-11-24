@@ -1,86 +1,169 @@
-# Sprint 4 — Draft Task Briefs: impact analysis (carried over from Sprint 3)
+# Sprint 4: Task Briefs
 
-DRAFT. Not ready to assign. Written during Sprint 3 planning, then deferred because the code search rate limit (about 10 searches per minute) caps analysis at roughly 10 changed files per PR. Before assigning, settle the open items in SPRINT4.md ("Carried over from Sprint 3"): the rate-limit design, and whether to search deleted files and skip added ones.
+Spec: `SPRINT4.md`. The rules there are the source of truth; these briefs say who does what. Deterministic work only; the AI assessment is Sprint 5 (`SPRINT5-TASKS.md`).
 
-Sprint 3 T2 (Zod schemas) is a prerequisite for S4-T4.
+- **Part 1: Blast-radius metrics** (S4-T1 to S4-T3)
+- **Part 2: Line numbers and R017** (S4-T4 to S4-T6)
+- **Optional:** rule tests and CI (S4-T7)
+- **Part 3: R018** script permission change (S4-T8)
+- **Part 4: Rule matching gaps** in R001, R014 and R011 (S4-T9)
 
-## Wave 2: Impact analysis (backend)
-**Decision:** affected files come from GitHub code search (`search.code`). No repo source downloads and no repo file list. Search covers the default branch only; open PRs aren't searched.
+Parts 1, 2 and 3 are independent and can run in parallel.
 
-**GitHub limits that shape these tasks** (coder: confirm against current GitHub docs before building):
-- The code search endpoint has its own low rate limit, about 10 requests per minute for an authenticated user at time of writing. That's why searches are capped per PR.
-- Only the default branch is indexed. Files added in this PR have no importers there yet. Very large files and some forks aren't indexed.
-- Requesting the `application/vnd.github.text-match+json` media type returns the matching snippets. That lets us confirm a hit is an import line without downloading the file.
+# Part 1: Blast-radius metrics (S4-T1 to S4-T3)
 
-### S4-T1. Code search client (spec 1.1)
-**Role:** Coder
-**Files:** `lib/github/client.ts`, `lib/github/constants.ts`, types in `types/` or `lib/types/github/`
+The earlier code-search briefs were dropped on 2026-11-24 (see SPRINT4.md "Dropped"). They remain in git history at commit `44160c8`.
 
-**Scope**
-- Add `searchCode(owner, repo, term)`, which calls `search.code` with `q = "<term> repo:<owner>/<repo>"`, `per_page: 100`, and the text-match media type.
-- Return the path and snippet fragments for each hit, plus `totalCount`, so the caller can tell when results were cut off.
-- A rate-limit response (403/429) or a search failure must not fail the whole analysis. Return a typed "search unavailable / rate limited" result. The errors go through `lib/github/errors.ts` and are logged with `console.error`.
-- Constants: page size, media type, and the per-PR search cap (`MAX_IMPACT_SEARCHES`, e.g. 10).
+Order: S4-T1 → S4-T2 and S4-T3 can run in parallel once S4-T1's response shape is merged → reviewer.
 
-**Out of scope:** retries/backoff, caching, fetching more than one page.
-
-**Acceptance:** a typed success result with paths and fragments, or a typed limited/failed result. It never throws to the route.
-
-### S4-T2. Affected files from search results (spec 1.1, 1.2)
-**Role:** Coder
-**Files:** new `lib/impact/` (pure logic, no Octokit imports), types in `lib/types/impact/`
+## S4-T1. Blast-radius calculation and API (backend)
+**Role:** Coder (backend)
+**Files:**
+- new `lib/diff/blast-radius.ts` (pure function, no Octokit imports)
+- new constants file, e.g. `lib/diff/constants/blast-radius.ts`: thresholds, container folders, lockfiles, asset extensions, docs patterns
+- types in `lib/types/diff/blast-radius.ts` (mirror the lib path, per the two-types-roots convention)
+- `lib/diff/core.ts` (call it), `lib/types/pr/metadata.ts` (`PRAnalysis.blastRadius`), `lib/schemas/pr-analysis.ts`
 
 **Scope**
-- **Which changed files to search:** JS/TS source files with status modified, renamed or removed. Removed files matter because their importers are now broken. Skip added files (they aren't on the default branch yet), test files and non-JS/TS files.
-- If there are more candidates than `MAX_IMPACT_SEARCHES`, search the ones with the most changed lines first. Record the rest as `skipped: "search-cap"`.
-- **Search term:** the file's basename without extension (`token-service`). For an `index.*` file, use its folder name (`src/auth/index.ts` → `auth`).
-- **Confirm each hit** using its snippets. It counts only if a fragment contains an `import … from`, `export … from`, `require(` or `import(` whose specifier ends in `/<term>` or `/<term>/index` (with or without extension). That covers relative paths and aliases like `@/lib/...` without resolving them. Drop hits that aren't JS/TS files, and drop the changed file itself.
-- **Output per affected file:** its path, which changed file it depends on, the matching import line as the reason, and `alsoChanged: true` if it's also in the PR.
-- **Direct dependents only.** A second level would multiply searches into the rate limit. The spec's "avoid circular loops" item doesn't apply at one level.
-- When `totalCount` exceeds what we got back, mark the result as `truncated` so the UI can say "showing first 100".
+- `getBlastRadius(files: ChangedFile[]): BlastRadius`, following SPRINT4.md §1–§5 exactly.
+- Uses only `filename`, `status` and `patch` (for the binary check). Reuse `isBinaryFile` (`lib/diff/util/is-binary.ts`) and `JS_TS_FILE_PATTERN`.
+- **Test-file detection:** SPRINT4.md §3 defines it (`*.test.*`, `*.spec.*`, `__tests__/`, `test/`, `tests/`, `e2e/`; fixtures are neither). The existing `isTestPath` also matches `fixtures/`, so add a separate helper rather than changing `isTestPath`, which secret scanning and file typing depend on.
+- `spread.modules` is sorted and unique.
+- Add `blastRadius` to the analysis response and the Zod schema in the same PR. The frontend validates responses, so the schema and the response must ship together.
 
-**Known limitations (add to README Known Limitations):**
-- Results come from the default branch.
-- A basename shared by many files (`utils`, `index` in `src/`) can produce a lot of hits. Snippet checking filters most of them, but a match is not a guarantee.
-- Imports written without the basename (e.g. a barrel `from "@/lib"`) aren't found.
+**Out of scope:** UI, renamed-file previous paths, any new GitHub request, a numeric score.
 
-**Acceptance (pure functions, fixture search results):**
-- An import of `./token-service` in a snippet is confirmed as a dependent.
-- A comment that merely mentions `token-service` is not confirmed.
-- `@/auth/token-service` and `../auth/token-service.js` are both confirmed.
-- An `index.ts` change searches by folder name.
-- The cap, the skip reasons and `truncated` are reported correctly.
+**Acceptance**
+- Response validates; existing fields unchanged.
+- Spot checks (the tester writes the real tests):
+  - `package-lock.json` + `src/a.ts` → counted 1, excluded 1.
+  - `src/auth/a.ts`, `src/db/b.ts`, `packages/ui/c.tsx`, `.github/workflows/ci.yml` → 4 modules, wide.
+  - `src/index.ts` → module `src`; `README.md` at root → excluded from spread.
+  - `src/a.ts` only → tests state `no-tests`; `src/a.ts` + `src/a.test.ts` → `tests-changed` (1 for 1).
+  - Only `tsconfig.json` changed → `no-source-changes`.
+  - Deleted `src/a.test.ts` doesn't count as a test file.
+- `npm run lint`, `npx tsc --noEmit` and existing tests pass. Don't edit test files.
 
-### S4-T3. Suggested tests (spec 1.3)
-**Role:** Coder
-**Files:** `lib/impact/`
+## S4-T2. Blast radius card (frontend)
+**Role:** Coder (frontend)
+**Depends on:** S4-T1's types and schema merged.
+**Files:** new `app/components/BlastRadius.tsx`; place it in `app/components/PRSummary.tsx` (or its parent) next to the severity distribution.
 
-**Scope:** take tests from S4-T2's confirmed dependents. A dependent whose path matches test conventions (`*.test.*`, `*.spec.*`, `__tests__/`, `test/`, `tests/`) is a suggested test. Each one keeps its reason ("imports token-service"). Also include test files changed in the PR itself.
+**Scope** (SPRINT4.md §6)
+- Overall level, then three rows: files ("12 files · 3 excluded"), modules (count, level, module list with "+N more" after about 6), tests (the state text).
+- Each level shown as text in a neutral outline badge (the `none` badge style in STYLEGUIDE.md "Colors and brand"). **No severity colors** for levels.
+- "No tests changed" warning: icon + text; may use medium-severity text color. Never color alone.
+- Readable at mobile width.
 
-**Why no file list:** this needs no extra request and works on repos with 30k+ files. Tests that never import the changed file aren't suggested. That's an accepted gap, since the spec says these are only suggestions.
+**Out of scope:** U1 (severity bar layout) and the palette migration (U7), unless they're scheduled in the same sprint.
 
-**Acceptance:** test files come out separately from affected source files, with no duplicates, and each has a reason.
+**Acceptance:** all three levels and all three test states render correctly against fixture data; no layout break with a long module list.
 
-### S4-T4. API integration
-**Role:** Coder
-**Files:** `lib/github/pr-metadata/get.ts`, `lib/types/pr/metadata.ts`, `lib/schemas/` (after Sprint 3 T2)
+## S4-T3. Tests
+**Role:** Tester
+**Depends on:** S4-T1 merged (unit tests); S4-T2 merged (component tests).
 
-**Scope:**
-- Add `impact: { affectedFiles, suggestedTests, skipped, status }` to the analysis response.
-- `status` is one of `"complete" | "partial" | "rate-limited" | "unavailable"`.
-- Run the searches one after another (sequentially) to stay within the rate limit.
-- If impact analysis fails, the rest of the analysis is still returned unchanged.
-- Extend the Zod schema.
+**Scope**
+- `lib/__tests__/blast-radius*.test.ts`, one file per metric (split because biome skips files over 10,000 bytes), plus `blast-radius.test.ts` for the overall level and `analyzeDiff` wiring:
+  - exclusions: each lockfile, `*.snap` and `__snapshots__/`, each asset group, a binary patch, a too-large text file with an empty patch (counted)
+  - level boundaries: files 10/11/30/31, modules 1/2/3/4, zero files and zero modules
+  - module rule: each container folder, a file directly in a container, root files, uppercase container names, `SRC/Auth` + `src/auth` counted as one module (first spelling shown), case-insensitive sort
+  - spread exclusions: test files by path whatever their type (a `.json` under `tests/`), fixtures, `*.md`/`*.mdx` anywhere, top-level `docs/` excluded but `app/docs/page.tsx` counted
+  - no patch and 0/0 lines → excluded (binary with an unlisted extension, empty file, content-free rename); no patch with non-zero lines (too-large text file) → counted; status `unchanged` → excluded
+  - tests signal: all three states; only added, modified and renamed count (`copied`, `changed` and deleted don't); fixtures counted as neither; non-JS/TS files ignored; no patch and 0/0 (pure rename, empty file) counted as neither
+  - overall level = max of the two
+- Schema test: a response with `blastRadius` validates, and a malformed one is rejected.
+- Component tests for the card: levels, test states, "+N more".
 
-**Acceptance:** the response validates, existing fields are unchanged, and a rate-limited run returns `status: "rate-limited"` along with any results gathered before the limit hit.
+# Part 2: Line numbers and R017 (S4-T4 to S4-T6)
 
-**Tester follow-up for wave 2:** unit tests for S4-T2 and S4-T3 with fixture search results, plus an integration test for S4-T4 with `search.code` mocked (success, rate limited, truncated).
+Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merging) → S4-T6 → reviewer.
 
-## Wave 3: Frontend (after S4-T4)
-### S4-T5. Affected Areas section (spec 2.1)
-- Group by the categories we already detect (Auth, Database, CI/CD…), with changed files and affected files listed separately.
-- Each affected file shows its reason (the import line) and an "also changed in this PR" marker.
-- Show notices for `partial`, `rate-limited`, skipped files ("not searched: limit reached") and `truncated`.
+## S4-T4. Line numbers and stable IDs on findings (backend, S)
+**Role:** Coder (backend)
+**Why:** R017 (S4-T5) needs the line, findings can link to the exact line on GitHub, and Sprint 5 sends the flagged line with context and matches AI verdicts back by ID. Today a finding has only `evidence` (the line's text).
+**Files:** `lib/types/diff/pattern.ts`, `lib/diff/code.ts`, `lib/diff/util/regex-finding.ts`, `lib/diff/util/parse-patch.ts` if needed, `lib/schemas/pr-analysis.ts`
 
-### S4-T6. Suggested Tests section (spec 2.2)
-- A list of links to the test files on GitHub at the base branch, each with its reason. File contents aren't shown.
+**Scope**
+- Add `line?: number` to `Pattern`: the line number in the new version of the file, for findings that come from a specific added line (at minimum R002, R012, R013, R015, R016, and R017 once S4-T5 lands). Path-only findings have no line.
+- Add `id: string` to every finding, stable for the same input: `<ruleId>:<filename>:<line>` (or `<ruleId>:<filename>` when there's no line).
+- Extend the Zod schema; both fields optional in the schema for backward compatibility within the sprint.
+
+**Acceptance:** for a fixture patch, R015's finding reports the exact new-file line of the matching `window.location` line; IDs are identical across two runs; existing response fields unchanged. Don't edit test files.
+
+## S4-T5. R017: exported signature changed (DROPPED)
+**Repurposed (2026-11-24):** PR #23 is reused for the refactor only: the finders in `lib/diff/code.ts` take `hunks` directly, bringing the file back under ~150 lines. All R017 code is removed from the PR; the PR is renamed and squash-merged. No behaviour change, so existing tests must pass unchanged.
+**Dropped 2026-11-24, before merge (R017 code removed from PR #23, which was reused for the code.ts refactor).** User decision: it only adds value for plain JavaScript. In TypeScript, a changed signature already fails the type check (`tsc`) for every caller in the repo. The rule ID R017 is retired and won't be reused. The text below is kept for the record.
+**Role:** Coder (backend)
+**Files:** `lib/diff/util/risk-scoring.ts`, `lib/diff/code.ts` or a new detector file, `lib/diff/change-detection.ts`, `lib/schemas/` if the rule ID is enumerated; README "Rules" table and Known Limitations, AGENTS.md Key Decisions
+
+**Scope** (SPRINT4.md "R017: exported signature changed")
+- JS/TS files only. Flags a patch that removes an exported function line (`export function name(…)`, `export async function name(…)`, `export const name = (…) =>`, `export default function name(…)`) and either adds one with the same name but a different parameter list, or doesn't add it back at all.
+- Severity low. Message: "Public API changed: code outside this PR that uses `name` may break." Include the line (S4-T4) and evidence.
+- **Depends on:** S4-T4 for the line number. The detector itself can be written in parallel.
+- **Optional, from the S4-T4 review:** have the finders in `lib/diff/code.ts` take `hunks` directly, which brings the file back under ~150 lines before R017 adds to it.
+- Not mapped to an Affected Area. Deterministic; Sprint 5 lists it as "not sent to AI".
+- **Known limitations (README):** multi-line parameter lists, re-exports (`export { a as b }`), class methods and type-only changes aren't detected.
+
+**Acceptance:** a renamed parameter list is flagged; a function body change with the same signature isn't; a removed export is flagged; a non-JS/TS file is ignored.
+
+## S4-T6. Tests for Part 2
+**Role:** Tester
+- S4-T4: line numbers and stable IDs across several patch shapes (multiple hunks, removed lines before the flagged line, a file with no patch). Line numbers come from `parsePatch`; ids from `buildFindingId` / `withFindingId` in `lib/diff/util/finding-id.ts`. Cover: R002 from a removed line has no line and id `R002:<file>`; R002 from an added line has both; several R007 findings in one file get distinct ids; ids appear on `aggregate.findings` only; hunks without `addedLineNumbers` give findings without a line.
+- ~~S4-T5~~ (dropped with R017; skip): `rules.R017.test.ts` with the acceptance cases above, plus `export async function`, `export default function`, and a multi-line parameter list (documented as not detected). The detector is `detectExportedSignatureChange(hunks, filename)` in `lib/diff/exported-signature.ts`, wired as `CodeAnalysis.exportedSignatureChanges`; the fixture `code()` helper exposes it, but `codeRuleIds` doesn't include it yet. Also cover the S4-T5 decisions in SPRINT4.md: parameter rename flagged, whitespace and trailing comma ignored, `export` dropped counts as removed, unreadable parameters not flagged, one finding per file, the extra forms (generator, generics, typed-return and no-paren arrows), and line/id for added vs removed. Also the export-list cases: `export { foo }`, `export { x as foo }`, `export { foo } from "…"` and `export default foo` keep `foo` exported (no finding); `export { foo as bar }` is flagged.
+- Schema test: findings with and without `line` and `id` validate.
+
+## S4-T7. Optional if there's room: rule tests and CI
+**Roles:** Tester (rule tests), Coder (CI)
+- Tester: add `rules.R001.test.ts`, `rules.R011.test.ts`, `rules.R012.test.ts`, `rules.R014.test.ts` (SPRINT4.md "Optional if there's room").
+- Coder, formatting check first (raised in the PR #25 review): `npm run lint` is `biome lint`, which never checks formatting, and the `format` scripts rewrite files instead of failing, so badly formatted files get through (`ChangedFilesTable.test.tsx` on sprint-4 already fails `biome format`).
+  1. Add `"check": "biome check"` to package.json. It runs lint, formatting and import sorting, and fails on problems.
+  2. A one-off formatting pass (`biome check --write`) on existing files, in its own PR with no behaviour change, so the check starts green. Read the diff: one fix turns the Octokit mock's `function` into an arrow (TESTING.md). Test files in that pass go to kimchi.
+  3. Optional: rename `format:fix`, since it runs `biome check --write` and fixes more than formatting.
+- ~~Coder: a GitHub Actions workflow~~: moved to Sprint 5 (S5-T0, its first task) by the user 2026-11-25. The prerequisite is done here: `npm run check` (PR #26) exits 0 on sprint-4 after #27.
+
+# Part 3: R018 (S4-T8)
+
+## S4-T8. R018: script permission change (backend, S)
+**Role:** Coder (backend)
+**Files:** `lib/diff/util/risk-scoring.ts` (rule entry), a new detector (e.g. `lib/diff/mode-change.ts`) with its patterns in `lib/diff/constants/`, `lib/diff/core.ts` (call it), `lib/schemas/` if rule IDs are enumerated
+
+**Scope** (SPRINT4.md "R018: script permission change")
+- Flag a file when status is `modified`, the patch is missing or empty, additions and deletions are both 0, and the path looks runnable (the extensions and folders listed in the spec). Folder matching ignores case and works at any depth (`packages/cli/bin/run`).
+- Severity medium; message exactly as in the spec.
+- Runs for every file, including files that end up in `unscannedFiles` (they have no patch by definition). Its finding must show in the UI like other path-rule findings on unscanned files.
+- Not mapped to an Affected Area. Not JS/TS-gated.
+- Constants for the extensions and folders live in one place.
+
+**Out of scope:** any new GitHub request; detecting mode changes that come with content changes or renames.
+
+**Acceptance**
+- `scripts/deploy.sh`, modified, no patch, 0/0 → flagged.
+- `.husky/pre-commit` (no extension), modified, no patch, 0/0 → flagged.
+- `bin/cli.js`, modified, no patch, 0/0 → flagged.
+- `scripts/deploy.sh` with a patch → not flagged.
+- `scripts/deploy.sh`, status `added` or `renamed`, 0/0 → not flagged.
+- `LICENSE` or `assets/logo.png`, modified, no patch, 0/0 → not flagged.
+- `package-lock.json` with no patch but non-zero line counts → not flagged.
+- Lint, type check and existing tests pass. Don't edit test files.
+
+**Tester follow-up:** `rules.R018.test.ts` with the cases above, plus case variations (`Scripts/`, `.SH`) and nested folders. The detector is `detectPermissionChange(file)` in `lib/diff/mode-change.ts`, with constants `RUNNABLE_EXTENSIONS` and `RUNNABLE_FOLDER_PATTERN` in `lib/diff/constants/mode-change.ts`. `core.ts` adds it to each file's path-rule report via `getPathReport`. Don't use the fixtures' `pathRuleIds(filename, status)`: it builds files with 0 additions and 10 deletions, so it never triggers R018. Use `analyzeDiff([file({ filename, status: "modified", additions: 0, deletions: 0, patch: "" })])`, or call `detectPermissionChange(file(...))` directly. Also cover: status `changed` isn't flagged; the exact message with double quotes. Remove the stale R017 comment in `findings.ids.test.ts` (line 104) in the same PR.
+
+# Part 4: Rule matching gaps (S4-T9)
+
+## S4-T9. R001, R014 and R011 matching gaps (backend, S)
+**Role:** Coder (backend)
+**Files:** the path patterns for R001, R014 and R011 (`lib/diff/constants/` and wherever the rules match paths); README rules table and Known Limitations via mochi.
+
+**Scope** (SPRINT4.md "Rule matching gaps")
+- R001 and R014: an uppercase letter or a digit after the keyword counts as a boundary, as well as the existing separators. A lowercase letter doesn't.
+- R014: add `cryptography` as a keyword.
+- R011: also match `.tfvars` and `.tf.json`, and Helm chart files under `charts/<name>/` (`Chart.yaml`, `values*.yaml`, `templates/**`).
+- Match case as the rules do today.
+
+**Acceptance**
+- Flagged: `src/AuthProvider.tsx` (R001), `lib/SecurityHeaders.ts` (R014), `oauth2/callback.ts`, `login2.ts`, `cryptography/aes.ts`, `infra/prod.tfvars`, `infra/main.tf.json`, `charts/api/Chart.yaml`, `charts/api/values-prod.yaml`, `charts/api/templates/deployment.yaml`.
+- Not flagged: `src/author.ts`, `authority/index.ts`, `charts/README.md`, `charts/values.yaml` (no `charts/<name>/` folder), `charts/api/README.md` (not a chart file), `app/charts/line/Chart.tsx`, `Author.ts`, `Cryptic.ts`, a `charts/` folder with no chart files (e.g. `docs/charts/sales.png`).
+- `npm run check`, tsc and existing tests pass. Don't edit test files.
+
+**Tester follow-up:** kimchi adds the cases above to `rules.R001`, `rules.R011` and `rules.R014` tests; add them as `it.fails` first if written before the fix merges. Written on `sprint-4-t9-tests`; kimchi opens the PR after boba's fix merges.

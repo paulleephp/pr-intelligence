@@ -30,7 +30,9 @@ describe("R002 - authentication check changes", () => {
   });
 
   it("flags a removed permission check", () => {
-    const finding = code("-  if (!user.hasPermission('admin')) return res.status(403);").authPatterns;
+    const finding = code(
+      "-  if (!user.hasPermission('admin')) return res.status(403);",
+    ).authPatterns;
 
     expect(finding).toMatchObject({ ruleId: "R002", severity: "high" });
     expect(finding?.message).toContain("check removed");
@@ -44,7 +46,9 @@ describe("R002 - authentication check changes", () => {
   });
 
   it("does not treat a re-indented (moved) check as removed", () => {
-    const finding = code("-if (!user.hasPermission('admin')) {\n+    if (!user.hasPermission('admin')) {").authPatterns;
+    const finding = code(
+      "-if (!user.hasPermission('admin')) {\n+    if (!user.hasPermission('admin')) {",
+    ).authPatterns;
 
     expect(finding?.message).toContain("logic changed");
   });

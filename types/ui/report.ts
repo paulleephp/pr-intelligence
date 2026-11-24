@@ -61,3 +61,8 @@ export interface AffectedAreaGroup {
   label: string;
   files: AffectedAreaFile[];
 }
+
+export interface ModuleSplit {
+  shown: string[];
+  hidden: string[];
+}
