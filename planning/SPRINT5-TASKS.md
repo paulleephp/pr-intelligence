@@ -7,7 +7,7 @@ Spec: `SPRINT5.md`. Read the whole spec before starting any of these tasks, espe
 No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliverables").
 
 **Order**
-- Wave A, in parallel: S5-T1 (payload builder), S5-T2 (Claude provider)
+- Wave A, in parallel: S5-T1 (payload builder), S5-T2 (Claude client)
 - Wave B: S5-T3 (route, needs S5-T1 and S5-T2)
 - Wave C: S5-T4 (frontend; can start on S5-T1's preview data, then wire up S5-T3)
 - Tester (S5-T5) follows each wave. Reviewer after each PR.
@@ -31,7 +31,7 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 - **Preview in the analysis response:** add `aiAssessment: { available, reason?, findings: [{ id, outcome, reason }], payloadChars, limitChars: 10000 }`. It must not contain the snippets themselves. `available` is false for private repos, no eligible findings, or too-large.
 - **Private flag:** read `base.repo.private` from the `pulls.get` response the analysis route already makes. No extra request.
 
-**Out of scope:** calling any AI provider; the JSON download (future deliverable).
+**Out of scope:** calling Claude; the JSON download (future deliverable).
 
 **Acceptance (fixtures)**
 - An R015 finding in `src/nav.ts` → sent, snippet is lines n−5 to n+5.
@@ -42,13 +42,13 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 - Private repo → `available: false`, reason `private-repo`, payload empty.
 - The preview never includes snippet text.
 
-## S5-T2. Provider interface and Claude implementation (backend, M)
+## S5-T2. Claude client (backend, M)
 **Role:** Coder (backend)
-**Files:** new `lib/llm/provider.ts` (interface), `lib/llm/providers/claude.ts`, `lib/llm/prompt.ts`, `lib/schemas/ai-assessment.ts`; add `@anthropic-ai/sdk`
+**Files:** new `lib/llm/claude.ts`, `lib/llm/prompt.ts`, `lib/schemas/ai-assessment.ts`; add `@anthropic-ai/sdk`
 
 **Scope**
-- Interface: `assess({ payload, apiKey }): Promise<AssessResult>`. `AssessResult` is either `{ ok: true, verdicts, usage: { inputTokens, outputTokens }, model }` or `{ ok: false, error: "invalid-key" | "rate-limited" | "refused" | "invalid-output" | "provider-error" }`.
-- **Claude implementation** (SPRINT5.md "Backend deliverables" 1):
+- One function, no provider interface (Claude is the only platform): `assess({ payload, apiKey }): Promise<AssessResult>`. `AssessResult` is either `{ ok: true, verdicts, usage: { inputTokens, outputTokens }, model }` or `{ ok: false, error: "invalid-key" | "rate-limited" | "refused" | "invalid-output" | "provider-error" }`.
+- **Implementation** (SPRINT5.md "Backend deliverables" 1):
   - Official SDK, client created per request with the user's key. Never read a key from the environment.
   - Model `claude-opus-5-5`; set `output_config.effort` explicitly (`"high"`); don't send `thinking: { type: "disabled" }` or `budget_tokens` (both rejected by this model).
   - Structured output with the verdict schema (`output_config.format`), then validate with Zod anyway.
@@ -70,21 +70,21 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 **Files:** new `app/api/pr/assessment/route.ts`; `lib/schemas/request.ts`; `lib/api.ts` and `lib/api-constants.ts` (allowlist, timeout); AGENTS.md Key Decision 10 and README "Design Decisions" (API)
 
 **Scope**
-- `POST /api/pr/assessment` with body `{ url, provider: "claude", apiKey }`, validated with Zod:
+- `POST /api/pr/assessment` with body `{ url, apiKey }`, validated with Zod:
   1. Re-fetch the PR and rebuild the payload **on the server** with S5-T1. Never accept findings or snippets from the client; the security exclusions are only meaningful if the server applies them.
-  2. Private repo, nothing eligible, or over 10,000 characters → 400 with the reason, no provider call.
-  3. Call the provider and return verdicts, token usage, model, prompt version and `assessedAt`. Nothing is saved.
-- Error mapping: `invalid-key` → 401, `rate-limited` → 429, `refused` → 422 with "The provider declined to assess this", `invalid-output` / `provider-error` → 502.
+  2. Private repo, nothing eligible, or over 10,000 characters → 400 with the reason, no call to Claude.
+  3. Call Claude and return verdicts, token usage, model, prompt version and `assessedAt`. Nothing is saved.
+- Error mapping: `invalid-key` → 401, `rate-limited` → 429, `refused` → 422 with "Claude declined to assess this", `invalid-output` / `provider-error` → 502.
 - Set the route's `maxDuration` high enough for an AI call (check `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/02-route-segment-config/maxDuration.md` and the Vercel plan's limit).
 - `lib/api.ts`: add the endpoint to the allowlist with its own longer timeout (the 20s default is too short for AI calls) and Zod validation of the response.
 - **The key never appears in the URL, in logs or in the response.** It's read from the POST body, used once, and dropped.
 
-**Acceptance:** with the provider mocked, the server ignores any findings in the request body; a private repo is rejected before any provider call; each error maps to its status; no log call contains the key.
+**Acceptance:** with Claude mocked, the server ignores any findings in the request body; a private repo is rejected before any Claude call; each error maps to its status; no log call contains the key.
 
 ## S5-T4. AI assessment section (frontend, M)
 **Role:** Coder (frontend)
 **Depends on:** S5-T1 (preview data); S5-T3 (sending)
-**Files:** new `app/components/ai-assessment/` (section, provider/key form, finding lists, verdict badge); place the section below the deterministic results; verdict display next to findings in the existing finding views
+**Files:** new `app/components/ai-assessment/` (section, key form, finding lists, verdict badge); place the section below the deterministic results; verdict display next to findings in the existing finding views
 
 **Scope** (SPRINT5.md "Frontend" 1–4, using its exact wording)
 - **Always visible.** Shows why AI is offered and which findings in this PR will be sent, each with its reason.
@@ -94,7 +94,6 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
   - no eligible findings: "AI wouldn't add anything for this PR", and no button
   - too large: "Too large for AI assessment (over 10,000 characters)"
 - **Form:**
-  - provider selector with Claude (default); Gemini and ChatGPT shown as "coming soon" and disabled
   - password-type key input with the "Bring your own key…" text; the key is held only in component state and is never written to `localStorage`, cookies or the URL; clear it after the request
   - the size against the cap
 - **During:** loading state; the request can take tens of seconds. **After:** tokens used, the model, and errors explained per status (invalid key, rate limited, declined, failed).
@@ -108,5 +107,5 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 **Scope**
 - S5-T1: one test per filtering step and per outcome; the 10,000-character boundary (exactly at and one over); the preview never contains snippet text. **Security tests are the priority:** for each excluded rule (R003, R004, R006, R007, R009, R011), prove nothing from that file reaches the payload, even when an eligible rule fires on the same file.
 - S5-T2: error mapping, the single retry, no key in logs (spy on `console`), refusal handling.
-- S5-T3: server ignores client-sent findings; private repo rejected before any provider call; status mapping.
+- S5-T3: server ignores client-sent findings; private repo rejected before any Claude call; status mapping.
 - S5-T4: every UI state; the key isn't in storage or the URL after submit.

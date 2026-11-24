@@ -4,9 +4,9 @@ Status: scoped and briefed 2026-11-24 (moved here from Sprint 4). Prerequisite f
 
 ## Bring your own key (decided 2026-11-24)
 
-- AI assessment runs **only with the user's own API key** for a provider they choose. The app has no AI key of its own and never pays for or proxies AI usage on its own account.
-- The user picks the provider and enters their key in the AI assessment section. **Default and only provider this sprint: Claude (Anthropic).** Gemini and ChatGPT come later (see "Future deliverables").
-- The key goes from the browser to our route handler with the request, is used for that one call to the provider, and is discarded. Never stored (server, database, browser storage) and never logged, including request headers and bodies in error logs (Key Decision 14).
+- AI assessment runs **only with the user's own Anthropic API key**. The app has no AI key of its own and never pays for or proxies AI usage on its own account.
+- **Claude is the only AI platform** (decided 2026-11-24): "stick to one idea and do it well". No provider choice, no provider abstraction, and no plans for other platforms.
+- The key goes from the browser to our route handler with the request, is used for that one call to Claude, and is discarded. Never stored (server, database, browser storage) and never logged, including request headers and bodies in error logs (Key Decision 14).
 
 ## Narrative (what the user should understand)
 
@@ -73,15 +73,15 @@ Per finding, validated with Zod:
 
 ## Backend deliverables (carried from the original plan, adjusted)
 
-1. **Provider:** Claude first, via the official `@anthropic-ai/sdk`. A small provider interface (`assess(findings, key) → verdicts + token usage`) with one implementation, so Gemini and ChatGPT can be added without touching callers.
+1. **Claude:** via the official `@anthropic-ai/sdk`, in one module (`assess(payload, key) → verdicts + token usage`). No provider interface: there is only one platform.
    - Default model: Claude Opus 5.5 (`claude-opus-5-5`). Set `output_config.effort` explicitly (this model defaults to `medium`; thinking can't be turned off).
    - Use structured outputs (`output_config.format` with the verdict schema) so the response is valid JSON, then still validate with Zod.
-   - Security-related code can trigger the model's safety refusals (`stop_reason: "refusal"`). Check `stop_reason` before reading the result, enable the server-side refusal fallback (`fallbacks: "default"`), and show "the provider declined to assess this" rather than a generic error.
+   - Security-related code can trigger the model's safety refusals (`stop_reason: "refusal"`). Check `stop_reason` before reading the result, enable the server-side refusal fallback (`fallbacks: "default"`), and show "Claude declined to assess this" rather than a generic error.
    - Coder: confirm SDK calls against the SDK docs; don't write them from memory.
 2. **Key handling:** bring-your-own-key, sent per request, never stored or logged (Key Decision 14).
 3. **Budget:** before sending, show the number of findings, the request size against the 10,000-character cap, and an estimated token count; after, show tokens actually used. Over the cap, don't send.
 4. **Validation and retry:** responses validated with Zod; an invalid response is retried once with the validation error, then reported as failed.
-5. **No cache or database this sprint** (decided 2026-11-24). Each assessment calls the provider again; with bring your own key that costs the user cents. See "Future deliverables".
+5. **No cache or database this sprint** (decided 2026-11-24). Each assessment calls Claude again; with bring your own key that costs the user cents. See "Future deliverables".
 
 ## Frontend
 
@@ -92,8 +92,7 @@ Per finding, validated with Zod:
    - **Not sent, on purpose:** the deterministic findings in this PR, each with its reason.
    - **No eligible findings:** say so plainly ("AI wouldn't add anything for this PR: all findings are deterministic") and don't offer the button.
 2. **Before sending:**
-   - **Provider selector:** Claude (default). Gemini and ChatGPT shown as "coming soon", not selectable.
-   - **Key field** for the chosen provider, with: "Bring your own key. Your key is sent with this request only and is never stored." A password-type input; not saved in the browser.
+   - **Anthropic API key field**, with: "Bring your own key. Your key is sent with this request only and is never stored." A password-type input; not saved in the browser.
    - The number of findings, the request size against the 10,000-character cap, and estimated tokens.
 3. **During / after:** loading state (AI is slower than the rest of the page); errors explained (invalid key, rate limit, token limit, invalid output); tokens used.
 4. **Results:** each verdict shown next to its finding, with the rule's severity unchanged. Verdicts use text and icons; colors from STYLEGUIDE.md, never color alone.
@@ -103,8 +102,7 @@ Per finding, validated with Zod:
 - **Download the assessment data instead of sending it** (decided 2026-11-24): when the findings JSON is over 10,000 characters, the user can't send it to AI from the app, but can **download the JSON** and use it however they want (e.g. paste it into their own AI tool).
   - Hard limit for the download: **30,000 characters**. Over that, no download either; the UI says the PR is too large.
   - The download contains exactly what would have been sent: the same JS/TS-only selection, the same security exclusions and the same secret check. Nothing excluded for security reasons appears in it.
-- **More providers:** Gemini and ChatGPT, behind the same provider interface and selector.
-- **Verdict cache (Supabase)** (deferred 2026-11-24; reconsider only once everything else is done): store verdicts so the same PR isn't sent twice. Public repos only. Key: owner, repo, PR number, head SHA, provider, model and prompt version. Store verdicts, explanations and token usage only: never the API key, never the code sent. The UI would then show "Assessed on <date> · <model>" instead of the form. Needs a decision on the database client (recommended: Supabase JS client with plain SQL migrations).
+- **Verdict cache (Supabase)** (deferred 2026-11-24; reconsider only once everything else is done): store verdicts so the same PR isn't sent twice. Public repos only. Key: owner, repo, PR number, head SHA, model and prompt version. Store verdicts, explanations and token usage only: never the API key, never the code sent. The UI would then show "Assessed on <date> · <model>" instead of the form. Needs a decision on the database client (recommended: Supabase JS client with plain SQL migrations).
 
 ## Dropped from the original plan
 

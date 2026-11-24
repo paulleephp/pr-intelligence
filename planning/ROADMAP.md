@@ -45,13 +45,12 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 - Optional: missing rule tests and a CI workflow
 
 **Sprint 5** (`SPRINT5.md`)
-- Optional AI assessment, bring your own key: the user picks the provider (Claude by default) and enters their own API key. Flagged JS/TS lines for findings that need judgment (auth checks, crypto, password hashing, unsafe sinks) are sent for a verdict, public repositories only, capped at 10,000 characters. Only JS/TS source code is ever sent; secrets, schema, production config, CI and infrastructure files never are, for security reasons. No database: nothing is cached
+- Optional AI assessment, bring your own key: Claude only, with the user's own Anthropic API key. Flagged JS/TS lines for findings that need judgment (auth checks, crypto, password hashing, unsafe sinks) are sent for a verdict, public repositories only, capped at 10,000 characters. Only JS/TS source code is ever sent; secrets, schema, production config, CI and infrastructure files never are, for security reasons. No database: nothing is cached
 
 ## Later
 
 - Verdict cache (Supabase), reconsidered only once Sprints 4 and 5 are done
 - Download the assessment JSON when it's over the 10,000-character send limit (up to 30,000 characters)
-- Gemini and ChatGPT as AI providers
 - Review workflow that runs stages in order and retries from the failed stage (`LATER-REVIEW-WORKFLOW.md`, outdated draft)
 - Fix camelCase secret names (R007; see README Known Limitations)
 - Complexity increase detection and change metrics
@@ -61,7 +60,7 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 
 These are also in AGENTS.md "Key Decisions" (14 and 16). They move to the README once they ship.
 
-- **LLM keys:** AI assessment is bring your own key: the user chooses the provider (Claude by default; Gemini and ChatGPT later) and enters their own API key. The app has no AI key of its own. The key is sent per request and never stored, on the server, in a database, in the browser or in logs.
+- **LLM keys:** AI assessment uses Claude only, with the user's own Anthropic API key (bring your own key). No other AI platforms are planned. The app has no AI key of its own. The key is sent per request and never stored, on the server, in a database, in the browser or in logs.
 - **AI assessment is optional and selective:** deterministic results stand on their own. Only findings where a rule can locate a change but not judge it (R002, R012, R013, R015, R016) are sent, as flagged JS/TS lines with context. Secrets, database schema, production configuration, CI workflows and infrastructure files (R007, R003, R004, R009, R006, R011) are never sent, for security reasons. The AI adds a verdict next to a finding; it never changes the rule's severity.
 
 ## Development process
