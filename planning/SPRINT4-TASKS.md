@@ -163,7 +163,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 
 **Acceptance**
 - Flagged: `src/AuthProvider.tsx` (R001), `lib/SecurityHeaders.ts` (R014), `oauth2/callback.ts`, `login2.ts`, `cryptography/aes.ts`, `infra/prod.tfvars`, `infra/main.tf.json`, `charts/api/Chart.yaml`, `charts/api/values-prod.yaml`, `charts/api/templates/deployment.yaml`.
-- Not flagged: `src/author.ts`, `authority/index.ts`, `charts/README.md`, a `charts/` folder with no chart files (e.g. `docs/charts/sales.png`).
+- Not flagged: `src/author.ts`, `authority/index.ts`, `charts/README.md`, `charts/values.yaml` (no `charts/<name>/` folder), `charts/api/README.md` (not a chart file), `app/charts/line/Chart.tsx`, `Author.ts`, `Cryptic.ts`, a `charts/` folder with no chart files (e.g. `docs/charts/sales.png`).
 - `npm run check`, tsc and existing tests pass. Don't edit test files.
 
-**Tester follow-up:** kimchi adds the cases above to `rules.R001`, `rules.R011` and `rules.R014` tests; add them as `it.fails` first if written before the fix merges.
+**Tester follow-up:** kimchi adds the cases above to `rules.R001`, `rules.R011` and `rules.R014` tests; add them as `it.fails` first if written before the fix merges. Written on `sprint-4-t9-tests`; kimchi opens the PR after boba's fix merges.
