@@ -74,3 +74,27 @@ describe("R014 - security-sensitive path modified", () => {
     expect(aggregate.overallSeverity).toBe("high");
   });
 });
+
+// Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): the same boundaries as R001 (a
+// digit, or camelCase), and "cryptography" is a keyword of its own.
+describe("R014 - keyword boundaries and cryptography (S4-T9)", () => {
+  // Regression (S4-T9, PR #29): not flagged while paths were lowercased before matching and
+  // "cryptography" wasn't a keyword.
+  it.each([
+    "lib/SecurityHeaders.ts",
+    "src/CryptoUtils.ts",
+    "src/EncryptionService.ts",
+    "src/crypto2/keys.ts",
+    "cryptography/aes.ts",
+    "src/lib/cryptography.ts",
+  ])("flags %s", (filename) => {
+    expect(ruleIds(filename, "modified")).toContain("R014");
+  });
+
+  it.each(["src/cryptic.ts", "src/Cryptic.ts", "src/securities/bond.ts", "src/decryption.ts"])(
+    "still doesn't flag %s, where a lowercase letter follows the keyword",
+    (filename) => {
+      expect(ruleIds(filename, "modified")).not.toContain("R014");
+    },
+  );
+});
