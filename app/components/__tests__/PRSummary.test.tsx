@@ -96,4 +96,14 @@ describe("PRSummary", () => {
 
     expect(screen.getByRole("img", { name: "4 findings by severity" })).toBeInTheDocument();
   });
+
+  // mixedReport: README.md is counted but left out of the modules; package.json is (root).
+  it("shows the blast radius card for the PR", () => {
+    render(<PRSummary report={mixedReport()} />);
+
+    expect(screen.getByRole("heading", { name: "Blast radius" })).toBeInTheDocument();
+    expect(screen.getByText("5 files")).toBeInTheDocument();
+    expect(screen.getByText("3 modules")).toBeInTheDocument();
+    expect(screen.getByText("No tests changed for 2 source files")).toBeInTheDocument();
+  });
 });
