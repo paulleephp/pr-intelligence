@@ -94,3 +94,30 @@ describe("R001 - authentication files modified", () => {
     expect(aggregate.overallSeverity).toBe("medium");
   });
 });
+
+// Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): an uppercase letter or a digit
+// after the keyword also ends it. A lowercase letter still doesn't.
+describe("R001 - keyword boundaries (S4-T9)", () => {
+  // KNOWN GAP: agreed 2026-11-25, not built yet (S4-T9). Paths are lowercased before matching,
+  // so "AuthProvider" reads as "authprovider", and a digit isn't a boundary.
+  it.fails.each([
+    "src/AuthProvider.tsx",
+    "src/components/LoginForm.tsx",
+    "src/PermissionGuard.ts",
+    "oauth2/callback.ts",
+    "login2.ts",
+    "src/sso2/saml.ts",
+  ])("flags %s", (filename) => {
+    expect(ruleIds(filename, "modified")).toContain("R001");
+  });
+
+  it.each([
+    "src/author.ts",
+    "authority/index.ts",
+    "src/Author.ts",
+    "src/Authority/index.ts",
+    "src/Sessionless.ts",
+  ])("still doesn't flag %s, where a lowercase letter follows the keyword", (filename) => {
+    expect(ruleIds(filename, "modified")).not.toContain("R001");
+  });
+});

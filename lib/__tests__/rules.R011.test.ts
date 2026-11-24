@@ -74,3 +74,40 @@ describe("R011 - infrastructure changes", () => {
     expect(aggregate.overallSeverity).toBe("medium");
   });
 });
+
+// Decided 2026-11-25 (SPRINT4.md "Rule matching gaps", S4-T9): .tfvars and .tf.json count as
+// Terraform, and Helm chart files count without a helm/ folder: Chart.yaml, values*.yaml and
+// anything under templates/, inside a charts/<name>/ folder.
+describe("R011 - Terraform files and Helm charts (S4-T9)", () => {
+  // KNOWN GAP: agreed 2026-11-25, not built yet (S4-T9). Only .tf files and the four
+  // infrastructure folders match today.
+  it.fails.each(["infra/prod.tfvars", "terraform.tfvars", "infra/main.tf.json"])(
+    "flags the Terraform file %s",
+    (filename) => {
+      expect(ruleIds(filename, "modified")).toContain("R011");
+    },
+  );
+
+  // KNOWN GAP: as above.
+  it.fails.each([
+    "charts/api/Chart.yaml",
+    "charts/api/values.yaml",
+    "charts/api/values-prod.yaml",
+    "charts/api/templates/deployment.yaml",
+    "charts/api/templates/_helpers.tpl",
+    "charts/api/templates/tests/test-connection.yaml",
+  ])("flags the Helm chart file %s", (filename) => {
+    expect(ruleIds(filename, "modified")).toContain("R011");
+  });
+
+  it.each([
+    "charts/README.md",
+    "docs/charts/sales.png",
+    "charts/values.yaml",
+    "charts/api/README.md",
+    "app/charts/line/Chart.tsx",
+    "infra/main.json",
+  ])("still doesn't flag %s, which isn't a chart or Terraform file", (filename) => {
+    expect(ruleIds(filename, "modified")).not.toContain("R011");
+  });
+});
