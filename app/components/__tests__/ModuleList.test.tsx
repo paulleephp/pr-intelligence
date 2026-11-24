@@ -32,6 +32,16 @@ describe("ModuleList", () => {
     expect(details).toBeNull();
   });
 
+  // happy-dom has no layout, so the class stands in for "a long module name can't widen the card"
+  // (S4-T2) until there's a browser test. The full name stays in the title.
+  it("truncates every chip, in the preview and behind '+N more'", () => {
+    const { modules } = renderList(8);
+
+    for (const name of modules) {
+      expect(screen.getByText(name)).toHaveClass("truncate");
+    }
+  });
+
   it.each<[number, string]>([
     [7, "+1 more"],
     [10, "+4 more"],
