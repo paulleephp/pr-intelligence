@@ -125,7 +125,12 @@ Several agents work on this repo at the same time. Agents message each other by 
 - Each worktree has its own `npm install` and its own copy of `.env.local`. If two agents run the dev server at once, use different ports.
 
 ### Branches
-- Each sprint has a branch, `sprint-<n>`. Each task gets a branch cut from the latest `sprint-<n>`, named `sprint-<n>-t<task>` (e.g. `sprint-4-t8`).
+Git checks out a branch in only one worktree at a time, so:
+- **The sprint branch `sprint-<n>` is checked out only in the main checkout** (`mochi`'s). No other worktree checks it out.
+- **Each task branch is checked out only in its owner's worktree.** Two agents never share a branch; the tester's branch is separate from the coder's.
+- **Start a task from the remote sprint branch:** `git fetch`, then `git switch -c sprint-<n>-t<task> origin/sprint-<n>` (e.g. `sprint-4-t8`). Never base a task on a local `sprint-<n>`; it may be stale.
+- **Between tasks, park on a detached HEAD:** `git switch --detach origin/sprint-<n>`.
+- **The reviewer** checks out PRs detached (`gh pr checkout <n> --detach`) or reviews from the PR diff.
 - PRs target `sprint-<n>`. Before opening a PR, rebase onto the latest `sprint-<n>`.
 - `sprint-<n>` → `staging` → `main` is merged by the user only. Agents never push to `staging` or `main`, and never merge PRs.
 - `mochi` commits its own doc changes directly to `sprint-<n>`, without a PR.
