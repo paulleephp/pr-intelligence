@@ -58,7 +58,7 @@ PR Intelligence System Flow:
                 │
         ┌───────▼──────────┐
         │ Severity Rules     │
-        │ (R001–R016, no LLM)│
+        │ (R001–R018, no LLM)│
         │ Highest = PR label │
         └───────┬───────────┘
                 │
@@ -173,7 +173,7 @@ This list is the authoritative one, including planned decisions. README.md "Desi
 
 1. **Diff Source**: parse git patch
 2. **Binary Files**: Skipped - focus on text diffs only. Binary files and files without a patch are returned in `analysis.unscannedFiles` and shown as "Not scanned" in the UI, never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them, and their findings still show
-3. **Severity, not scores**: Each rule (R001–R016) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
+3. **Severity, not scores**: Each rule (R001–R016, R018; R017 was dropped and its ID retired) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
 4. **Frontend Display**: Color-coded severity groups (critical/high/medium/low), no raw scores shown to users
 5. **Testing Strategy**: Full test coverage expected from Sprint 2 on, integration tests for UI
 6. **Language Scope**: JavaScript/TypeScript only for source-code analysis; language-agnostic config, infrastructure, migration, dependency and secret checks still apply to all files (see Language Scope)
@@ -186,10 +186,11 @@ This list is the authoritative one, including planned decisions. README.md "Desi
 13. **Affected Areas**: Changed files are grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security) from their path-rule findings. A file can appear in more than one area. Its badge in an area shows the highest severity among that area's findings, not the file's overall severity, which the changed-files table already shows
 14. **LLM keys (planned)**: AI assessment uses Claude only ("stick to one idea and do it well"), with the user's own Anthropic API key (bring your own key). No other AI platforms are planned. The app has no AI key of its own. The key is sent per request and never stored, on the server, in the database, in the browser or in logs
 15. **No impact analysis (affected files, suggested tests)**: GitHub code search was rejected for its rate limit (about 10 searches per minute), and downloading or cloning the repository doesn't fit Vercel functions (no `git`, memory and time limits). Sprint 4 measures blast radius from the changed-file list instead, with no extra GitHub requests
-16. **AI assessment (planned) is optional and selective**: deterministic results stand on their own. Only findings where a rule can locate a change but not judge it (R002, R012, R013, R015, R016) are sent, as flagged JS/TS lines with context, public repositories only, capped at 10,000 characters per request. Only JS/TS source code is ever sent: for security reasons, secrets, database schema, production configuration, CI workflows and infrastructure files (R007, R003, R004, R009, R006, R011) are never sent, and neither is any hunk the secret detectors match. Deterministic findings (R001, R005, R010, R014, and R018 once it ships) are deliberately not sent. The UI states both reasons. The AI adds a verdict next to a finding; it never changes the rule's severity
+16. **AI assessment (planned) is optional and selective**: deterministic results stand on their own. Only findings where a rule can locate a change but not judge it (R002, R012, R013, R015, R016) are sent, as flagged JS/TS lines with context, public repositories only, capped at 10,000 characters per request. Only JS/TS source code is ever sent: for security reasons, secrets, database schema, production configuration, CI workflows and infrastructure files (R007, R003, R004, R009, R006, R011) are never sent, and neither is any hunk the secret detectors match. Deterministic findings (R001, R005, R010, R014, R018) are deliberately not sent. The UI states both reasons. The AI adds a verdict next to a finding; it never changes the rule's severity
 
 <!-- BEGIN:nextjs-agent-rules -->
 17. **Blast radius**: computed from the changed-file list only, with no extra GitHub requests. File count excludes lockfiles, test snapshots, assets, binaries, files with no patch and 0/0 lines (binaries, empty files, content-free renames, mode-only changes) and `unchanged` files. Directory spread counts top-level modules (first folder, or first two under `src`, `lib`, `app`, `packages`, `apps`, `libs`, `services`, `modules`), ignoring case, and leaves out tests, fixtures, `*.md`/`*.mdx` and a top-level `docs/`. Levels: files 1–10/11–30/31+, modules 1/2–3/4+; the overall level is the higher of the two, with no numeric score. The test-to-code ratio (JS/TS only; added, modified or renamed files with content changes) is a separate signal and doesn't raise the level. Shown with neutral badges, not severity colors
+18. **R018 script permission change**: severity medium. A heuristic, because GitHub doesn't send file modes: status `modified`, no patch, 0/0 lines, and a runnable path (extension `sh`, `bash`, `zsh`, `ksh`, `fish`, `command`, or any file under `bin/`, `scripts/`, `.husky/`, `.githooks/`). Runs on every file, including unscanned ones; not JS/TS-gated; no Affected Area. The message always says "likely". R017 (exported signature changed) was dropped before merge: TypeScript's type check already catches broken callers, so it only helped plain JavaScript
 
 ## This is NOT the Next.js you know
 

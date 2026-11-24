@@ -37,6 +37,9 @@ Each rule has a fixed severity. A file's severity, and the PR's, is the highest 
 | R014 | Security-sensitive path modified | high | Any file (path) |
 | R015 | Unsafe navigation: `window.location` assigned from a dynamic value | high | JS/TS |
 | R016 | Dangerous code execution or DOM sink introduced | high | JS/TS |
+| R018 | Script changed with no content change: likely a permission change (e.g. `chmod +x`) | medium | Scripts (path) |
+
+R017 was dropped before release and its ID is retired.
 
 Rules and severities are defined in `lib/diff/util/risk-scoring.ts`.
 
@@ -92,7 +95,7 @@ PR Intelligence System Flow:
                 │
         ┌───────▼──────────┐
         │ Severity Rules     │
-        │ (R001–R016, no LLM)│
+        │ (R001–R018, no LLM)│
         │ Highest = PR label │
         └───────┬───────────┘
                 │
@@ -177,6 +180,12 @@ Secret detection was built around `snake_case`, `SCREAMING_SNAKE` and `dot.case`
 Token values with a known format (`ghp_…`, `AKIA…`, `xoxb-…`, `sk_live_…`, private key headers) are detected whatever the variable is called.
 
 Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` and `.`) touches every name rule and the placeholder filter.
+### Script permission changes (R018)
+
+- GitHub's changed-file data doesn't include file modes, so R018 is a heuristic: it flags a modified file with no diff and 0 lines changed that looks runnable. That means a shell-script extension (`sh`, `bash`, `zsh`, `ksh`, `fish`, `command`) or any file under `bin/`, `scripts/`, `.husky/` or `.githooks/`. The message always says "likely".
+- **Missed:** permission changes on other files, such as an extensionless script outside those folders, or a `.js` or `.py` file made executable. A permission change made together with a content change is also missed.
+- **Possible false positive:** a script under those folders whose only change GitHub reports without a diff for another reason.
+
 ### Blast radius
 
 - **Files that don't count:** lockfiles, test snapshots, images and other assets, and files GitHub sends without a diff and with 0 lines changed: binaries, empty files, renames with no content change, and permission-only changes. A text file whose diff is too large to show still counts.
