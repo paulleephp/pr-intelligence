@@ -122,7 +122,7 @@ Several agents work on this repo at the same time. Agents message each other by 
 
 ### Workspaces
 - Work only in your own worktree. Never check out a branch, stage or commit in another agent's folder, including the main checkout.
-- Each worktree has its own `npm install` and its own copy of `.env` (gitignored; copy it from the main checkout). If two agents run the dev server at once, use different ports.
+- Each worktree has its own `npm install` and its own copy of `.env` (gitignored; copy it from the main checkout). In a fresh worktree, run `npx next typegen` once so `npx tsc --noEmit` can find the generated route types (otherwise it reports missing types such as `LayoutProps`). If two agents run the dev server at once, use different ports.
 
 ### Branches
 Git checks out a branch in only one worktree at a time, so:
