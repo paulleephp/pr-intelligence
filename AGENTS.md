@@ -8,7 +8,7 @@ This tool automates the initial investigation by fetching PR metadata, analyzing
 
 ## Language Scope
 
-Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the test-to-code ratio in the planned blast-radius metrics (Sprint 4).
+Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the test-to-code ratio in the blast-radius metrics.
 
 Files that aren't tied to one language are still analyzed:
 
@@ -189,6 +189,7 @@ This list is the authoritative one, including planned decisions. README.md "Desi
 16. **AI assessment (planned) is optional and selective**: deterministic results stand on their own. Only findings where a rule can locate a change but not judge it (R002, R012, R013, R015, R016) are sent, as flagged JS/TS lines with context, public repositories only, capped at 10,000 characters per request. Only JS/TS source code is ever sent: for security reasons, secrets, database schema, production configuration, CI workflows and infrastructure files (R007, R003, R004, R009, R006, R011) are never sent, and neither is any hunk the secret detectors match. Deterministic findings (R001, R005, R010, R014) are deliberately not sent. The UI states both reasons. The AI adds a verdict next to a finding; it never changes the rule's severity
 
 <!-- BEGIN:nextjs-agent-rules -->
+17. **Blast radius**: computed from the changed-file list only, with no extra GitHub requests. File count excludes lockfiles, test snapshots, assets, binaries, files with no patch and 0/0 lines (binaries, empty files, content-free renames, mode-only changes) and `unchanged` files. Directory spread counts top-level modules (first folder, or first two under `src`, `lib`, `app`, `packages`, `apps`, `libs`, `services`, `modules`), ignoring case, and leaves out tests, fixtures, `*.md`/`*.mdx` and a top-level `docs/`. Levels: files 1–10/11–30/31+, modules 1/2–3/4+; the overall level is the higher of the two, with no numeric score. The test-to-code ratio (JS/TS only; added, modified or renamed files) is a separate signal and doesn't raise the level. Shown with neutral badges, not severity colors
 
 ## This is NOT the Next.js you know
 

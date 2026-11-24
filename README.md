@@ -11,6 +11,7 @@ This tool automates the initial investigation. Paste a GitHub PR URL and it fetc
 - **PR overview:** title, author, number and state (open, merged, closed), linked to GitHub, plus change statistics: files changed, lines added and removed, files added, modified and removed.
 - **Overall severity:** the PR gets the highest severity among its findings (critical, high, medium, low or none), with a distribution of findings and files by severity.
 - **Changed files table:** every changed file with its type, status and severity. Binary files and files without a diff are marked "Not scanned", never shown as clean.
+- **Blast radius:** how widely the PR spreads, separate from severity: number of changed files, how many top-level modules they touch, and whether tests changed alongside JS/TS source. Each is rated contained, moderate or wide, and the PR gets the higher of the file and module levels.
 - **Affected Areas:** changed files grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security), with each file's severity within that area.
 - **Findings by severity:** findings grouped into critical, high, medium and low, each showing the file and what was detected.
 
@@ -176,6 +177,11 @@ Secret detection was built around `snake_case`, `SCREAMING_SNAKE` and `dot.case`
 Token values with a known format (`ghp_…`, `AKIA…`, `xoxb-…`, `sk_live_…`, private key headers) are detected whatever the variable is called.
 
 Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` and `.`) touches every name rule and the placeholder filter.
+### Blast radius
+
+- **Files that don't count:** lockfiles, test snapshots, images and other assets, and files GitHub sends without a diff and with 0 lines changed: binaries, empty files, renames with no content change, and permission-only changes. A text file whose diff is too large to show still counts.
+- **Renamed files** that also change content count only under their new path, because GitHub doesn't send the old path. A move between modules counts once.
+- **Modules** are detected by folder convention (`src/auth`, `packages/ui`, …). Repos with an unusual layout may show more or fewer modules than a person would.
 
 ## Design Decisions
 
@@ -187,6 +193,7 @@ Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` a
 - **R005** runs only on recognised dependency manifests (by filename) and inspects their patch for packages added, removed or upgraded. Lockfiles are excluded.
 - **R015** flags only writes to `window.location` (assignment, `.href =`, `.assign()`, `.replace()`) whose value isn't a plain relative or `http(s)` string literal, because a `javascript:` URL can run script in the user's browser. Code-execution sinks such as `eval()` are R016.
 - **Affected Areas:** a file can appear in more than one area. Its badge in an area shows the highest severity among that area's findings, not the file's overall severity.
+- **Blast radius isn't risk:** a large refactor can be wide but harmless, so blast radius has its own card with neutral colors and doesn't affect severity. There is no numeric score.
 - **No impact analysis:** the app doesn't try to find other files affected by a PR or suggest tests outside it. GitHub code search is rate-limited to about 10 searches per minute, and downloading or cloning the repository doesn't fit the app's serverless hosting.
 - **API:** `GET /api/pr?url=<PR URL>` returns PR metadata and `GET /api/pr/analysis?url=<PR URL>` returns changed files, summary and findings. Errors return `{ error }` with an HTTP status. Responses are validated with Zod before the UI uses them.
 
