@@ -7,6 +7,7 @@ import {
   IGNORED_DEPENDENCY_KEYS,
   REQUIREMENTS_FILENAME_PATTERN,
 } from "./constants/dependency";
+import { withLine } from "./util/finding-id";
 import { RISK_RULES } from "./util/risk-scoring";
 
 const DEPENDENCY_RULE_ID = "R005";
@@ -68,6 +69,13 @@ const describeChanges = ({ added, removed, upgraded }: DependencyChanges): strin
   return parts.filter(Boolean).join("; ");
 };
 
+const getEvidenceLine = (hunks: DiffHunks, changes: DependencyChanges): number | undefined => {
+  const isAddedEvidence = changes.added.length + changes.upgraded.length > 0;
+  if (!isAddedEvidence) return undefined;
+  const index = hunks.added.findIndex((line) => line.trim() === changes.evidence);
+  return hunks.addedLineNumbers?.[index];
+};
+
 export const detectDependencyChanges = (hunks: DiffHunks, filename: string): Pattern | null => {
   if (!isDependencyManifest(filename)) {
     return null;
@@ -80,12 +88,12 @@ export const detectDependencyChanges = (hunks: DiffHunks, filename: string): Pat
   }
 
   const summary = describeChanges(changes);
-
-  return {
+  const finding: Pattern = {
     ruleId: DEPENDENCY_RULE_ID,
     severity: RISK_RULES[DEPENDENCY_RULE_ID].severity,
     filename,
     message: `Dependency changes in ${filename}: ${summary}`,
     evidence: changes.evidence ?? undefined,
   };
+  return withLine(finding, getEvidenceLine(hunks, changes));
 };
