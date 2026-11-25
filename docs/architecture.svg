@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 714" width="720" height="714" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>PR Intelligence architecture</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0f766e"/>
+    </marker>
+    <style>
+      .box { fill: #f0fdfa; stroke: #0f766e; stroke-width: 1.5; }
+      .inner { fill: #ffffff; stroke: #5eead4; stroke-width: 1.2; }
+      .sev { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.2; }
+      .h { font-size: 15px; font-weight: 600; fill: #0f172a; }
+      .h2 { font-size: 13px; font-weight: 600; fill: #0f172a; }
+      .s { font-size: 12px; fill: #475569; }
+      .flow { stroke: #0f766e; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="720" height="714" fill="#ffffff"/>
+  <text x="360" y="34" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">PR Intelligence: how a PR is analyzed</text>
+
+  <!-- 1. Input -->
+  <rect class="box" x="40" y="56" width="640" height="44" rx="10"/>
+  <text class="h" x="360" y="83" text-anchor="middle">GitHub PR URL</text>
+  <line class="flow" x1="360" y1="100" x2="360" y2="122"/>
+
+  <!-- 2. GitHub -->
+  <rect class="box" x="40" y="126" width="640" height="60" rx="10"/>
+  <text class="h" x="360" y="151" text-anchor="middle">GitHub API (Octokit)</text>
+  <text class="s" x="360" y="171" text-anchor="middle">PR metadata · changed files with their patches (up to 3,000 files)</text>
+  <line class="flow" x1="360" y1="186" x2="360" y2="208"/>
+
+  <!-- 3. Engine -->
+  <rect x="40" y="212" width="640" height="306" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text class="h" x="360" y="237" text-anchor="middle">Deterministic analysis engine (TypeScript, no AI)</text>
+
+  <rect class="inner" x="60" y="250" width="600" height="40" rx="8"/>
+  <text class="h2" x="360" y="275" text-anchor="middle">Diff parser: added and removed lines, with line numbers</text>
+
+  <rect class="inner" x="60" y="304" width="192" height="86" rx="8"/>
+  <text class="h2" x="156" y="328" text-anchor="middle">Path rules (any file)</text>
+  <text class="s" x="156" y="350" text-anchor="middle">R001 R003 R004 R006</text>
+  <text class="s" x="156" y="368" text-anchor="middle">R010 R011 R014 R018</text>
+
+  <rect class="inner" x="264" y="304" width="192" height="86" rx="8"/>
+  <text class="h2" x="360" y="328" text-anchor="middle">Code rules (JS/TS only)</text>
+  <text class="s" x="360" y="350" text-anchor="middle">R002 R012 R013</text>
+  <text class="s" x="360" y="368" text-anchor="middle">R015 R016</text>
+
+  <rect class="inner" x="468" y="304" width="192" height="86" rx="8"/>
+  <text class="h2" x="564" y="328" text-anchor="middle">Content (any text file)</text>
+  <text class="s" x="564" y="350" text-anchor="middle">R005 deps · R007 secrets</text>
+  <text class="s" x="564" y="368" text-anchor="middle">R009 production config</text>
+
+  <rect class="inner" x="60" y="402" width="294" height="44" rx="8"/>
+  <text class="h2" x="207" y="420" text-anchor="middle">Categories and statistics</text>
+  <text class="s" x="207" y="437" text-anchor="middle">file types · lines added and removed</text>
+
+  <rect class="inner" x="366" y="402" width="294" height="44" rx="8"/>
+  <text class="h2" x="513" y="420" text-anchor="middle">Blast radius</text>
+  <text class="s" x="513" y="437" text-anchor="middle">file count · module spread · tests changed</text>
+
+  <rect class="sev" x="60" y="458" width="600" height="44" rx="8"/>
+  <text class="h2" x="360" y="476" text-anchor="middle">Severity: fixed per rule, no score</text>
+  <text class="s" x="360" y="493" text-anchor="middle">The highest finding sets each file's label and the PR's label</text>
+
+  <line class="flow" x1="360" y1="518" x2="360" y2="540"/>
+
+  <!-- 4. API -->
+  <rect class="box" x="40" y="544" width="640" height="60" rx="10"/>
+  <text class="h" x="360" y="569" text-anchor="middle">Next.js route handlers</text>
+  <text class="s" x="360" y="589" text-anchor="middle">GET /api/pr · GET /api/pr/analysis · responses validated with Zod</text>
+  <line class="flow" x1="360" y1="604" x2="360" y2="626"/>
+
+  <!-- 5. UI -->
+  <rect class="box" x="40" y="630" width="640" height="60" rx="10"/>
+  <text class="h" x="360" y="655" text-anchor="middle">React frontend</text>
+  <text class="s" x="360" y="675" text-anchor="middle">Overview · severity · blast radius · changed files · affected areas · findings</text>
+</svg>
