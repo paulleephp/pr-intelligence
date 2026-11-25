@@ -24,60 +24,9 @@ Files in other languages still count toward file and line statistics and path-ba
 
 PR URL → GitHub client (Octokit) → diff parser and deterministic rules engine → Next.js route handlers → React frontend (responses validated with Zod)
 
-```
-PR Intelligence System Flow:
-┌─────────────────────────────────────────┐
-│            PR Input                      │
-└──────────────┬──────────────────────────┘
-                │
-        ┌───────▼──────────┐
-        │  Fetch Metadata   │
-        │ (Octokit/GitHub)  │
-        └───────┬───────────┘
-                │
-        ┌───────▼──────────┐
-        │ Diff Parser       │
-        │ (Unified Git Diffs│
-        │ TypeScript/Node.js)│
-        └───────┬───────────┘
-                │
-        ┌───────▼──────────┐
-        │ File Categorizer  │
-        │ (Labels + Fallback)│
-        └───────┬───────────┘
-                │
-        ┌───────▼──────────┐
-        │ Statistics Calc   │
-        │ (Line/File Counts)│
-        └───────┬───────────┘
-                │
-        ┌───────▼──────────┐
-        │  Sensitive Detection  │
-        │ (Path Patterns + Rules)│
-        └───────┬───────────┘
-                │
-        ┌───────▼──────────┐
-        │ Severity Rules     │
-        │ (R001–R018, no LLM)│
-        │ Highest = PR label │
-        └───────┬───────────┘
-                │
-        ┌───────▼──────────┐
-        │ API Service       │
-        │ (GET /api/pr,     │
-        │ /api/pr/analysis)  │
-        └───────┬───────────┘
-                │
-        ┌───────▼──────────┐
-        │ React Frontend    │
-        │ (Summary + Tables)│
-        │ (Risk Indicators)  │
-        │ (Affected Areas)  │
-        └───────────────────┘
+![PR Intelligence architecture: PR URL, GitHub API, deterministic analysis engine, route handlers, React frontend](docs/architecture.svg)
 
-Deterministic vs LLM: The deterministic engine handles everything except tasks requiring human reasoning. Rules-based detection and severity assignment are fully automated, not dependent on LLM interpretation.
-
-```
+Rules and severity are fully deterministic; no AI is involved in detection or severity.
 
 ### Tech Stack
 
