@@ -9,9 +9,9 @@ import type {
   SecretScanType,
 } from "@/types/diff/secret";
 import type { SecretAnalysis } from "@/types/pr/metadata";
-import { API_KEY_PATTERNS, PASSWORD_PATTERNS, SSH_PATTERNS } from "./constants/patterns";
 import {
   CONFIG_FILE_PATTERNS,
+  KEYWORD_RULES,
   LOW_RISK_LINE,
   SECRET_NAME_RULES,
   SECRET_VALUE_RULES,
@@ -32,12 +32,6 @@ const dataFnMap: Record<SecretScanType, GetHandlerFn> = {
   ssh: getSSHFoundData,
   password: getPasswordFoundData,
   apiKey: getApiKeyFoundData,
-};
-
-const scansMap: Record<Exclude<SecretScanType, "secret">, string[]> = {
-  ssh: SSH_PATTERNS,
-  password: PASSWORD_PATTERNS,
-  apiKey: API_KEY_PATTERNS,
 };
 
 const SECRET_SCAN_ORDER: readonly SecretScanType[] = ["secret", "apiKey", "password", "ssh"];
@@ -65,12 +59,9 @@ export const detectSSHKeys = (hunks: DiffHunks, filename: string): Pattern | nul
   detectRiskyPatterns({ hunks, filename, type: "ssh" });
 
 const findNameMatch = ({ rawLine, type, fileKind }: SecretLineContext): string | null => {
-  if (type === "secret") {
-    const rules = SECRET_NAME_RULES.filter((scan) => !scan.fileKind || scan.fileKind === fileKind);
-    return rules.find((scan) => scan.regex.test(rawLine))?.name ?? null;
-  }
-  const line = rawLine.toLowerCase();
-  return scansMap[type].find((scan) => line.includes(scan)) ?? null;
+  const scans = type === "secret" ? SECRET_NAME_RULES : KEYWORD_RULES[type];
+  const rules = scans.filter((scan) => !scan.fileKind || scan.fileKind === fileKind);
+  return rules.find((scan) => scan.regex.test(rawLine))?.name ?? null;
 };
 
 const findValueMatch = ({ rawLine, type }: SecretLineContext): string | null =>
