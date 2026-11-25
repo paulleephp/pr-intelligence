@@ -1,5 +1,12 @@
 # PR Intelligence
 
+## Screenshots
+
+<img width="1258" height="856" alt="Screenshot 2026-11-25 at 11 51 20 AM" src="https://github.com/user-attachments/assets/6dbe69eb-49c6-4461-8e53-ae00fdddb22b" />
+
+<img width="1268" height="883" alt="Screenshot 2026-11-25 at 11 54 19 AM" src="https://github.com/user-attachments/assets/139219f1-4bd6-489f-a8c4-6388a39da90c" />
+
+
 ## The problem
 
 Reviewing a pull request requires understanding of what changed, which parts of the codebase are affected, what tests are relevant, and whether there are potential risks. This is especially challenging if the codebase has long history and/or a lot of inner dependencies.
