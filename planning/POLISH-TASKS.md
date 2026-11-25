@@ -34,6 +34,12 @@ Small fixes found by the user before Sprint 5's AI work. Branch from `origin/spr
   - `apiKey = "abcd1234efgh5678"`
 - `npm run check`, `npx tsc --noEmit` and existing tests pass. If existing tests pinned the old over-matching, list them in the PR for kimchi; don't edit test files.
 
+**Decided in PR #34:**
+- A name right after `type ` is skipped, so type aliases such as `type PasswordMode = "plain" | "hashed"` aren't flagged.
+- Go's `:=` counts as an assignment.
+- No longer flagged (for KNOWN-LIMITATIONS): a bare public-key line (`ssh-rsa AAAA…`; private key blocks are still caught), unquoted numbers in code (`password = 12345678`), and values under 4 characters.
+- Open, for the user: bare `ssh` is too broad (`sshHost: "example.com"` is still critical). Proposal: narrow to `ssh_key`, `ssh_private_key`, `ssh_passphrase` (keep `private_key`), drop `ssh-rsa` and `ssh-ed25519`.
+
 **Docs (mochi):** update `docs/KNOWN-LIMITATIONS.md` (R007) once merged.
 
 **Tester follow-up:** kimchi adds the acceptance cases to the R007 tests.
