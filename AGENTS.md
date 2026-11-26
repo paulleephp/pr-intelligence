@@ -59,7 +59,7 @@ Sprint status, delivered work and plans: `planning/ROADMAP.md`. Specs and task b
 
 ## Agent Workflow
 
-Several agents work on this repo at the same time. Agents message each other by session name (= agent ID). The local `agents.yaml` (gitignored) holds the GitHub App settings and each agent's worktree.
+Several agents work on this repo at the same time. Agents message each other by session name (= agent ID). The local `agents.yaml` (gitignored) holds the GitHub App settings and each agent's worktree. Standards: coding in `CODER.md` and `STYLEGUIDE.md`, testing in `TESTING.md`; plans and progress in `planning/ROADMAP.md`. (This used to be README's "Contributing" section; README is for readers of the project, not for agents.)
 
 | Agent | Role | Worktree |
 |-------|------|----------|
