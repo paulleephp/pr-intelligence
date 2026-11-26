@@ -40,7 +40,17 @@ Small fixes found by the user before Sprint 5's AI work. Branch from `origin/spr
 - No longer flagged (for KNOWN-LIMITATIONS): a bare public-key line (`ssh-rsa AAAA…`; private key blocks are still caught), unquoted numbers in code (`password = 12345678`), and values under 4 characters.
 - Open, for the user: bare `ssh` is too broad (`sshHost: "example.com"` is still critical). Proposal: narrow to `ssh_key`, `ssh_private_key`, `ssh_passphrase` (keep `private_key`), drop `ssh-rsa` and `ssh-ed25519`.
 
-**Docs (mochi):** update `docs/KNOWN-LIMITATIONS.md` (R007) once merged.
+**Review (banh-mi, changes requested, approved by the user):**
+- Must fix: typed declarations (`const password: string = "…"`) are no longer flagged; a regex backtracking slowdown (one crafted 8 KB line: 8.2 s vs 0.2 s before; one-token fix verified by banh-mi).
+- Optional: interface members (`passwordMode: "plain" | "hashed"`) are still flagged; `["password"]: "…"` keys and `??=` / `||=` are no longer flagged.
+- Confirmed unchanged: quoted keys in JSON and JS, YAML `password: value`, unquoted values in `.env`, shell and config files are still flagged.
+
+**Docs (mochi):** update `docs/KNOWN-LIMITATIONS.md` (R007) once merged. Besides the decided list above, add these no-longer-flagged forms (lowest priority for the user, since the focus is JS/TS):
+- Dockerfile's legacy `ENV DB_PASSWORD value` (space, no `=`)
+- a hyphen after the keyword, e.g. YAML `password-prod: value` (plain `password: value` is still flagged)
+- an unquoted shell flag followed by more arguments, e.g. `mysql --password=hunter2xyz db` (an unquoted value must end the line so `x=foo bar` isn't read as a secret; a quoted value is still flagged)
+- if optional item 2 isn't done: `["password"]: "…"` keys and `??=` / `||=`
+- if the typed-declaration must-fix is somehow left out: typed declarations
 
 **Tester follow-up:** kimchi adds the acceptance cases to the R007 tests.
 
@@ -52,6 +62,9 @@ Found in the Pages site PR #36. The landing subtitle reads "…surface relevant 
 
 ## P4. Retake the README and site screenshots (frontend, XS)
 After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitle and PR #26's false R007 "password" finding, which P1 fixes. Replace them in the README and the Pages site.
+
+## P5. Bound the older `*_secret` regex slowdown (backend, S) — proposed, waiting on the user
+Found by banh-mi while reviewing PR #34; it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could slow the analysis request. Options: cap the line length the secret scans read, or rewrite the rules so they run in linear time. Pick in the PR; the existing R007 tests must still pass.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
