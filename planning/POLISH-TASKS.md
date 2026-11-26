@@ -38,7 +38,7 @@ Small fixes found by the user before Sprint 5's AI work. Branch from `origin/spr
 - A name right after `type ` is skipped, so type aliases such as `type PasswordMode = "plain" | "hashed"` aren't flagged.
 - Go's `:=` counts as an assignment.
 - No longer flagged (for KNOWN-LIMITATIONS): a bare public-key line (`ssh-rsa AAAA…`; private key blocks are still caught), unquoted numbers in code (`password = 12345678`), and values under 4 characters.
-- Open, for the user: bare `ssh` is too broad (`sshHost: "example.com"` is still critical). Proposal: narrow to `ssh_key`, `ssh_private_key`, `ssh_passphrase` (keep `private_key`), drop `ssh-rsa` and `ssh-ed25519`.
+- Bare `ssh` is too broad (`sshHost: "example.com"` is still critical): approved as P2.
 
 **Review (banh-mi, changes requested, approved by the user):**
 - Must fix: typed declarations (`const password: string = "…"`) are no longer flagged; a regex backtracking slowdown (one crafted 8 KB line: 8.2 s vs 0.2 s before; one-token fix verified by banh-mi).
@@ -54,8 +54,15 @@ Small fixes found by the user before Sprint 5's AI work. Branch from `origin/spr
 
 **Tester follow-up:** kimchi adds the acceptance cases to the R007 tests.
 
-## P2. Narrow the `ssh` keyword in R007 (backend, S) — waiting on the user
-Proposed in PR #34: bare `ssh` still flags `sshHost: "example.com"` as a critical secret. Narrow `SSH_PATTERNS` to `ssh_key`, `ssh_private_key`, `ssh_passphrase` (keep `private_key`); drop `ssh-rsa` and `ssh-ed25519` (public key prefixes). Private key blocks stay caught by the private-key value rule.
+## P2. Narrow the `ssh` keyword in R007 (backend, S) — approved for polish day
+**Order:** after PR #34 merges (same files). boba may bundle it with P5 or do it right after; separate PRs are preferred.
+**Scope:** in `SSH_PATTERNS` (`lib/diff/constants/patterns.ts`), drop bare `ssh`, `ssh-rsa` and `ssh-ed25519` (public key prefixes); add `ssh_key`, `ssh_private_key`, `ssh_passphrase`; keep `private_key`, `private.key`. Check whether `openssh` is still useful as a name keyword and say so in the PR. Private key blocks stay caught by the `PRIVATE_KEY` value rule.
+**Acceptance:**
+- Not flagged: `sshHost: "example.com"`, `sshPort: "2222"`, `sshUser = "deploy"`, `deployKey: "ssh-ed25519 AAAA…"`.
+- Flagged (critical): `ssh_private_key = "…"`, `SSH_PASSPHRASE=hunter2xyz` in `.env`, any `-----BEGIN OPENSSH PRIVATE KEY-----` line.
+- `npm run check`, `npx tsc --noEmit` and tests pass.
+**Accepted risk (user):** an SSH secret under a name with none of the specific keywords (e.g. `sshSecret`) may be missed; rare, judged very low risk. Note it in KNOWN-LIMITATIONS.
+**Tester follow-up:** kimchi adds the acceptance cases.
 
 ## P3. App subtitle still says "AI-powered analysis" (frontend, XS)
 Found in the Pages site PR #36. The landing subtitle reads "…surface relevant tests with AI-powered analysis". The app doesn't use AI and doesn't suggest tests (Key Decision 15). Suggested: "Automate PR review investigation. Understand what changed, where it spreads, and which changes deserve a closer look." Final wording to be confirmed with the user.
