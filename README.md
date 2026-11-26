@@ -171,7 +171,3 @@ Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` a
 - **Blast radius isn't risk:** a large refactor can be wide but harmless, so blast radius has its own card with neutral colors and doesn't affect severity. There is no numeric score.
 - **No impact analysis:** the app doesn't try to find other files affected by a PR or suggest tests outside it. GitHub code search is rate-limited to about 10 searches per minute, and downloading or cloning the repository doesn't fit the app's serverless hosting.
 - **API:** `GET /api/pr?url=<PR URL>` returns PR metadata and `GET /api/pr/analysis?url=<PR URL>` returns changed files, summary and findings. Errors return `{ error }` with an HTTP status. Responses are validated with Zod before the UI uses them.
-
-## Contributing
-
-Coding standards: `CODER.md` and `STYLEGUIDE.md`. Testing: `TESTING.md`. Work is planned in sprints; plans and progress are in `planning/ROADMAP.md`.
