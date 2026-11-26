@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR Intelligence</title>
+<meta name="description" content="Paste a GitHub PR URL and PR Intelligence analyzes the diff with deterministic rules, showing what changed, which areas it touches, and which changes deserve a closer look.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div class="topbar">
+      <a class="lockup" href="./"><img src="brand/mark.svg" width="28" height="28" alt="">PR Intelligence</a>
+      <a class="repo-link" href="https://github.com/paulleephp/pr-intelligence">View on GitHub</a>
+    </div>
+    <div class="hero">
+      <h1>PR Intelligence</h1>
+      <p>Automates the first pass of a pull request review: what changed, which areas it touches, and which changes deserve a closer look. Deterministic rules, no AI.</p>
+      <nav class="toc" aria-label="Sections">
+        <a href="#problem">The problem</a>
+        <a href="#features">Features</a>
+        <a href="#rules">Rules</a>
+        <a href="#scope">Language scope</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#stack">Tech stack</a>
+        <a href="#principles">Principles</a>
+        <a href="#limitations">Limitations</a>
+        <a href="#contributing">Contributing</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="problem">
+    <h2>The problem</h2>
+    <p>Reviewing a pull request requires understanding of what changed, which parts of the codebase are affected, what tests are relevant, and whether there are potential risks. This is especially challenging if the codebase has long history and/or a lot of inner dependencies.</p>
+    <p>This tool automates the initial investigation. Paste a GitHub PR URL and it fetches the PR, analyzes the diff with deterministic rules (no AI), and shows what changed, which areas it touches, and which changes deserve a closer look, with a severity for each finding.</p>
+    <div class="shots">
+      <img src="https://github.com/user-attachments/assets/6dbe69eb-49c6-4461-8e53-ae00fdddb22b" width="1258" height="856" alt="PR Intelligence report: PR overview, overall severity, findings and files by severity, and blast radius" loading="lazy">
+      <img src="https://github.com/user-attachments/assets/139219f1-4bd6-489f-a8c4-6388a39da90c" width="1268" height="883" alt="PR Intelligence report: changed files table, affected areas and findings grouped by severity" loading="lazy">
+    </div>
+  </section>
+
+  <section id="features">
+    <h2>Features</h2>
+    <ul class="cards">
+      <li class="card"><h3>PR overview</h3><p>Title, author, number and state (open, merged, closed), linked to GitHub, plus change statistics: files changed, lines added and removed, files added, modified and removed.</p></li>
+      <li class="card"><h3>Overall severity</h3><p>The PR gets the highest severity among its findings (critical, high, medium, low or none), with a distribution of findings and files by severity.</p></li>
+      <li class="card"><h3>Changed files table</h3><p>Every changed file with its type, status and severity. Binary files and files without a diff are marked "Not scanned", never shown as clean.</p></li>
+      <li class="card"><h3>Blast radius</h3><p>How widely the PR spreads, separate from severity: number of changed files, how many top-level modules they touch, and whether tests changed alongside JS/TS source. The file count and module spread are each rated contained, moderate or wide, and the PR gets the higher of the two. The tests signal says whether source changed without tests.</p></li>
+      <li class="card"><h3>Affected Areas</h3><p>Changed files grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security), with each file's severity within that area.</p></li>
+      <li class="card"><h3>Findings by severity</h3><p>Findings grouped into critical, high, medium and low, each showing the file and what was detected.</p></li>
+    </ul>
+  </section>
+
+  <section id="rules">
+    <h2>Rules</h2>
+    <p>Each rule has a fixed severity. A file's severity, and the PR's, is the highest severity among its findings. There is no numeric score.</p>
+    <table class="rules">
+      <thead><tr><th>Rule</th><th>Flags</th><th>Severity</th><th>Applies to</th></tr></thead>
+      <tbody>
+        <tr><td class="id">R001</td><td class="flags">Authentication files modified</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R002</td><td class="flags">Authentication check potentially removed</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R003</td><td class="flags">Database migration added or modified</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R004</td><td class="flags">Database migration deleted</td><td><span class="badge sev-high">High</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R005</td><td class="flags">Dependencies added, removed or upgraded</td><td><span class="badge sev-low">Low</span></td><td class="scope">Dependency manifests</td></tr>
+        <tr><td class="id">R006</td><td class="flags">CI/CD workflow modified</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R007</td><td class="flags">Private key, API key or password pattern</td><td><span class="badge sev-critical">Critical</span></td><td class="scope">Any text file</td></tr>
+        <tr class="muted-row"><td class="id">R008</td><td class="flags">More than 500 lines changed</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Not implemented</td></tr>
+        <tr><td class="id">R009</td><td class="flags">Production configuration modified</td><td><span class="badge sev-high">High</span></td><td class="scope">Any file</td></tr>
+        <tr><td class="id">R010</td><td class="flags">Test files removed</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R011</td><td class="flags">Infrastructure changes</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R012</td><td class="flags">Crypto algorithm changed</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R013</td><td class="flags">Password hashing changed</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R014</td><td class="flags">Security-sensitive path modified</td><td><span class="badge sev-high">High</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R015</td><td class="flags">Unsafe navigation: <code>window.location</code> assigned from a dynamic value</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R016</td><td class="flags">Dangerous code execution or DOM sink introduced</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R018</td><td class="flags">Script changed with no content change: likely a permission change (e.g. <code>chmod +x</code>)</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Scripts (path)</td></tr>
+      </tbody>
+    </table>
+    <p>R017 was dropped before release and its ID is retired. Rules and severities are defined in <a href="https://github.com/paulleephp/pr-intelligence/blob/main/lib/diff/util/risk-scoring.ts"><code>lib/diff/util/risk-scoring.ts</code></a>.</p>
+  </section>
+
+  <section id="scope">
+    <h2>Language scope</h2>
+    <p>Source-code analysis covers <strong>JavaScript and TypeScript only</strong> (<code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>, <code>.mts</code>, <code>.cts</code>). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing).</p>
+    <p>Files that aren't tied to one language are still analyzed:</p>
+    <ul>
+      <li><strong>Configuration and infrastructure:</strong> <code>.env*</code>, <code>Dockerfile</code>, <code>docker-compose*</code>, Terraform, Kubernetes, Helm</li>
+      <li><strong>CI/CD:</strong> <code>.github/workflows/**</code></li>
+      <li><strong>Database:</strong> migrations and schema files</li>
+      <li><strong>Dependency manifests:</strong> <code>package.json</code> (R005 also checks other ecosystems' manifests, but those checks aren't maintained)</li>
+      <li><strong>Secrets:</strong> keys, tokens and passwords added to any text file</li>
+    </ul>
+    <p>Files in other languages still count toward file and line statistics and path-based checks, such as a sensitive <code>auth/</code> folder.</p>
+  </section>
+
+  <section id="architecture">
+    <h2>Architecture</h2>
+    <p>PR URL → GitHub client (Octokit) → diff parser and deterministic rules engine → Next.js route handlers → React frontend (responses validated with Zod)</p>
+    <figure class="diagram"><img src="architecture.svg" width="720" height="714" alt="PR Intelligence architecture: PR URL, GitHub API, deterministic analysis engine, route handlers, React frontend"></figure>
+    <p>Rules and severity are fully deterministic; no AI is involved in detection or severity.</p>
+  </section>
+
+  <section id="stack">
+    <h2>Tech stack</h2>
+    <table>
+      <thead><tr><th>Component</th><th>Technology</th></tr></thead>
+      <tbody>
+        <tr><td>Frontend framework</td><td>Next.js App Router</td></tr>
+        <tr><td>UI library</td><td>React + TypeScript</td></tr>
+        <tr><td>Styling</td><td>Tailwind CSS</td></tr>
+        <tr><td>Backend runtime</td><td>Node.js</td></tr>
+        <tr><td>API layer</td><td>Next.js Route Handlers</td></tr>
+        <tr><td>Analysis engine</td><td>TypeScript</td></tr>
+        <tr><td>GitHub integration</td><td>Octokit</td></tr>
+        <tr><td>Severity rules</td><td>Deterministic rule table (<code>lib/diff/util/risk-scoring.ts</code>)</td></tr>
+        <tr><td>Validation</td><td>Zod v4 schemas (<code>lib/schemas/</code>) for API responses and the <code>url</code> query param</td></tr>
+        <tr><td>Testing</td><td>Vitest</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="principles">
+    <h2>Core principles</h2>
+    <ol>
+      <li><strong>Deterministic first:</strong> all detection, parsing and severity assignment use explicit rules. Results are reproducible and don't depend on an AI's interpretation.</li>
+      <li><strong>Label-based categorization:</strong> files are categorized by labels, with fallback categories (frontend, backend, tests, docs) when no label exists.</li>
+      <li><strong>Severity, not scores:</strong> each rule has a fixed severity, and findings are shown as labelled severity groups. A numeric risk score was tried and removed as arbitrary.</li>
+    </ol>
+  </section>
+
+  <section id="limitations">
+    <h2>Known limitations</h2>
+    <p>What each rule misses or may wrongly flag. Open a topic for details.</p>
+    <div class="stack">
+      <details>
+        <summary>Languages: JavaScript and TypeScript only</summary>
+        <p>The rules target JavaScript and TypeScript projects. Supporting other languages (Python, PHP, Go, Ruby, Rust, Java/Kotlin, etc.) is out of scope.</p>
+        <ul>
+          <li><strong>Still in scope:</strong> the non-code files a JS/TS project normally contains, such as <code>package.json</code>, <code>.env*</code>, YAML, shell scripts, <code>.envrc</code>, Dockerfiles, Terraform and CI workflows.</li>
+          <li><strong>Existing checks for other languages aren't maintained.</strong> Some are already in place, for example Python, Go, Rust, Ruby and Gradle dependency manifests (R005), Alembic migrations (R003/R004) and <code>os.environ</code> in secret detection (R007). They still run for now, but gaps in them won't be fixed. If one of them ever needs its tests changed, for any reason, the check and its tests are removed instead of updated.</li>
+          <li><strong>Behaviour is designed around JS/TS rules.</strong> Where languages disagree (for example, whether <code>"$name"</code> inside double quotes reads a variable), the JS/TS meaning wins.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Changed files capped at 3,000 per PR</summary>
+        <p><code>fetchChangedFiles</code> in <code>lib/github/client.ts</code> pages through <code>pulls.listFiles</code> 100 files at a time, but GitHub returns at most 3,000 files per PR. Files beyond that aren't analyzed, and the report doesn't warn that the list was cut short.</p>
+      </details>
+      <details>
+        <summary>Unsafe navigation (R015)</summary>
+        <p>R015 matches text on changed lines only, so:</p>
+        <ol>
+          <li><strong>It can't tell whether a value was validated.</strong> Any dynamic value assigned to <code>window.location</code> is flagged, even if it was checked against an allowlist elsewhere.</li>
+          <li><strong>A bare <code>location = url</code> isn't flagged.</strong> Only <code>window.</code>/<code>document.</code>/<code>self.</code>/<code>top.</code>/<code>parent.</code>/<code>globalThis.</code> prefixed locations, <code>location.href =</code>, and <code>location.assign()</code>/<code>location.replace()</code> are matched.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Dependency detection (R005)</summary>
+        <p>R005 only checks files whose basename is a recognised dependency manifest (<code>package.json</code>, <code>go.mod</code>, <code>Cargo.toml</code>, <code>Gemfile</code>, <code>build.gradle(.kts)</code>, <code>pyproject.toml</code>, <code>Pipfile</code>, <code>requirements*.txt</code> / <code>requirements*.in</code>). Known gaps:</p>
+        <ol>
+          <li><strong>Requirements files kept in a folder aren't detected.</strong> Files such as <code>requirements/base.txt</code> or <code>requirements/dev.txt</code> aren't recognised, because only the filename is checked, not the folder.</li>
+          <li><strong>Some ecosystems aren't supported.</strong> <code>setup.py</code>, <code>setup.cfg</code>, <code>composer.json</code> (PHP) and <code>pom.xml</code> (Maven) aren't in the manifest list. The detector also has no line patterns for their dependency formats, so supporting them needs both a filename entry and new patterns.</li>
+        </ol>
+        <p>Both gaps are in non-JS ecosystems, so they're out of scope (see "Languages: JavaScript and TypeScript only" above) and won't be fixed. Lockfiles (<code>package-lock.json</code>, etc.) are excluded on purpose.</p>
+      </details>
+      <details>
+        <summary>Secret names written in camelCase (R007)</summary>
+        <p>Secret detection was built around <code>snake_case</code>, <code>SCREAMING_SNAKE</code> and <code>dot.case</code> names. camelCase names are handled inconsistently, in both directions:</p>
+        <ol>
+          <li><strong>Some real camelCase secrets are missed.</strong> The named rules and the catch-all <code>*_secret</code> rule need a <code>_</code> or <code>.</code> between words, so <code>githubToken</code>, <code>clientSecret</code>, <code>jwtSecret</code>, <code>stripeSecretKey</code> and <code>slackBotToken</code> aren't flagged. <code>github_token</code>, <code>client_secret</code> and the rest are. (<code>apiKey</code> and <code>dbPassword</code> <em>are</em> flagged, because those scans match a substring.)</li>
+          <li><strong>camelCase placeholders aren't recognised.</strong> The test/mock/demo/example/todo/fixme filter needs the word to stand alone, so <code>mock_api_key = "…"</code> and <code>test_password = "…"</code> are skipped, but <code>mockApiKey = "…"</code> and <code>testPassword = "…"</code> are flagged.</li>
+        </ol>
+        <p>Token values with a known format (<code>ghp_…</code>, <code>AKIA…</code>, <code>xoxb-…</code>, <code>sk_live_…</code>, private key headers) are detected whatever the variable is called.</p>
+        <p>Not fixed yet. The fix (splitting names on camelCase boundaries as well as <code>_</code> and <code>.</code>) touches every name rule and the placeholder filter.</p>
+      </details>
+      <details>
+        <summary>Path keywords (R001, R014) and infrastructure files (R011)</summary>
+        <ul>
+          <li><strong>R001 and R014 match keywords at the start of a path segment.</strong> A keyword counts when it's followed by a separator (<code>/</code>, <code>.</code>, <code>-</code>, <code>_</code>), a digit (<code>oauth2/</code>), or a camelCase capital (<code>AuthProvider.tsx</code>). A lowercase letter doesn't count, so <code>author.ts</code> and <code>authority/</code> aren't flagged.</li>
+          <li><strong>Missed:</strong> a keyword in the middle of a name (<code>useAuth.ts</code>); an all-caps acronym followed by a word (<code>SSOConfig.ts</code>, <code>AUTHProvider.ts</code>); <code>AccessControl.ts</code>, because the keyword is <code>access-control</code>.</li>
+          <li><strong>Flagged, though not always sensitive:</strong> camelCase names that start with a keyword, such as <code>sessionStorage.ts</code> or <code>loginIcon.svg</code>. This matches how <code>session-storage.ts</code> was already treated.</li>
+          <li><strong>R011</strong> covers Terraform (<code>.tf</code>, <code>.tfvars</code>, <code>.tf.json</code>) and Helm charts, including charts under <code>charts/&lt;name&gt;/</code> (<code>Chart.yaml</code>, <code>values*.yaml</code>/<code>.yml</code>, and <code>yaml</code>, <code>yml</code>, <code>tpl</code> and <code>txt</code> files under <code>templates/</code>). Terraform's <code>*.tfvars.json</code> isn't matched.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Script permission changes (R018)</summary>
+        <ul>
+          <li>GitHub's changed-file data doesn't include file modes, so R018 is a heuristic: it flags a modified file with no diff and 0 lines changed that looks runnable. That means a shell-script extension (<code>sh</code>, <code>bash</code>, <code>zsh</code>, <code>ksh</code>, <code>fish</code>, <code>command</code>) or any file under <code>bin/</code>, <code>scripts/</code>, <code>.husky/</code> or <code>.githooks/</code>. The message always says "likely".</li>
+          <li><strong>Missed:</strong> permission changes on other files, such as an extensionless script outside those folders, or a <code>.js</code> or <code>.py</code> file made executable. A permission change made together with a content change is also missed.</li>
+          <li><strong>Possible false positive:</strong> a file under those folders that GitHub reports without a diff for another reason, such as an updated binary under <code>bin/</code>.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Blast radius</summary>
+        <ul>
+          <li><strong>Files that don't count:</strong> lockfiles, test snapshots, images and other assets, and files GitHub sends without a diff and with 0 lines changed: binaries, empty files, renames with no content change, and permission-only changes. A text file whose diff is too large to show still counts.</li>
+          <li><strong>Renamed files</strong> that also change content count only under their new path, because GitHub doesn't send the old path. A move between modules counts once.</li>
+          <li><strong>Modules</strong> are detected by folder convention (<code>src/auth</code>, <code>packages/ui</code>, …). Repos with an unusual layout may show more or fewer modules than a person would.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <section id="decisions">
+    <h2>Design decisions</h2>
+    <details>
+      <summary>Why the app works the way it does</summary>
+      <ul>
+        <li><strong>Diffs come from the Git patch</strong> GitHub returns for each changed file. Repository source is never downloaded.</li>
+        <li><strong>Binary files aren't scanned.</strong> They're listed as "Not scanned", never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them.</li>
+        <li><strong>Severity display:</strong> critical is its own level in bright red; high is orange, medium yellow, low sky, none grey. "None" means scanned with no findings.</li>
+        <li><strong>PR state:</strong> <code>open</code>, <code>closed</code> or <code>merged</code>. GitHub reports merged PRs as <code>closed</code> plus a <code>merged</code> flag; the app shows them as merged.</li>
+        <li><strong>R003 and R004:</strong> R003 flags migrations that are added as well as modified; R004 covers deleted migrations.</li>
+        <li><strong>R005</strong> runs only on recognised dependency manifests (by filename) and inspects their patch for packages added, removed or upgraded. Lockfiles are excluded.</li>
+        <li><strong>R015</strong> flags only writes to <code>window.location</code> (assignment, <code>.href =</code>, <code>.assign()</code>, <code>.replace()</code>) whose value isn't a plain relative or <code>http(s)</code> string literal, because a <code>javascript:</code> URL can run script in the user's browser. Code-execution sinks such as <code>eval()</code> are R016.</li>
+        <li><strong>Affected Areas:</strong> a file can appear in more than one area. Its badge in an area shows the highest severity among that area's findings, not the file's overall severity.</li>
+        <li><strong>Blast radius isn't risk:</strong> a large refactor can be wide but harmless, so blast radius has its own card with neutral colors and doesn't affect severity. There is no numeric score.</li>
+        <li><strong>No impact analysis:</strong> the app doesn't try to find other files affected by a PR or suggest tests outside it. GitHub code search is rate-limited to about 10 searches per minute, and downloading or cloning the repository doesn't fit the app's serverless hosting.</li>
+        <li><strong>API:</strong> <code>GET /api/pr?url=&lt;PR URL&gt;</code> returns PR metadata and <code>GET /api/pr/analysis?url=&lt;PR URL&gt;</code> returns changed files, summary and findings. Errors return <code>{ error }</code> with an HTTP status. Responses are validated with Zod before the UI uses them.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section id="contributing">
+    <h2>Contributing</h2>
+    <p>Coding standards: <a href="https://github.com/paulleephp/pr-intelligence/blob/main/CODER.md">CODER.md</a> and <a href="https://github.com/paulleephp/pr-intelligence/blob/main/STYLEGUIDE.md">STYLEGUIDE.md</a>. Testing: <a href="https://github.com/paulleephp/pr-intelligence/blob/main/TESTING.md">TESTING.md</a>.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>PR Intelligence · <a href="https://github.com/paulleephp/pr-intelligence">GitHub</a> · <a href="https://github.com/paulleephp/pr-intelligence/blob/main/README.md">README</a></span>
+    <a href="style-guide.html">Style guide</a>
+  </div>
+</footer>
+</body>
+</html>
