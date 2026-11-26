@@ -43,3 +43,15 @@ Small fixes found by the user before Sprint 5's AI work. Branch from `origin/spr
 **Docs (mochi):** update `docs/KNOWN-LIMITATIONS.md` (R007) once merged.
 
 **Tester follow-up:** kimchi adds the acceptance cases to the R007 tests.
+
+## P2. Narrow the `ssh` keyword in R007 (backend, S) — waiting on the user
+Proposed in PR #34: bare `ssh` still flags `sshHost: "example.com"` as a critical secret. Narrow `SSH_PATTERNS` to `ssh_key`, `ssh_private_key`, `ssh_passphrase` (keep `private_key`); drop `ssh-rsa` and `ssh-ed25519` (public key prefixes). Private key blocks stay caught by the private-key value rule.
+
+## P3. App subtitle still says "AI-powered analysis" (frontend, XS)
+Found in the Pages site PR #36. The landing subtitle reads "…surface relevant tests with AI-powered analysis". The app doesn't use AI and doesn't suggest tests (Key Decision 15). Suggested: "Automate PR review investigation. Understand what changed, where it spreads, and which changes deserve a closer look." Final wording to be confirmed with the user.
+
+## P4. Retake the README and site screenshots (frontend, XS)
+After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitle and PR #26's false R007 "password" finding, which P1 fixes. Replace them in the README and the Pages site.
+
+## Site: GitHub Pages (urgent, done outside the sprint flow)
+`docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
