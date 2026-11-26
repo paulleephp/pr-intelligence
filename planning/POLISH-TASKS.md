@@ -63,7 +63,8 @@ Found in the Pages site PR #36. The landing subtitle reads "…surface relevant 
 ## P4. Retake the README and site screenshots (frontend, XS)
 After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitle and PR #26's false R007 "password" finding, which P1 fixes. Replace them in the README and the Pages site.
 
-## P5. Bound the older `*_secret` regex slowdown (backend, S) — proposed, waiting on the user
+## P5. Bound the older `*_secret` regex slowdown (backend, S) — approved for polish day
+**Order:** boba starts it after PR #34 merges (same files), branched from the updated `origin/sprint-5`. kimchi adds a timing regression test afterwards.
 Found by banh-mi while reviewing PR #34; it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could slow the analysis request. Options: cap the line length the secret scans read, or rewrite the rules so they run in linear time. Pick in the PR; the existing R007 tests must still pass.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
