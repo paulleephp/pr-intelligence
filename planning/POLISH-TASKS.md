@@ -70,9 +70,22 @@ Found in the Pages site PR #36. Two places: the landing subtitle in `app/page.ts
 ## P4. Retake the README and site screenshots (frontend, XS)
 After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitle and PR #26's false R007 "password" finding, which P1 fixes. Replace them in the README and the Pages site.
 
-## P5. Bound the older `*_secret` regex slowdown (backend, S) — approved for polish day
-**Order:** boba starts it after PR #34 merges (same files), branched from the updated `origin/sprint-5`. kimchi adds a timing regression test afterwards.
-Found by banh-mi while reviewing PR #34; it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could slow the analysis request. Options: cap the line length the secret scans read, or rewrite the rules so they run in linear time. Pick in the PR; the existing R007 tests must still pass.
+## P5. Run the R007 secret scan on RE2 (backend, M) — approved for polish day
+**Order:** after PR #34 merges (same files; #34 itself only takes banh-mi's one-token anchor fix). Separate PR from P2; whichever merges second rebases.
+**Why:** found by banh-mi while reviewing #34, and it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could stall the analysis request.
+**Decision (user, via banh-mi):** move the secret scan to RE2, Google's linear-time regex engine, instead of capping line length.
+**Scope**
+- Only the R007 secret scan (`lib/diff/secret.ts` and its constants). Path rules (R001, R011, R014) keep JS regex: they also use lookarounds, but run on short paths.
+- RE2 has no lookarounds and no backreferences, so this is a rework of the patterns, not a drop-in swap. To rewrite as plain alternation or as a second check in code:
+  - backreferences: `\1` closing quote in `QUOTED_VALUE` and `SHELL_QUOTED_VALUE`
+  - lookbehinds: `(?<!\btype\s+)`, and `(?<![\w.])` from #34's anchor fix
+  - lookaheads: `NON_LITERAL_WORDS`, `INTERPOLATION`, `CONFIG_VARIABLE`, `SHELL_REFERENCE`, the `(?=…)` in `BARE_VALUE`, and `=(?!=)`
+- **Package and deploy:** the npm `re2` package is a native C++ addon. Confirm it builds and runs on Vercel, and compare a WebAssembly build such as `re2-wasm`, which needs no native build. Say which one you picked and why in the PR. It's a new runtime dependency: tell mochi so README's tech stack can list it.
+**Acceptance**
+- An 8 KB and a 100 KB single added line of `a.a.a.…`, and of `password.password.…`, each scan in linear time (under 50 ms).
+- Every existing R007 test passes, plus kimchi's P1 cases if merged by then. No behaviour change otherwise; list any intended difference in the PR.
+- `npm run check`, `npx tsc --noEmit` and tests pass; the Vercel preview deploy succeeds.
+**Tester follow-up:** kimchi adds the long-line timing cases as a regression test.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
