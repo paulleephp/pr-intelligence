@@ -96,7 +96,3 @@ Full list, rule by rule: [docs/KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md).
 ## Design Decisions
 
 Deterministic rules with fixed severities and no score, no AI in the core analysis, and no repository download. The reasons behind these and other choices: [docs/DESIGN-DECISIONS.md](docs/DESIGN-DECISIONS.md).
-
-## Contributing
-
-Coding standards: `CODER.md` and `STYLEGUIDE.md`. Testing: `TESTING.md`. Work is planned in sprints; plans and progress are in `planning/ROADMAP.md`.
