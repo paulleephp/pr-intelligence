@@ -96,7 +96,7 @@ Rules and severity are fully deterministic; no AI is involved in detection or se
 
 ## Known Limitations
 
-The analysis works from the PR diff only, with no repository download, so some changes are missed or flagged wrongly. The main ones: source-code rules cover JavaScript and TypeScript only, PRs over 3,000 files are rejected, and path-based rules match by folder and file-name conventions.
+The analysis works from the PR diff only, with no repository download, so some changes are missed or flagged wrongly. The main ones: source-code rules cover JavaScript and TypeScript only, only the first 3,000 files of a PR are analyzed (GitHub's limit), and path-based rules match by folder and file-name conventions.
 
 Full list, rule by rule: [docs/KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md).
 
