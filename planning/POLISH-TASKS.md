@@ -2,7 +2,7 @@
 
 Small fixes found by the user before Sprint 5's AI work. Branch from `origin/sprint-5`; PRs target `sprint-5`. PR titles: `[<id>] P<n>: <summary>`.
 
-## P1. R007 flags identifiers that only contain "password" (backend, S)
+## P1. R007 flags identifiers that only contain "password" (backend, S) — merged (#34, 2026-11-27)
 **Role:** Coder (backend)
 **Found on:** https://github.com/paulleephp/pr-intelligence/pull/26. The PR is reported as critical R007 ("password") for this added line in a type definition, which holds no secret:
 

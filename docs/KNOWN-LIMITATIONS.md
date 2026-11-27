@@ -36,12 +36,30 @@ Lockfiles (`package-lock.json`, etc.) are excluded on purpose.
 
 Secret detection was built around `snake_case`, `SCREAMING_SNAKE` and `dot.case` names. camelCase names are handled inconsistently, in both directions:
 
-1. **Some real camelCase secrets are missed.** The named rules and the catch-all `*_secret` rule need a `_` or `.` between words, so `githubToken`, `clientSecret`, `jwtSecret`, `stripeSecretKey` and `slackBotToken` aren't flagged. `github_token`, `client_secret` and the rest are. (`apiKey` and `dbPassword` *are* flagged, because those scans match a substring.)
+1. **Some real camelCase secrets are missed.** The named rules and the catch-all `*_secret` rule need a `_` or `.` between words, so `githubToken`, `clientSecret`, `jwtSecret`, `stripeSecretKey` and `slackBotToken` aren't flagged. `github_token`, `client_secret` and the rest are. (`apiKey` and `dbPassword` *are* flagged, because the password, API key and SSH keywords may appear anywhere in a name, in any case.)
 2. **camelCase placeholders aren't recognised.** The test/mock/demo/example/todo/fixme filter needs the word to stand alone, so `mock_api_key = "…"` and `test_password = "…"` are skipped, but `mockApiKey = "…"` and `testPassword = "…"` are flagged.
 
 Token values with a known format (`ghp_…`, `AKIA…`, `xoxb-…`, `sk_live_…`, private key headers) are detected whatever the variable is called.
 
 Not fixed yet. The fix (splitting names on camelCase boundaries as well as `_` and `.`) touches every name rule and the placeholder filter.
+
+### Passwords, API keys and SSH keys found by name (R007)
+
+A password, API key or SSH keyword is reported only when it's part of a key or variable name that is **assigned a literal value**, such as `const password = "hunter2xyz";`, `DB_PASSWORD=supersecret` in `.env` or `password: "s3cr3t-value"` in YAML. In code the value must be quoted; in `.env`, config and shell files it may be unquoted. Until November 2026 any line that merely *contained* a keyword was reported, so names like `passwordHashingPatterns` were flagged as critical.
+
+**Not flagged, by design:**
+- Identifiers, type names, imports, property reads and calls that contain a keyword (`hashPassword()`, `type PasswordMode = …`, `<input type="password" />`)
+- Values that aren't literals: `process.env.X`, `$VAR`, `${…}`, variables and calls
+- Values under 4 characters, and unquoted numbers in code (`password = 12345678`)
+- A bare public-key line (`ssh-rsa AAAA…`). Private key blocks are still caught by their `-----BEGIN … PRIVATE KEY-----` header
+
+**Missed:**
+- A union type in the annotation: `const password: string | undefined = "…"`
+- Dockerfile's legacy `ENV DB_PASSWORD value` form (a space instead of `=`)
+- A hyphen right after the keyword, e.g. YAML `password-prod: value` (plain `password: value` is caught)
+- An unquoted shell flag followed by more arguments, e.g. `mysql --password=hunter2xyz db`. An unquoted value must end the line, so that `x=foo bar` isn't read as a secret. A quoted value is caught
+
+**Rare false alarms:** a keyword name followed by a word and `=` reads like Go's `var name type = …`, so `case "password": label = "Password";` and comments such as `// the password field = "…"` can be flagged.
 ### Path keywords (R001, R014) and infrastructure files (R011)
 
 - **R001 and R014 match keywords at the start of a path segment.** A keyword counts when it's followed by a separator (`/`, `.`, `-`, `_`), a digit (`oauth2/`), or a camelCase capital (`AuthProvider.tsx`). A lowercase letter doesn't count, so `author.ts` and `authority/` aren't flagged.
