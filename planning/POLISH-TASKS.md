@@ -86,5 +86,26 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 **Docs (mochi):** add the limit to `docs/KNOWN-LIMITATIONS.md` (R007): on lines over 300 characters, only the first 300 are checked, so a secret further along (e.g. in a minified file) isn't detected.
 **Tester follow-up:** kimchi adds the long-line cases as a regression test.
 
+## P6. Named R007 rules flag a name without checking the value (backend, S) — approved for polish day
+**Order:** after P5 (same file, `lib/diff/constants/secret.ts`). Found by banh-mi, confirmed on `sprint-5` at `bddf2ae`; older than #34, which doesn't touch it.
+**Cause:** the rules built by `nameRule` (`GITHUB_TOKEN`, `AWS_SECRET`, `AWS_ACCESS_KEY`, `ENCRYPTION_KEY`, `OAUTH_TOKEN`, `STRIPE_SECRET`, `SLACK_TOKEN`, `JWT_SECRET`) end at `name =` or `name:` and never check the value. It's the same false alarm P1 fixed for passwords. The worst case is the standard GitHub Actions line `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`, so almost any PR touching a workflow gets a critical finding.
+**Scope:** give `nameRule` the same assigned-literal check as the generic and keyword rules (`ASSIGNMENT` + `literalAfter(fileKind)`, one rule per file kind).
+**Acceptance**
+- Not flagged: `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` in `.github/workflows/ci.yml`; `const github_token = process.env.GITHUB_TOKEN;` and `const jwt_secret = getSecret();` in `src/a.ts`.
+- Flagged (critical): `jwt_secret = "abcd1234"` in code, `AWS_SECRET=abcd1234` in `.env`, `GITHUB_TOKEN: ghs_…` (value rule).
+- Existing R007 tests pass; if any pin the old over-matching, list them in the PR for kimchi.
+**Tester follow-up:** kimchi adds the acceptance cases.
+
+## P7. Comment the secret regexes (backend, S) — approved for polish day
+**Order:** last of the R007 items, after P6, so the comments describe the final patterns. Comments only: no behaviour change. The user finds these regex sections hard to follow.
+**Scope:** in `lib/diff/constants/secret.ts`, one short comment per named piece: the fragments `QUOTED_VALUE`, `SHELL_QUOTED_VALUE`, `BARE_VALUE`, `DOTTED_REFERENCE`, `INTERPOLATION`, `CONFIG_VARIABLE`, `SHELL_REFERENCE`, `NON_LITERAL_WORDS`, `ASSIGNMENT`, `TYPE_ANNOTATION`, `NOT_UNION`, and the builders and tables `ASSIGNED_LITERAL`, `literalAfter`, `nameRule`, `valueRule`, `genericRule`, `keywordRules`, `SECRET_VALUE_RULES`, `SECRET_NAME_RULES`, `KEYWORD_RULES`, `LOW_RISK_LINE` (plus anything P5 or P6 adds, such as the JWT rule and the 300-character cut).
+- Each comment says what the piece matches, with one line it matches and one it doesn't, taken from the existing R007 tests (name the test file), so the examples are real and checked.
+- A short header comment on how the pieces fit together:
+  - **Value rules** recognise a secret by its format (`ghp_`, `AKIA`, a private key header, a JWT). They run first and skip the example/mock/test filter.
+  - **Name rules** recognise a secret by the name it's assigned to: the named rules, the generic `*_secret` rule and the keyword rules.
+  - **`ASSIGNED_LITERAL`** decides what counts as a hard-coded value per file kind: in `code` the value must be quoted; in `config` (`.env`, YAML and similar) and `shell` it may also be unquoted. `$VAR`, `${…}`, `process.env` and calls never count.
+- Keep the file under Biome's 10 KB limit; if comments push it over, split by topic (e.g. fragments vs rule tables) rather than raising the limit.
+**Acceptance:** every built regex is byte-identical before and after (banh-mi checks); `npm run check`, `npx tsc --noEmit` and tests pass.
+
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
