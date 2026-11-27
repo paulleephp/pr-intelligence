@@ -1,6 +1,6 @@
 # Sprint 4: Task Briefs
 
-Spec: `SPRINT4.md`. The rules there are the source of truth; these briefs say who does what. Deterministic work only; the AI assessment is Sprint 5 (`SPRINT5-TASKS.md`).
+Spec: `SPRINT4.md`. The rules there are the source of truth; these briefs say who does what. Deterministic work only; the AI assessment is Sprint 6 (`SPRINT6-TASKS.md`).
 
 - **Part 1: Blast-radius metrics** (S4-T1 to S4-T3)
 - **Part 2: Line numbers and R017** (S4-T4 to S4-T6)
@@ -81,7 +81,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 
 ## S4-T4. Line numbers and stable IDs on findings (backend, S)
 **Role:** Coder (backend)
-**Why:** R017 (S4-T5) needs the line, findings can link to the exact line on GitHub, and Sprint 5 sends the flagged line with context and matches AI verdicts back by ID. Today a finding has only `evidence` (the line's text).
+**Why:** R017 (S4-T5) needs the line, findings can link to the exact line on GitHub, and Sprint 6 sends the flagged line with context and matches AI verdicts back by ID. Today a finding has only `evidence` (the line's text).
 **Files:** `lib/types/diff/pattern.ts`, `lib/diff/code.ts`, `lib/diff/util/regex-finding.ts`, `lib/diff/util/parse-patch.ts` if needed, `lib/schemas/pr-analysis.ts`
 
 **Scope**
@@ -102,7 +102,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
 - Severity low. Message: "Public API changed: code outside this PR that uses `name` may break." Include the line (S4-T4) and evidence.
 - **Depends on:** S4-T4 for the line number. The detector itself can be written in parallel.
 - **Optional, from the S4-T4 review:** have the finders in `lib/diff/code.ts` take `hunks` directly, which brings the file back under ~150 lines before R017 adds to it.
-- Not mapped to an Affected Area. Deterministic; Sprint 5 lists it as "not sent to AI".
+- Not mapped to an Affected Area. Deterministic; Sprint 6 lists it as "not sent to AI".
 - **Known limitations (README):** multi-line parameter lists, re-exports (`export { a as b }`), class methods and type-only changes aren't detected.
 
 **Acceptance:** a renamed parameter list is flagged; a function body change with the same signature isn't; a removed export is flagged; a non-JS/TS file is ignored.
@@ -120,7 +120,7 @@ Order: S4-T4 and S4-T5 in parallel (S4-T5 needs S4-T4's `line` field before merg
   1. Add `"check": "biome check"` to package.json. It runs lint, formatting and import sorting, and fails on problems.
   2. A one-off formatting pass (`biome check --write`) on existing files, in its own PR with no behaviour change, so the check starts green. Read the diff: one fix turns the Octokit mock's `function` into an arrow (TESTING.md). Test files in that pass go to kimchi.
   3. Optional: rename `format:fix`, since it runs `biome check --write` and fixes more than formatting.
-- ~~Coder: a GitHub Actions workflow~~: moved to Sprint 5 (S5-T0, its first task) by the user 2026-11-25. The prerequisite is done here: `npm run check` (PR #26) exits 0 on sprint-4 after #27.
+- ~~Coder: a GitHub Actions workflow~~: moved to Sprint 6 (S6-T0, its first task) by the user 2026-11-25. The prerequisite is done here: `npm run check` (PR #26) exits 0 on sprint-4 after #27.
 
 # Part 3: R018 (S4-T8)
 

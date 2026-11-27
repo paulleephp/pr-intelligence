@@ -6,7 +6,7 @@ Objective: run the existing steps (fetch, analyze, classify, AI review) as one s
 
 Prerequisites from Sprint 4: database (Supabase/PostgreSQL), LLM provider abstraction, Zod response schemas, code search impact analysis.
 
-> **Outdated (2026-11-24):** moved out of Sprint 5, which is now the AI assessment (`SPRINT5.md`). Code search impact analysis was dropped (Key Decision 15), there is no database yet (the verdict cache is deferred), and the AI design changed. References below to code search, the CLASSIFYING stage's affected files and suggested tests, and the code-search rate limit no longer apply. Revisit only after the AI assessment ships.
+> **Outdated (2026-11-24):** moved out of Sprint 6, which is now the AI assessment (`SPRINT6.md`). Code search impact analysis was dropped (Key Decision 15), there is no database yet (the verdict cache is deferred), and the AI design changed. References below to code search, the CLASSIFYING stage's affected files and suggested tests, and the code-search rate limit no longer apply. Revisit only after the AI assessment ships.
 
 ---
 

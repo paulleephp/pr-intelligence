@@ -1,19 +1,19 @@
-# Sprint 5: Task Briefs (AI assessment, bring your own key)
+# Sprint 6: Task Briefs (AI assessment, bring your own key)
 
-Spec: `SPRINT5.md`. Read the whole spec before starting any of these tasks, especially "Which findings are sent" and "What is sent". **The security exclusions are the most important part of this feature; when in doubt, don't send.**
+Spec: `SPRINT6.md`. Read the whole spec before starting any of these tasks, especially "Which findings are sent" and "What is sent". **The security exclusions are the most important part of this feature; when in doubt, don't send.**
 
 **Prerequisite from Sprint 4:** S4-T4 (line numbers and stable IDs on findings) merged.
 
-No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliverables").
+No database this sprint: the verdict cache is deferred (SPRINT6.md "Future deliverables").
 
 **Order**
-- First: S5-T0 (CI workflow, carried from Sprint 4), so every later Sprint 5 PR is checked by CI.
-- Wave A, in parallel: S5-T1 (payload builder), S5-T2 (Claude client)
-- Wave B: S5-T3 (route, needs S5-T1 and S5-T2)
-- Wave C: S5-T4 (frontend; can start on S5-T1's preview data, then wire up S5-T3)
-- Tester (S5-T5) follows each wave. Reviewer after each PR.
+- First: S6-T0 (CI workflow, carried from Sprint 4), so every later Sprint 6 PR is checked by CI.
+- Wave A, in parallel: S6-T1 (payload builder), S6-T2 (Claude client)
+- Wave B: S6-T3 (route, needs S6-T1 and S6-T2)
+- Wave C: S6-T4 (frontend; can start on S6-T1's preview data, then wire up S6-T3)
+- Tester (S6-T5) follows each wave. Reviewer after each PR.
 
-## S5-T0. CI workflow (backend, S; first, carried over from Sprint 4)
+## S6-T0. CI workflow (backend, S; first, carried over from Sprint 4)
 **Role:** Coder (backend)
 **Files:** new `.github/workflows/ci.yml`; README (Tech Stack, Contributing) and AGENTS.md Tech Stack via mochi.
 
@@ -29,21 +29,21 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 
 **Acceptance:** the workflow runs on its own PR and passes. `npm run check` starts green (Sprint 4 PRs #26 and #27). Biome's remaining infos (`noUselessStringRaw`) and the `docs/style-guide.html` size warning don't fail it, which the user accepted.
 
-## S5-T1. Eligibility and payload builder (backend, M)
+## S6-T1. Eligibility and payload builder (backend, M)
 **Role:** Coder (backend)
 **Depends on:** S4-T4 (Sprint 4)
 **First step:** make `id` required on findings in `aggregate.findings`, in both the type (e.g. `Finding = Pattern & { id: string }`) and the Zod schema, and update the tests that build findings without ids. Verdicts are matched back by id, so it must always be present (deferred from S4-T4).
 **Files:** new `lib/llm/eligibility.ts`, `lib/llm/payload.ts`, `lib/llm/constants.ts`; types in `lib/types/llm/`; `lib/types/pr/metadata.ts`; `lib/schemas/`; the analysis route
 
 **Scope**
-- **Eligibility constant** (single source for backend and UI): every rule R001–R018 → `{ status: "sent" | "excluded-security" | "deterministic", reason: string }`, using the exact user-facing reasons in SPRINT5.md. Sent: R002, R012, R013, R015, R016. Excluded for security: R003, R004, R006, R007, R009, R011. Everything else deterministic.
-- **`buildAssessmentPayload(files, findings, repoIsPrivate)`**, a pure function, applying SPRINT5.md "What is sent" in this order:
+- **Eligibility constant** (single source for backend and UI): every rule R001–R018 → `{ status: "sent" | "excluded-security" | "deterministic", reason: string }`, using the exact user-facing reasons in SPRINT6.md. Sent: R002, R012, R013, R015, R016. Excluded for security: R003, R004, R006, R007, R009, R011. Everything else deterministic.
+- **`buildAssessmentPayload(files, findings, repoIsPrivate)`**, a pure function, applying SPRINT6.md "What is sent" in this order:
   1. Private repo → nothing is sent; status `private-repo`.
   2. Keep findings whose rule is `sent`.
   3. Drop any finding whose file isn't JS/TS (`JS_TS_FILE_PATTERN`).
   4. Drop any finding whose file has an R003, R004, R006, R007, R009 or R011 finding, or whose path matches migration, schema, `.env*`, production-config, CI or infrastructure patterns (reuse the existing path constants).
   5. Cut the flagged line with 5 lines of context either side from its patch hunk. Keep the patch's `+`/`-`/space markers and include removed lines inside the window (R002 is about removals). Never reach outside the hunk.
-     - **R002 from a removed line has no `line`** (Sprint 4 decision: no position in the new file). The payload builder must still locate it, e.g. by recording the removed line's position in the old file or in the hunk (an `oldLine` field set by `parsePatch`). Add that here as part of S5-T1; don't send R002 without context.
+     - **R002 from a removed line has no `line`** (Sprint 4 decision: no position in the new file). The payload builder must still locate it, e.g. by recording the removed line's position in the old file or in the hunk (an `oldLine` field set by `parsePatch`). Add that here as part of S6-T1; don't send R002 without context.
   6. Run the secret detectors over each snippet. **Any match → drop the finding** with status `possible-secret`. Never redact-and-send.
   7. Serialize to JSON; if over **10,000 characters**, status `too-large` and nothing is sent.
 - **Per-finding outcome** for the UI: `sent`, `excluded-security`, `deterministic`, `not-js-ts`, `excluded-file`, `possible-secret`.
@@ -61,13 +61,13 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 - Private repo → `available: false`, reason `private-repo`, payload empty.
 - The preview never includes snippet text.
 
-## S5-T2. Claude client (backend, M)
+## S6-T2. Claude client (backend, M)
 **Role:** Coder (backend)
 **Files:** new `lib/llm/claude.ts`, `lib/llm/prompt.ts`, `lib/schemas/ai-assessment.ts`; add `@anthropic-ai/sdk`
 
 **Scope**
 - One function, no provider interface (Claude is the only platform): `assess({ payload, apiKey }): Promise<AssessResult>`. `AssessResult` is either `{ ok: true, verdicts, usage: { inputTokens, outputTokens }, model }` or `{ ok: false, error: "invalid-key" | "rate-limited" | "refused" | "invalid-output" | "provider-error" }`.
-- **Implementation** (SPRINT5.md "Backend deliverables" 1):
+- **Implementation** (SPRINT6.md "Backend deliverables" 1):
   - Official SDK, client created per request with the user's key. Never read a key from the environment.
   - Model `claude-opus-5-5`; set `output_config.effort` explicitly (`"high"`); don't send `thinking: { type: "disabled" }` or `budget_tokens` (both rejected by this model).
   - Structured output with the verdict schema (`output_config.format`), then validate with Zod anyway.
@@ -83,14 +83,14 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 
 **Acceptance:** with the SDK mocked, each error kind maps correctly, the retry happens exactly once, the key never appears in any log call, and a valid response yields typed verdicts with token usage.
 
-## S5-T3. Assessment route (backend, M)
+## S6-T3. Assessment route (backend, M)
 **Role:** Coder (backend)
-**Depends on:** S5-T1, S5-T2
+**Depends on:** S6-T1, S6-T2
 **Files:** new `app/api/pr/assessment/route.ts`; `lib/schemas/request.ts`; `lib/api.ts` and `lib/api-constants.ts` (allowlist, timeout); AGENTS.md Key Decision 10 and README "Design Decisions" (API)
 
 **Scope**
 - `POST /api/pr/assessment` with body `{ url, apiKey }`, validated with Zod:
-  1. Re-fetch the PR and rebuild the payload **on the server** with S5-T1. Never accept findings or snippets from the client; the security exclusions are only meaningful if the server applies them.
+  1. Re-fetch the PR and rebuild the payload **on the server** with S6-T1. Never accept findings or snippets from the client; the security exclusions are only meaningful if the server applies them.
   2. Private repo, nothing eligible, or over 10,000 characters → 400 with the reason, no call to Claude.
   3. Call Claude and return verdicts, token usage, model, prompt version and `assessedAt`. Nothing is saved.
 - Error mapping: `invalid-key` → 401, `rate-limited` → 429, `refused` → 422 with "Claude declined to assess this", `invalid-output` / `provider-error` → 502.
@@ -100,12 +100,12 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 
 **Acceptance:** with Claude mocked, the server ignores any findings in the request body; a private repo is rejected before any Claude call; each error maps to its status; no log call contains the key.
 
-## S5-T4. AI assessment section (frontend, M)
+## S6-T4. AI assessment section (frontend, M)
 **Role:** Coder (frontend)
-**Depends on:** S5-T1 (preview data); S5-T3 (sending)
+**Depends on:** S6-T1 (preview data); S6-T3 (sending)
 **Files:** new `app/components/ai-assessment/` (section, key form, finding lists, verdict badge); place the section below the deterministic results; verdict display next to findings in the existing finding views
 
-**Scope** (SPRINT5.md "Frontend" 1–4, using its exact wording)
+**Scope** (SPRINT6.md "Frontend" 1–4, using its exact wording)
 - **Always visible.** Shows why AI is offered and which findings in this PR will be sent, each with its reason.
 - **Two not-sent lists:** "For security reasons…" (with the JS/TS-only statement) and "Not sent, on purpose". Also show `possible-secret` and `excluded-file` outcomes with plain explanations.
 - **States:**
@@ -121,10 +121,10 @@ No database this sprint: the verdict cache is deferred (SPRINT5.md "Future deliv
 
 **Acceptance:** renders every state above against fixture data; the key isn't present in storage, the URL or the DOM after submit; works at mobile width.
 
-## S5-T5. Tests
+## S6-T5. Tests
 **Role:** Tester
 **Scope**
-- S5-T1: one test per filtering step and per outcome; the 10,000-character boundary (exactly at and one over); the preview never contains snippet text. **Security tests are the priority:** for each excluded rule (R003, R004, R006, R007, R009, R011), prove nothing from that file reaches the payload, even when an eligible rule fires on the same file.
-- S5-T2: error mapping, the single retry, no key in logs (spy on `console`), refusal handling.
-- S5-T3: server ignores client-sent findings; private repo rejected before any Claude call; status mapping.
-- S5-T4: every UI state; the key isn't in storage or the URL after submit.
+- S6-T1: one test per filtering step and per outcome; the 10,000-character boundary (exactly at and one over); the preview never contains snippet text. **Security tests are the priority:** for each excluded rule (R003, R004, R006, R007, R009, R011), prove nothing from that file reaches the payload, even when an eligible rule fires on the same file.
+- S6-T2: error mapping, the single retry, no key in logs (spy on `console`), refusal handling.
+- S6-T3: server ignores client-sent findings; private repo rejected before any Claude call; status mapping.
+- S6-T4: every UI state; the key isn't in storage or the URL after submit.

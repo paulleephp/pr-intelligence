@@ -41,7 +41,7 @@ Rules and severity are fully deterministic; no AI is involved in detection or se
 | GitHub Integration | Octokit |
 | Severity Rules | Deterministic rule table (`lib/diff/util/risk-scoring.ts`) |
 | Validation | Zod v4 schemas (`lib/schemas/`) for API responses and the `url` query param |
-| Database | None yet. A Supabase verdict cache is deferred until after Sprint 5 |
+| Database | None yet. A Supabase verdict cache is deferred until after Sprint 6 |
 | DB client / ORM | To be decided if the cache is picked up (recommended: Supabase JS client) |
 | Testing | Vitest (Playwright planned) |
 | CI/CD | GitHub Actions (planned, no workflows yet) |

@@ -9,8 +9,11 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 | **1** | Foundation: Next.js app, repo structure, Octokit integration | Done |
 | **2** | Diff parser, file categorization, change statistics, detection rules R001–R016, severity labels, summary/table/risk UI | Done |
 | **3** | Cleanup: changed-file pagination, Zod validation, R015 narrowed to unsafe `window.location` navigation, R005 regression tests, Affected Areas section | Done |
-| **4** | Blast-radius metrics (file count, directory spread, test-to-code ratio); R018 script permission change; line numbers and IDs on findings; R001/R014/R011 path matching | Done 2026-11-25 (`SPRINT4.md`; on `sprint-4`, not yet released to `staging`) |
-| **5** | Optional AI assessment of flagged JS/TS findings, bring your own key (Claude only), CI workflow first, no database | Planned (`SPRINT5.md`) |
+| **4** | Blast-radius metrics (file count, directory spread, test-to-code ratio); R018 script permission change; line numbers and IDs on findings; R001/R014/R011 path matching | Done and released 2026-11-25 (`SPRINT4.md`) |
+| **5** | Polish: R007 secret detection false alarms and slowdowns, app subtitle, screenshots, Pages site | In progress (`POLISH-TASKS.md`) |
+| **6** | Optional AI assessment of flagged JS/TS findings, bring your own key (Claude only), CI workflow first, no database | Planned (`SPRINT6.md`) |
+| **7** | Saved AI results (draft, not scoped) | Draft (`SPRINT7.md`) |
+| **8** | Release readiness: LLM response validation, docs, demos of failure cases, v1.0.0 (draft, not scoped) | Draft (`SPRINT8.md`) |
 | Later | See "Later" below | Unscheduled |
 
 ## Delivered
@@ -37,7 +40,7 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 
 **Sprint 4: blast radius and rules**
 - Blast-radius card: file count (excluding lockfiles, snapshots, assets and content-free files), directory spread across top-level modules, and a separate test-to-code signal, from the changed-file list with no extra GitHub requests
-- Line numbers and stable IDs on findings (the basis for Sprint 5's AI verdicts)
+- Line numbers and stable IDs on findings (the basis for Sprint 6's AI verdicts)
 - R018: a script whose only change is likely a permission change (e.g. `chmod +x`)
 - R001/R014 keyword matching extended to camelCase names and trailing digits, `cryptography` added; R011 covers `.tfvars`, `.tf.json` and Helm charts under `charts/<name>/`
 - `npm run check` (Biome lint, formatting and import order) with the codebase formatted to pass it; rule tests for R001, R011, R012, R014 and R018
@@ -45,13 +48,18 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 
 ## Planned
 
-**Sprint 5** (`SPRINT5.md`)
+**Sprint 5: polish** (`POLISH-TASKS.md`)
+- R007 (secrets): only keyword names assigned a literal are flagged (P1, done); narrower `ssh` keyword (P2); only the first 300 characters of a line are scanned, plus a JWT value rule (P5); named rules check the value (P6); the secret patterns commented and split by topic (P7)
+- App subtitle no longer claims AI or test suggestions (P3, done); new screenshots (P4)
+- GitHub Pages site, served from main `/docs` (hotfixes #36, #37, #39)
+
+**Sprint 6** (`SPRINT6.md`)
 - First: CI workflow (carried from Sprint 4): check, type check and tests on every PR
 - Optional AI assessment, bring your own key: Claude only, with the user's own Anthropic API key. Flagged JS/TS lines for findings that need judgment (auth checks, crypto, password hashing, unsafe sinks) are sent for a verdict, public repositories only, capped at 10,000 characters. Only JS/TS source code is ever sent; secrets, schema, production config, CI and infrastructure files never are, for security reasons. No database: nothing is cached
 
 ## Later
 
-- Verdict cache (Supabase), reconsidered only once Sprints 4 and 5 are done
+- Verdict cache (Supabase): see the Sprint 7 draft
 - Download the assessment JSON when it's over the 10,000-character send limit (up to 30,000 characters)
 - Review workflow that runs stages in order and retries from the failed stage (`LATER-REVIEW-WORKFLOW.md`, outdated draft)
 - Fix camelCase secret names (R007; see `docs/KNOWN-LIMITATIONS.md`)

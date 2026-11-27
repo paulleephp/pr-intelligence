@@ -1,6 +1,6 @@
 # Polish day: Task Briefs
 
-Small fixes found by the user before Sprint 5's AI work. Branch from `origin/sprint-5`; PRs target `sprint-5`. PR titles: `[<id>] P<n>: <summary>`.
+Sprint 5 (renumbered 2026-11-27: polish day grew into its own sprint). Small fixes found by the user before Sprint 6's AI work. Branch from `origin/sprint-5`; PRs target `sprint-5`. PR titles: `[<id>] P<n>: <summary>`.
 
 ## P1. R007 flags identifiers that only contain "password" (backend, S) — merged (#34, 2026-11-27)
 **Role:** Coder (backend)

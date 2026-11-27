@@ -1,6 +1,6 @@
 Sprint 4 — Blast-radius metrics, R018 and finding line numbers
 
-Status: scoped and briefed 2026-11-24; R018 added the same day. Deterministic work only. The AI assessment moved to Sprint 5 (`SPRINT5.md`) on 2026-11-24 to keep this sprint close to Sprint 3's size.
+Status: scoped and briefed 2026-11-24; R018 added the same day. Deterministic work only. The AI assessment moved to Sprint 6 (`SPRINT6.md`) on 2026-11-24 to keep this sprint close to Sprint 3's size.
 
 ## Dropped: impact analysis via code search or source download
 
@@ -94,7 +94,7 @@ interface BlastRadius {
 
 - **R017 "Exported function signature changed"**, JS/TS only, severity low (proposed). Flags a patch that removes an `export function name(…)` / `export const name = (…) =>` line and adds one with the same name but different parameters, or removes the export entirely.
 - Message: "Public API changed: code outside this PR that uses `name` may break." We can't see the callers (Key Decision 15), so the finding tells the reviewer to check.
-- Deterministic, so not sent to AI (Sprint 5).
+- Deterministic, so not sent to AI (Sprint 6).
 - Decided in S4-T5 (PR #23):
   - **Parameter lists are compared as text**, ignoring whitespace and a trailing comma. Renaming a parameter is flagged.
   - **An export that comes back without `export` is flagged as removed.**
@@ -127,20 +127,20 @@ interface BlastRadius {
   - An updated binary under `bin/` with no patch is flagged too (false positive).
   - Runnable files outside the listed extensions and folders aren't detected.
 - Rejected alternative: fetching the PR's full diff to read `old mode`/`new mode` lines. Exact, but it downloads the whole diff a second time and fails on very large PRs.
-- Deterministic; not sent to AI (Sprint 5).
+- Deterministic; not sent to AI (Sprint 6).
 
 ## Line numbers and stable IDs on findings (decided 2026-11-24)
 
 - Findings that come from a specific added line record that line's number in the new version of the file: R002 (added-line match), R005 (added or upgraded package line; removed-only changes have no line), R007, R009 (code match), R012, R013, R015, R016.
 - Every finding gets a stable ID: `<ruleId>:<filename>:<line>`, or `<ruleId>:<filename>` when there's no line.
-- Useful now (findings can link to the exact line on GitHub) and a prerequisite for Sprint 5, which sends the flagged line with context and matches AI verdicts back to findings by ID.
+- Useful now (findings can link to the exact line on GitHub) and a prerequisite for Sprint 6, which sends the flagged line with context and matches AI verdicts back to findings by ID.
 - Decided with the user 2026-11-24 (S4-T4, PR #21):
   - **Removed-line findings have no `line`.** R002 matching a removed line has no position in the new file, so its id is `R002:<file>`. R002 matching an added line gets a line.
   - **R007 and R009 (code match) also get lines.** One file can have up to four R007 findings, which would otherwise share an id.
   - **Ids live on `aggregate.findings` only** (the list the UI reads). Per-file secret, code and category reports carry `line` but not `id`.
   - The schema change is in `lib/schemas/common.ts` (`patternSchema`).
   - `DiffHunks.addedLineNumbers` is optional; findings from hand-built hunks without it have no line.
-  - **`id` stays optional** in the type and schema this sprint (making it required breaks existing tests). Making it required is a Sprint 5 prerequisite; see S5-T1.
+  - **`id` stays optional** in the type and schema this sprint (making it required breaks existing tests). Making it required is a Sprint 6 prerequisite; see S6-T1.
 
 ## Rule matching gaps: R001, R014, R011 (decided 2026-11-25)
 
@@ -169,6 +169,6 @@ Found by kimchi while writing the S4-T7 rule tests. User decisions:
 | Dockerfile edge cases (untested, low priority) | `Dockerfile.md` and `Dockerfile.json` count as Dockerfiles. The old `ENV KEY value` form and `*.Dockerfile` names aren't detected | Not decided |
 | camelCase secret names (deferred) | Some real camelCase names are missed and camelCase placeholders are flagged. See README → Known Limitations | Add tests with the fix |
 
-- ~~Add a GitHub Actions job~~: moved to Sprint 5 (S5-T0, its first task) by the user 2026-11-25. The prerequisite is done here: `npm run check` (PR #26) exits 0 on sprint-4 after #27.
+- ~~Add a GitHub Actions job~~: moved to Sprint 6 (S6-T0, its first task) by the user 2026-11-25. The prerequisite is done here: `npm run check` (PR #26) exits 0 on sprint-4 after #27.
 
 Task briefs: `SPRINT4-TASKS.md`.

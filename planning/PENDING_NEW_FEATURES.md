@@ -57,7 +57,7 @@ Suggested order: **U5 (routing) first**, because it reshapes the page the other 
   - The alternative, `react-markdown` + `remark-gfm` + our own reference-linking, is more work and will differ from GitHub in edge cases.
 - **Security:** rendering HTML means `dangerouslySetInnerHTML`, which our own R016 flags. Sanitize with DOMPurify (or equivalent) before rendering, even though GitHub already sanitizes. Links open in a new tab with `rel="noopener noreferrer"`.
 - **Images:** images uploaded to public repos load fine. Attachments in **private** repos may need GitHub authentication and show as broken. Show a fallback instead of a broken image.
-- The AI assessment (Sprint 5) doesn't use the PR description; only `body_html` is needed here.
+- The AI assessment (Sprint 6) doesn't use the PR description; only `body_html` is needed here.
 
 ## U7. Theme-derived color palette (S–M, frontend only)
 - Adopted 2026-11-24. Values and rules: STYLEGUIDE.md "Colors and brand"; visual reference: `docs/style-guide.html`.
