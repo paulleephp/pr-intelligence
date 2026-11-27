@@ -52,6 +52,22 @@ describe("R007 - catch-all *_secret rule (GENERIC_SECRET)", () => {
     expect(secretFindings(line)[0].message).toContain(name);
   });
 
+  // Regression (P1, PR #34): the rule now shares the keyword rules' assignment forms
+  // (rules.R007.keyword-decisions.test.ts). Before, only a bare `:` or `=` counted.
+  it.each([
+    ["a typed declaration", 'const client_secret: string = "abcd1234";'],
+    ["a bracket key", 'config["client_secret"] = "abcd1234";'],
+    ["??=", 'opts.client_secret ??= "abcd1234";'],
+  ])("flags %s: %s", (_, line) => {
+    expect(secretFindings(line).map((p) => p.message)).toEqual([
+      "Potential secret detected: GENERIC_SECRET",
+    ]);
+  });
+
+  it("doesn't flag an interface member typed as a union of literals", () => {
+    expect(secretFindings('  client_secret: "plain" | "hashed";')).toEqual([]);
+  });
+
   describe("does not flag", () => {
     it.each([
       ["a value shorter than 4 characters", 'secret = "abc"'],
