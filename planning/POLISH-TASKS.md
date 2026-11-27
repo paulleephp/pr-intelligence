@@ -70,18 +70,19 @@ Found in the Pages site PR #36. Two places: the landing subtitle in `app/page.ts
 ## P4. Retake the README and site screenshots (frontend, XS)
 After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitle and PR #26's false R007 "password" finding, which P1 fixes. Replace them in the README and the Pages site.
 
-## P5. Skip the secret scan on very long lines, and say so (backend + frontend, S) — approved for polish day
+## P5. Scan only the first 300 characters of very long lines, and say so (backend + frontend, S) — approved for polish day
 **Order:** after PR #34 merges (same files; #34 itself only takes banh-mi's one-token anchor fix). Separate PR from P2; whichever merges second rebases.
 **Why:** found by banh-mi while reviewing #34, and it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could stall the analysis request.
-**Decision (user):** don't change the regex engine. RE2 was considered and rejected as too much complexity for this project. Instead, the secret scan (R007) skips added lines over a length limit, and the UI tells the user which lines weren't checked.
+**Decision (user):** don't change the regex engine. RE2 was considered and rejected as too much complexity for this project. Instead, the secret scan (R007) checks only the first 300 characters of each added line, and the UI tells the user which lines were cut. A secret near the start of a long line is still caught, e.g. a Google Cloud service-account key (`"private_key": "-----BEGIN PRIVATE KEY-----\nMIIE…`, about 1,700 characters on one line).
 **Scope**
-- Backend (boba): in `lib/diff/secret.ts`, skip any added line longer than **300 characters** for all secret checks (user decision: past 300 characters a line is beyond human readability on screen, which is a problem of its own). Return the skipped lines per file (file and line numbers) in the analysis response, through the Zod schema. Other rules are unchanged.
-- Frontend (takoyaki, after the backend PR merges): a neutral note, in the same style as "Not scanned", e.g. "2 lines in `dist/app.min.js` are over 300 characters and weren't checked for secrets." Not a finding, and it doesn't change severity.
+- Backend (boba): in `lib/diff/secret.ts`, run all secret checks on only the first **300 characters** of each added line (user decision: past 300 characters a line is beyond human readability on screen, which is a problem of its own). A quoted value cut off at 300 has no closing quote: it must still count as a literal, so `token = "eyJhbGciOi…` (a long JWT) is still flagged. Return the cut lines per file (file and line numbers) in the analysis response, through the Zod schema. Other rules are unchanged.
+- Frontend (takoyaki, after the backend PR merges): a neutral note, in the same style as "Not scanned", e.g. "2 lines in `dist/app.min.js` are over 300 characters; only their first 300 characters were checked for secrets." Not a finding, and it doesn't change severity.
 **Acceptance**
-- An 8 KB and a 100 KB single added line of `a.a.a.…`, and of `password.password.…`, are skipped quickly (under 50 ms in total) and listed as skipped.
+- An 8 KB and a 100 KB single added line of `a.a.a.…`, and of `password.password.…`, are scanned quickly (under 50 ms in total) and listed as cut.
+- Still flagged on a line over 300 characters: a private key header in the first 300 characters (service-account JSON), and a keyword assigned a long quoted value (`token = "<500-character JWT>"`). Not flagged: a secret that starts after character 300.
 - A secret on a normal-length line is still flagged; all existing R007 tests pass.
 - `npm run check`, `npx tsc --noEmit` and tests pass.
-**Docs (mochi):** add the limit to `docs/KNOWN-LIMITATIONS.md` (R007): secrets on lines over the limit, e.g. in minified files, aren't detected.
+**Docs (mochi):** add the limit to `docs/KNOWN-LIMITATIONS.md` (R007): on lines over 300 characters, only the first 300 are checked, so a secret further along (e.g. in a minified file) isn't detected.
 **Tester follow-up:** kimchi adds the long-line cases as a regression test.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
