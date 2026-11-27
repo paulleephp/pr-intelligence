@@ -84,7 +84,7 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 - A secret on a normal-length line is still flagged; all existing R007 tests pass.
 - `npm run check`, `npx tsc --noEmit` and tests pass.
 **Docs (mochi):** add the limit to `docs/KNOWN-LIMITATIONS.md` (R007): on lines over 300 characters, only the first 300 are checked, so a secret further along (e.g. in a minified file) isn't detected.
-**Tester follow-up:** kimchi adds the long-line cases as a regression test.
+**Tester follow-up:** kimchi adds the long-line cases as a regression test. The test asserts a loose bound (under 1 s for the 8 KB and 100 KB lines together) so it isn't flaky on shared CI runners; the 50 ms target is checked by hand and the measured time reported in the PR. A regression still fails clearly: the old behaviour takes about 2 minutes on the 100 KB line.
 
 ## P6. Named R007 rules flag a name without checking the value (backend, S) — approved for polish day
 **Order:** after P5 (same file, `lib/diff/constants/secret.ts`). Found by banh-mi, confirmed on `sprint-5` at `bddf2ae`; older than #34, which doesn't touch it.
@@ -96,7 +96,7 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 - Not flagged: an empty value, `SLACK_BOT_TOKEN=` (decided, consistent with P1's 4-character minimum).
 - Existing R007 tests pass, except these, which pin the old name-only behaviour (found by banh-mi at `1d4a856`). List them in the PR for kimchi:
   - `rules.R007.formats.test.ts`: the `"SLACK_BOT_TOKEN with no value", "SLACK_BOT_TOKEN="` case expects an empty value to be flagged; it should expect no finding.
-  - `rules.R007.formats.test.ts` lines 22, 29, 36 and `rules.R007.skips.test.ts` line 74 (second finding) expect `const github_token = "abc";` to be flagged. `"abc"` is under the 4-character minimum; if those tests are about something else, use a 4+ character value.
+  - `rules.R007.formats.test.ts` lines 22, 29, 36 expect `const github_token = "abc";` to be flagged. `rules.R007.skips.test.ts` line 74 keeps passing (it expects `[]` on a test path), but with `"abc"` it would no longer test the skip. `"abc"` is under the 4-character minimum; if those tests are about something else, use a 4+ character value.
 - Why the tests missed it: no R007 test gave a named rule a non-literal value (`process.env.X`, `${{ secrets.X }}`, a call), so the tests matched the name-only behaviour.
 **Tester follow-up:** kimchi updates the tests above and adds the acceptance cases, including the non-literal values.
 
