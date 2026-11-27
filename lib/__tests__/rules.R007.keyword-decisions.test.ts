@@ -22,6 +22,12 @@ describe("R007 - keyword names: decided in P1", () => {
     expect(found(line)).toEqual([]);
   });
 
+  // A value followed by `|` is a union of literal types (NOT_UNION). A member typed as one literal
+  // (`passwordMode: "hashed";`) is still flagged: a known false alarm.
+  it('doesn\'t flag the interface member passwordMode: "plain" | "hashed";', () => {
+    expect(found('  passwordMode: "plain" | "hashed";', "src/types.ts")).toEqual([]);
+  });
+
   // Fixed during the #34 review: typed declarations, ["key"] and ??= / ||= weren't flagged in the
   // first version of the PR.
   it.each([
