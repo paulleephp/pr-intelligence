@@ -9,7 +9,10 @@ const nameRule = (name: string, core: string): SecretScan => ({
 
 const valueRule = (name: string, regex: RegExp): SecretScan => ({ name, kind: "value", regex });
 
-const SECRET_NAME = String.raw`\b(?:[\w.]*[_.])?secret(?:[_.][\w.]*)?["']?\s*(?::|=(?!=))\s*`;
+const TYPE_ANNOTATION = String.raw`(?:\??\s*:\s*[\w.$<>[\]]+|\s+[\w.]+)?`;
+const ASSIGNMENT = String.raw`["']?\]?\s*(?:${TYPE_ANNOTATION}\s*(?:\?\?|\|\||&&)?=(?!=)|:=?)\s*`;
+const NOT_UNION = String.raw`(?!\s*\|(?!\|))`;
+const SECRET_NAME = String.raw`\b(?:[\w.]*[_.])?secret(?:[_.][\w.]*)?${ASSIGNMENT}`;
 const NON_LITERAL_WORDS = String.raw`(?!(?:process\.env|env\(|true|false|null|undefined|string|number|boolean|await|new|yield|typeof|require|import)\b)`;
 const INTERPOLATION = String.raw`(?!["'\x60]?\$\{)`;
 const CONFIG_VARIABLE = String.raw`(?!["'\x60]?\$[{A-Za-z_])`;
@@ -28,7 +31,7 @@ const SECRET_FILE_KINDS = Object.keys(ASSIGNED_LITERAL) as SecretFileKind[];
 
 const literalAfter = (fileKind: SecretFileKind): string => {
   const { value, reference } = ASSIGNED_LITERAL[fileKind];
-  return `${reference}${NON_LITERAL_WORDS}(?:${value})`;
+  return `${reference}${NON_LITERAL_WORDS}(?:${value})${NOT_UNION}`;
 };
 
 const genericRule = (fileKind: SecretFileKind): SecretScan => ({
@@ -47,7 +50,7 @@ const keywordRules = (keywords: readonly string[]): SecretScan[] =>
       kind: "name" as const,
       fileKind,
       regex: new RegExp(
-        String.raw`(?<!\btype\s+)\b[\w.]*${escapeKeyword(keyword)}[\w.]*["']?\s*(?::=?|=(?!=))\s*${literalAfter(fileKind)}`,
+        String.raw`(?<!\btype\s+)(?<![\w.])[\w.]*${escapeKeyword(keyword)}[\w.]*${ASSIGNMENT}${literalAfter(fileKind)}`,
         "i",
       ),
     })),
