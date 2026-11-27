@@ -10,13 +10,15 @@ This tool automates the initial investigation by fetching PR metadata, analyzing
 
 Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing) and the test-to-code ratio in the blast-radius metrics.
 
-Files that aren't tied to one language are still analyzed:
+Files that aren't tied to one language get a **basic layer** of checks for DevOps and configuration anti-patterns:
 
 - **Configuration and infrastructure:** `.env*`, `Dockerfile`, `docker-compose*`, Terraform, Kubernetes, Helm
 - **CI/CD:** `.github/workflows/**`
 - **Database:** migrations and schema files
 - **Dependency manifests:** `package.json` (R005 also checks other ecosystems' manifests, but those checks aren't maintained)
 - **Secrets:** keys, tokens and passwords added to any text file
+
+These checks cover the common forms only, such as `KEY=value` in `.env`, `key: value` in YAML and the standard GitHub Actions layout. They stay because `.env` files, workflows and Kubernetes YAML are where JS/TS projects most often leak credentials. Unusual forms are listed in `docs/KNOWN-LIMITATIONS.md` rather than fixed.
 
 Files in other languages still count toward file and line statistics and path-based checks, such as a sensitive `auth/` folder.
 
@@ -127,7 +129,7 @@ This list is the authoritative one, including planned decisions. `docs/DESIGN-DE
 3. **Severity, not scores**: Each rule (R001–R016, R018; R017 was dropped and its ID retired) has a fixed severity (low/medium/high/critical). A file's severity and the overall PR label are the highest severity among their findings. The numeric risk score and confidence calculation were removed as arbitrary; whether scoring adds value will be revisited later.
 4. **Frontend Display**: Color-coded severity groups (critical/high/medium/low), no raw scores shown to users
 5. **Testing Strategy**: Full test coverage expected from Sprint 2 on, integration tests for UI
-6. **Language Scope**: JavaScript/TypeScript only for source-code analysis; language-agnostic config, infrastructure, migration, dependency and secret checks still apply to all files (see Language Scope)
+6. **Language Scope**: JavaScript/TypeScript only for source-code analysis; language-agnostic config, infrastructure, migration, dependency and secret checks still apply to all files (see Language Scope). **Basic layer policy (user, 2026-11-27):** the product is "focused on JS/TS, with a basic layer of checks for DevOps and config anti-patterns". Non-JS checks (YAML, shell, Dockerfile, `.env`, Terraform, Helm, …) cover the common forms only; their edge cases go to `docs/KNOWN-LIMITATIONS.md` by default instead of becoming fixes. A cheap fix for a frequent false alarm can still be approved case by case
 7. **Rule changes**: R003 flags migrations that are added as well as modified; R004 covers deleted migrations. R005 runs only on recognised dependency manifests (package.json, go.mod, Cargo.toml, requirements*.txt, etc., by basename) and inspects their patch for packages added, removed or upgraded. R008 (>500 lines) is not implemented but stays in the rule table
 8. **Severity display**: Critical is its own level in bright red; high is orange, medium yellow, low sky, none grey. In per-file counts, "None" means scanned with no findings; unscanned files without findings appear only in a separate "Not scanned" note
 9. **PR state**: `open`, `closed` or `merged`. GitHub reports merged PRs as `closed` plus a `merged` flag; the client maps that to `merged`

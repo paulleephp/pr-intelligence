@@ -55,7 +55,7 @@ Sprint 5 (renumbered 2026-11-27: polish day grew into its own sprint). Small fix
 
 ## P2. Narrow the `ssh` keyword in R007 (backend, S) — approved for polish day
 **Order:** after PR #34 merges (same files). boba may bundle it with P5 or do it right after; separate PRs are preferred.
-**Scope:** in `SSH_PATTERNS` (`lib/diff/constants/patterns.ts`), drop bare `ssh`, `ssh-rsa` and `ssh-ed25519` (public key prefixes); add `ssh_key`, `ssh_private_key`, `ssh_passphrase` and their joined camelCase forms `sshkey`, `sshprivatekey`, `sshpassphrase` (matched lowercased, as `apikey` already is, so `sshKey`, `sshPrivateKey`, `sshPassphrase` are flagged); keep `private_key`, `private.key`. Check whether `openssh` is still useful as a name keyword and say so in the PR. Private key blocks stay caught by the `PRIVATE_KEY` value rule.
+**Scope:** in `SSH_PATTERNS` (`lib/diff/constants/patterns.ts`), drop bare `ssh`, `ssh-rsa` and `ssh-ed25519` (public key prefixes); add `ssh_key`, `ssh_private_key`, `ssh_passphrase` and their joined camelCase forms `sshkey`, `sshprivatekey`, `sshpassphrase` (matched lowercased, as `apikey` already is, so `sshKey`, `sshPrivateKey`, `sshPassphrase` are flagged); keep `private_key`, `private.key`. Drop `openssh` too (user decision, via banh-mi: `opensshVersion = "9.6p1"` was critical; OpenSSH private keys are caught by `PRIVATE_KEY`). Private key blocks stay caught by the `PRIVATE_KEY` value rule.
 **Acceptance:**
 - Not flagged (each is critical today): `sshHost: "build.acme.io"`, `sshPort: "2222"`, `sshUser = "deploy"`; a public-key line ending in a single `=` (ssh-keygen's default 3072-bit RSA) in YAML or `.env`: `  - ssh-rsa AAAAB3…Q= deploy@host` in `cloud-init.yml`, `DEPLOY_PUBKEY=ssh-rsa AAAA…Q= deploy@host` in `.env`. (`sshHost: "example.com"` isn't a test of P2: the low-risk filter already skips "example".)
 - Existing test that changes: `findings.ids.test.ts:23` uses `const deploy_ssh = "abcd1234efgh5678";` as its SSH finding. List it for kimchi, who switches it to `ssh_private_key`.
@@ -102,7 +102,7 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 **Tester follow-up:** kimchi updates the tests above and adds the acceptance cases, including the non-literal values.
 
 ## P7. Comment the secret regexes (backend, S) — approved for polish day
-**Order:** last of the R007 items, after P9, so the comments describe the final patterns. Comments only: no behaviour change. The user finds these regex sections hard to follow.
+**Order:** last of the R007 items, after P11, so the comments describe the final patterns. Comments only: no behaviour change. The user finds these regex sections hard to follow.
 **Scope:** in `lib/diff/constants/secret.ts`, one short comment per named piece: the fragments `QUOTED_VALUE`, `SHELL_QUOTED_VALUE`, `BARE_VALUE`, `DOTTED_REFERENCE`, `INTERPOLATION`, `CONFIG_VARIABLE`, `SHELL_REFERENCE`, `NON_LITERAL_WORDS`, `ASSIGNMENT`, `TYPE_ANNOTATION`, `NOT_UNION`, and the builders and tables `ASSIGNED_LITERAL`, `literalAfter`, `nameRule`, `valueRule`, `genericRule`, `keywordRules`, `SECRET_VALUE_RULES`, `SECRET_NAME_RULES`, `KEYWORD_RULES`, `LOW_RISK_LINE` (plus anything P5 or P6 adds, such as the JWT rule and the 300-character cut).
 - Each comment says what the piece matches, with one line it matches and one it doesn't, taken from the existing R007 tests (name the test file), so the examples are real and checked.
 - A short header comment on how the pieces fit together:
@@ -135,6 +135,30 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 - kimchi applied the split temporarily and 0 of 1187 backend tests failed, so no tests change. `npm run check`, `npx tsc --noEmit` and tests pass.
 **Docs (mochi):** remove "Secret names written in camelCase" from KNOWN-LIMITATIONS once merged.
 **Tester follow-up:** kimchi adds the acceptance cases.
+
+## P10. Remaining `ssh_key` false alarms (backend, S) — approved
+**Decision (user, via banh-mi).** **Order:** after P2 (#41) merges, before P7.
+**Scope**
+- For the SSH keywords only, the keyword must end the name. Today it may be followed by more name characters, so `SSH_KEY_PATH=/home/u/.ssh/id_rsa` (`.env`), `const SSH_KEYGEN_ARGS = "-t ed25519";`, `const sshKeys = "…"` and `sshKeyPath = "~/.ssh/id_rsa"` are flagged. Accepted trade-off: a name like `SSH_KEY_B64` is no longer flagged.
+- Skip values that start with a public-key prefix (`ssh-rsa`, `ssh-ed25519`, `ecdsa-sha2-`), so `ssh_key: "ssh-ed25519 AAAA… u@h"` isn't flagged.
+**Acceptance**
+- Not flagged: the five lines above.
+- Still flagged: `ssh_key = "…"`, `sshKey: "…"`, `SSH_PRIVATE_KEY=…`, `deploy_ssh_key = "…"`, `sshPassphrase = "…"` (each with a 4+ character literal).
+- `npm run check`, `npx tsc --noEmit` and tests pass; list any test that pins the old behaviour for kimchi.
+**Docs (mochi):** add `SSH_KEY_B64`-style names to KNOWN-LIMITATIONS.
+
+## P11. YAML template placeholders aren't secrets (backend, XS) — approved
+**Decision (user, via banh-mi).** **Order:** before P7.
+**Problem:** `password: "{{ .Values.password }}"` in a Helm or Ansible file is critical today, for every keyword rule. `${…}` and `$VAR` are already excluded; `{{ … }}` isn't.
+**Fix:** add values that start with `{{`, quoted or not, to the reference exclusion for `config` files, next to `CONFIG_VARIABLE`.
+**Acceptance**
+- Not flagged: `password: "{{ .Values.password }}"`, `password: {{ vault_db_password }}`.
+- Still flagged: `password: "abc{{x}}"` and plain literals.
+- `npm run check`, `npx tsc --noEmit` and tests pass.
+
+**Boba's queue:** P8, P5, P6, P9, P10, P11, then P7 last.
+
+**Scope policy (user, via banh-mi, 2026-11-27):** the product is "focused on JS/TS, with a basic layer of checks for DevOps and config anti-patterns". Non-JS checks cover the common forms only; their edge cases go to KNOWN-LIMITATIONS by default, and a cheap fix for a frequent false alarm can still be approved case by case (as P11 was). Recorded in AGENTS.md (Language Scope, Key Decision 6) and README.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.

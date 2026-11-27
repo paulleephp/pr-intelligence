@@ -11,7 +11,7 @@
 
 Reviewing a pull request requires understanding of what changed, which parts of the codebase are affected, what tests are relevant, and whether there are potential risks. This is especially challenging if the codebase has long history and/or a lot of inner dependencies.
 
-This tool automates the initial investigation. Paste a GitHub PR URL and it fetches the PR, analyzes the diff with deterministic rules (no AI), and shows what changed, which areas it touches, and which changes deserve a closer look, with a severity for each finding.
+This tool automates the initial investigation. Paste a GitHub PR URL and it fetches the PR, analyzes the diff with deterministic rules (no AI), and shows what changed, which areas it touches, and which changes deserve a closer look, with a severity for each finding. It focuses on JavaScript and TypeScript, with a basic layer of checks for DevOps and configuration anti-patterns.
 
 ## Features
 
@@ -54,13 +54,15 @@ Rules and severities are defined in `lib/diff/util/risk-scoring.ts`.
 
 Source-code analysis covers **JavaScript and TypeScript only** (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing).
 
-Files that aren't tied to one language are still analyzed:
+Files that aren't tied to one language get a **basic layer** of checks for DevOps and configuration anti-patterns:
 
 - **Configuration and infrastructure:** `.env*`, `Dockerfile`, `docker-compose*`, Terraform, Kubernetes, Helm
 - **CI/CD:** `.github/workflows/**`
 - **Database:** migrations and schema files
 - **Dependency manifests:** `package.json` (R005 also checks other ecosystems' manifests, but those checks aren't maintained)
 - **Secrets:** keys, tokens and passwords added to any text file
+
+These checks cover the common forms only, such as `KEY=value` in `.env`, `key: value` in YAML and the standard GitHub Actions layout. They stay because `.env` files, workflows and Kubernetes YAML are where JS/TS projects most often leak credentials. Unusual forms are listed in [docs/KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md) rather than fixed.
 
 Files in other languages still count toward file and line statistics and path-based checks, such as a sensitive `auth/` folder.
 
