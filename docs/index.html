@@ -38,10 +38,10 @@
   <section id="problem">
     <h2>The problem</h2>
     <p>Reviewing a pull request requires understanding of what changed, which parts of the codebase are affected, what tests are relevant, and whether there are potential risks. This is especially challenging if the codebase has long history and/or a lot of inner dependencies.</p>
-    <p>This tool automates the initial investigation. Paste a GitHub PR URL and it fetches the PR, analyzes the diff with deterministic rules (no AI), and shows what changed, which areas it touches, and which changes deserve a closer look, with a severity for each finding.</p>
+    <p>This tool automates the initial investigation. Paste a GitHub PR URL and it fetches the PR, analyzes the diff with deterministic rules (no AI), and shows what changed, which areas it touches, and which changes deserve a closer look, with a severity for each finding. It focuses on JavaScript and TypeScript, with a basic layer of checks for DevOps and configuration anti-patterns.</p>
     <div class="shots">
-      <img src="https://github.com/user-attachments/assets/6dbe69eb-49c6-4461-8e53-ae00fdddb22b" width="1258" height="856" alt="PR Intelligence report: PR overview, overall severity, findings and files by severity, and blast radius" loading="lazy">
-      <img src="https://github.com/user-attachments/assets/139219f1-4bd6-489f-a8c4-6388a39da90c" width="1268" height="883" alt="PR Intelligence report: changed files table, affected areas and findings grouped by severity" loading="lazy">
+      <img src="screenshots/analysis-overview.png" width="1260" height="860" alt="PR Intelligence analyzing a pull request: the PR overview, overall severity, severity distribution and blast radius" loading="lazy">
+      <img src="screenshots/analysis-details.png" width="1260" height="880" alt="PR Intelligence report details: files by severity, line changes, affected areas, risk indicators and the changed files table" loading="lazy">
     </div>
   </section>
 
@@ -88,7 +88,7 @@
   <section id="scope">
     <h2>Language scope</h2>
     <p>Source-code analysis covers <strong>JavaScript and TypeScript only</strong> (<code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>, <code>.mts</code>, <code>.cts</code>). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing).</p>
-    <p>Files that aren't tied to one language are still analyzed:</p>
+    <p>Files that aren't tied to one language get a <strong>basic layer</strong> of checks for DevOps and configuration anti-patterns:</p>
     <ul>
       <li><strong>Configuration and infrastructure:</strong> <code>.env*</code>, <code>Dockerfile</code>, <code>docker-compose*</code>, Terraform, Kubernetes, Helm</li>
       <li><strong>CI/CD:</strong> <code>.github/workflows/**</code></li>
@@ -96,6 +96,7 @@
       <li><strong>Dependency manifests:</strong> <code>package.json</code> (R005 also checks other ecosystems' manifests, but those checks aren't maintained)</li>
       <li><strong>Secrets:</strong> keys, tokens and passwords added to any text file</li>
     </ul>
+    <p>These checks cover the common forms only, such as <code>KEY=value</code> in <code>.env</code>, <code>key: value</code> in YAML and the standard GitHub Actions layout. They stay because <code>.env</code> files, workflows and Kubernetes YAML are where JS/TS projects most often leak credentials. Unusual forms are listed in <a href="https://github.com/paulleephp/pr-intelligence/blob/main/docs/KNOWN-LIMITATIONS.md">docs/KNOWN-LIMITATIONS.md</a> rather than fixed.</p>
     <p>Files in other languages still count toward file and line statistics and path-based checks, such as a sensitive <code>auth/</code> folder.</p>
   </section>
 
