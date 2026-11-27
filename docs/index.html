@@ -136,94 +136,13 @@
 
   <section id="limitations">
     <h2>Known limitations</h2>
-    <p>What each rule misses or may wrongly flag. Open a topic for details.</p>
-    <div class="stack">
-      <details>
-        <summary>Languages: JavaScript and TypeScript only</summary>
-        <p>The rules target JavaScript and TypeScript projects. Supporting other languages (Python, PHP, Go, Ruby, Rust, Java/Kotlin, etc.) is out of scope.</p>
-        <ul>
-          <li><strong>Still in scope:</strong> the non-code files a JS/TS project normally contains, such as <code>package.json</code>, <code>.env*</code>, YAML, shell scripts, <code>.envrc</code>, Dockerfiles, Terraform and CI workflows.</li>
-          <li><strong>Existing checks for other languages aren't maintained.</strong> Some are already in place, for example Python, Go, Rust, Ruby and Gradle dependency manifests (R005), Alembic migrations (R003/R004) and <code>os.environ</code> in secret detection (R007). They still run for now, but gaps in them won't be fixed. If one of them ever needs its tests changed, for any reason, the check and its tests are removed instead of updated.</li>
-          <li><strong>Behaviour is designed around JS/TS rules.</strong> Where languages disagree (for example, whether <code>"$name"</code> inside double quotes reads a variable), the JS/TS meaning wins.</li>
-        </ul>
-      </details>
-      <details>
-        <summary>Changed files capped at 3,000 per PR</summary>
-        <p><code>fetchChangedFiles</code> in <code>lib/github/client.ts</code> pages through <code>pulls.listFiles</code> 100 files at a time, but GitHub returns at most 3,000 files per PR. Files beyond that aren't analyzed, and the report doesn't warn that the list was cut short.</p>
-      </details>
-      <details>
-        <summary>Unsafe navigation (R015)</summary>
-        <p>R015 matches text on changed lines only, so:</p>
-        <ol>
-          <li><strong>It can't tell whether a value was validated.</strong> Any dynamic value assigned to <code>window.location</code> is flagged, even if it was checked against an allowlist elsewhere.</li>
-          <li><strong>A bare <code>location = url</code> isn't flagged.</strong> Only <code>window.</code>/<code>document.</code>/<code>self.</code>/<code>top.</code>/<code>parent.</code>/<code>globalThis.</code> prefixed locations, <code>location.href =</code>, and <code>location.assign()</code>/<code>location.replace()</code> are matched.</li>
-        </ol>
-      </details>
-      <details>
-        <summary>Dependency detection (R005)</summary>
-        <p>R005 only checks files whose basename is a recognised dependency manifest (<code>package.json</code>, <code>go.mod</code>, <code>Cargo.toml</code>, <code>Gemfile</code>, <code>build.gradle(.kts)</code>, <code>pyproject.toml</code>, <code>Pipfile</code>, <code>requirements*.txt</code> / <code>requirements*.in</code>). Known gaps:</p>
-        <ol>
-          <li><strong>Requirements files kept in a folder aren't detected.</strong> Files such as <code>requirements/base.txt</code> or <code>requirements/dev.txt</code> aren't recognised, because only the filename is checked, not the folder.</li>
-          <li><strong>Some ecosystems aren't supported.</strong> <code>setup.py</code>, <code>setup.cfg</code>, <code>composer.json</code> (PHP) and <code>pom.xml</code> (Maven) aren't in the manifest list. The detector also has no line patterns for their dependency formats, so supporting them needs both a filename entry and new patterns.</li>
-        </ol>
-        <p>Both gaps are in non-JS ecosystems, so they're out of scope (see "Languages: JavaScript and TypeScript only" above) and won't be fixed. Lockfiles (<code>package-lock.json</code>, etc.) are excluded on purpose.</p>
-      </details>
-      <details>
-        <summary>Secret names written in camelCase (R007)</summary>
-        <p>Secret detection was built around <code>snake_case</code>, <code>SCREAMING_SNAKE</code> and <code>dot.case</code> names. camelCase names are handled inconsistently, in both directions:</p>
-        <ol>
-          <li><strong>Some real camelCase secrets are missed.</strong> The named rules and the catch-all <code>*_secret</code> rule need a <code>_</code> or <code>.</code> between words, so <code>githubToken</code>, <code>clientSecret</code>, <code>jwtSecret</code>, <code>stripeSecretKey</code> and <code>slackBotToken</code> aren't flagged. <code>github_token</code>, <code>client_secret</code> and the rest are. (<code>apiKey</code> and <code>dbPassword</code> <em>are</em> flagged, because those scans match a substring.)</li>
-          <li><strong>camelCase placeholders aren't recognised.</strong> The test/mock/demo/example/todo/fixme filter needs the word to stand alone, so <code>mock_api_key = "…"</code> and <code>test_password = "…"</code> are skipped, but <code>mockApiKey = "…"</code> and <code>testPassword = "…"</code> are flagged.</li>
-        </ol>
-        <p>Token values with a known format (<code>ghp_…</code>, <code>AKIA…</code>, <code>xoxb-…</code>, <code>sk_live_…</code>, private key headers) are detected whatever the variable is called.</p>
-        <p>Not fixed yet. The fix (splitting names on camelCase boundaries as well as <code>_</code> and <code>.</code>) touches every name rule and the placeholder filter.</p>
-      </details>
-      <details>
-        <summary>Path keywords (R001, R014) and infrastructure files (R011)</summary>
-        <ul>
-          <li><strong>R001 and R014 match keywords at the start of a path segment.</strong> A keyword counts when it's followed by a separator (<code>/</code>, <code>.</code>, <code>-</code>, <code>_</code>), a digit (<code>oauth2/</code>), or a camelCase capital (<code>AuthProvider.tsx</code>). A lowercase letter doesn't count, so <code>author.ts</code> and <code>authority/</code> aren't flagged.</li>
-          <li><strong>Missed:</strong> a keyword in the middle of a name (<code>useAuth.ts</code>); an all-caps acronym followed by a word (<code>SSOConfig.ts</code>, <code>AUTHProvider.ts</code>); <code>AccessControl.ts</code>, because the keyword is <code>access-control</code>.</li>
-          <li><strong>Flagged, though not always sensitive:</strong> camelCase names that start with a keyword, such as <code>sessionStorage.ts</code> or <code>loginIcon.svg</code>. This matches how <code>session-storage.ts</code> was already treated.</li>
-          <li><strong>R011</strong> covers Terraform (<code>.tf</code>, <code>.tfvars</code>, <code>.tf.json</code>) and Helm charts, including charts under <code>charts/&lt;name&gt;/</code> (<code>Chart.yaml</code>, <code>values*.yaml</code>/<code>.yml</code>, and <code>yaml</code>, <code>yml</code>, <code>tpl</code> and <code>txt</code> files under <code>templates/</code>). Terraform's <code>*.tfvars.json</code> isn't matched.</li>
-        </ul>
-      </details>
-      <details>
-        <summary>Script permission changes (R018)</summary>
-        <ul>
-          <li>GitHub's changed-file data doesn't include file modes, so R018 is a heuristic: it flags a modified file with no diff and 0 lines changed that looks runnable. That means a shell-script extension (<code>sh</code>, <code>bash</code>, <code>zsh</code>, <code>ksh</code>, <code>fish</code>, <code>command</code>) or any file under <code>bin/</code>, <code>scripts/</code>, <code>.husky/</code> or <code>.githooks/</code>. The message always says "likely".</li>
-          <li><strong>Missed:</strong> permission changes on other files, such as an extensionless script outside those folders, or a <code>.js</code> or <code>.py</code> file made executable. A permission change made together with a content change is also missed.</li>
-          <li><strong>Possible false positive:</strong> a file under those folders that GitHub reports without a diff for another reason, such as an updated binary under <code>bin/</code>.</li>
-        </ul>
-      </details>
-      <details>
-        <summary>Blast radius</summary>
-        <ul>
-          <li><strong>Files that don't count:</strong> lockfiles, test snapshots, images and other assets, and files GitHub sends without a diff and with 0 lines changed: binaries, empty files, renames with no content change, and permission-only changes. A text file whose diff is too large to show still counts.</li>
-          <li><strong>Renamed files</strong> that also change content count only under their new path, because GitHub doesn't send the old path. A move between modules counts once.</li>
-          <li><strong>Modules</strong> are detected by folder convention (<code>src/auth</code>, <code>packages/ui</code>, …). Repos with an unusual layout may show more or fewer modules than a person would.</li>
-        </ul>
-      </details>
-    </div>
+    <p>The analysis works from the PR diff only, with no repository download, so some changes are missed or flagged wrongly. The main ones: source-code rules cover JavaScript and TypeScript only, only the first 3,000 files of a PR are analyzed, and path-based rules match by folder and file-name conventions.</p>
+    <p>Full list, rule by rule: <a href="https://github.com/paulleephp/pr-intelligence/blob/main/docs/KNOWN-LIMITATIONS.md">docs/KNOWN-LIMITATIONS.md</a>.</p>
   </section>
 
   <section id="decisions">
     <h2>Design decisions</h2>
-    <details>
-      <summary>Why the app works the way it does</summary>
-      <ul>
-        <li><strong>Diffs come from the Git patch</strong> GitHub returns for each changed file. Repository source is never downloaded.</li>
-        <li><strong>Binary files aren't scanned.</strong> They're listed as "Not scanned", never as clean. Path-based rules (e.g. R004 on a deleted migration) still run on them.</li>
-        <li><strong>Severity display:</strong> critical is its own level in bright red; high is orange, medium yellow, low sky, none grey. "None" means scanned with no findings.</li>
-        <li><strong>PR state:</strong> <code>open</code>, <code>closed</code> or <code>merged</code>. GitHub reports merged PRs as <code>closed</code> plus a <code>merged</code> flag; the app shows them as merged.</li>
-        <li><strong>R003 and R004:</strong> R003 flags migrations that are added as well as modified; R004 covers deleted migrations.</li>
-        <li><strong>R005</strong> runs only on recognised dependency manifests (by filename) and inspects their patch for packages added, removed or upgraded. Lockfiles are excluded.</li>
-        <li><strong>R015</strong> flags only writes to <code>window.location</code> (assignment, <code>.href =</code>, <code>.assign()</code>, <code>.replace()</code>) whose value isn't a plain relative or <code>http(s)</code> string literal, because a <code>javascript:</code> URL can run script in the user's browser. Code-execution sinks such as <code>eval()</code> are R016.</li>
-        <li><strong>Affected Areas:</strong> a file can appear in more than one area. Its badge in an area shows the highest severity among that area's findings, not the file's overall severity.</li>
-        <li><strong>Blast radius isn't risk:</strong> a large refactor can be wide but harmless, so blast radius has its own card with neutral colors and doesn't affect severity. There is no numeric score.</li>
-        <li><strong>No impact analysis:</strong> the app doesn't try to find other files affected by a PR or suggest tests outside it. GitHub code search is rate-limited to about 10 searches per minute, and downloading or cloning the repository doesn't fit the app's serverless hosting.</li>
-        <li><strong>API:</strong> <code>GET /api/pr?url=&lt;PR URL&gt;</code> returns PR metadata and <code>GET /api/pr/analysis?url=&lt;PR URL&gt;</code> returns changed files, summary and findings. Errors return <code>{ error }</code> with an HTTP status. Responses are validated with Zod before the UI uses them.</li>
-      </ul>
-    </details>
+    <p>Deterministic rules with fixed severities and no score, no AI in the core analysis, and no repository download. The reasons behind these and other choices: <a href="https://github.com/paulleephp/pr-intelligence/blob/main/docs/DESIGN-DECISIONS.md">docs/DESIGN-DECISIONS.md</a>.</p>
   </section>
 </main>
 

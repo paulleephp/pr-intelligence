@@ -362,33 +362,6 @@ td.id {
   background: var(--low-mark);
 }
 
-details {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0 18px;
-}
-
-details[open] {
-  padding-bottom: 18px;
-}
-
-summary {
-  cursor: pointer;
-  padding: 14px 0;
-  font-weight: 600;
-  color: var(--fg);
-}
-
-details > :not(summary) + * {
-  margin-top: 12px;
-}
-
-.stack {
-  display: grid;
-  gap: 10px;
-}
-
 footer {
   margin-top: 64px;
   padding: 24px 0 40px;
