@@ -37,5 +37,4 @@ export const SSH_PATTERNS = [
   "sshpassphrase",
   "private_key",
   "private.key",
-  "openssh",
 ];
