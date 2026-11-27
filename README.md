@@ -15,33 +15,21 @@ This tool automates the initial investigation. Paste a GitHub PR URL and it fetc
 - **Affected Areas:** changed files grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security), with each file's severity within that area.
 - **Findings by severity:** findings grouped into critical, high, medium and low, each showing the file and what was detected.
 
-## Rules
+## What it checks
 
-Each rule has a fixed severity. A file's severity, and the PR's, is the highest severity among its findings. There is no numeric score.
+Each check has a fixed severity. A file's severity, and the PR's, is the highest severity among its findings. There is no numeric score.
 
-| Rule | Flags | Severity | Applies to |
-|------|-------|----------|------------|
-| R001 | Authentication files modified | medium | Any file (path) |
-| R002 | Authentication check potentially removed | high | JS/TS |
-| R003 | Database migration added or modified | medium | Any file (path) |
-| R004 | Database migration deleted | high | Any file (path) |
-| R005 | Dependencies added, removed or upgraded | low | Dependency manifests |
-| R006 | CI/CD workflow modified | medium | Any file (path) |
-| R007 | Private key, API key or password pattern | critical | Any text file |
-| R008 | More than 500 lines changed | medium | Not implemented |
-| R009 | Production configuration modified | high | Any file |
-| R010 | Test files removed | medium | Any file (path) |
-| R011 | Infrastructure changes | medium | Any file (path) |
-| R012 | Crypto algorithm changed | high | JS/TS |
-| R013 | Password hashing changed | high | JS/TS |
-| R014 | Security-sensitive path modified | high | Any file (path) |
-| R015 | Unsafe navigation: `window.location` assigned from a dynamic value | high | JS/TS |
-| R016 | Dangerous code execution or DOM sink introduced | high | JS/TS |
-| R018 | Script changed with no content change: likely a permission change (e.g. `chmod +x`) | medium | Scripts (path) |
+- **Secrets** (critical): private keys, API keys and passwords added to any text file
+- **Risky code changes** (high, JavaScript and TypeScript): an authentication check removed, a crypto algorithm or password hashing changed, unsafe `window.location` navigation, dangerous code execution or DOM sinks
+- **Sensitive paths:** security-sensitive folders and files (high), authentication files (medium)
+- **Database migrations:** deleted (high), added or modified (medium)
+- **Production configuration** changed (high)
+- **CI/CD workflows and infrastructure** (Terraform, Kubernetes, Helm, Docker) changed (medium)
+- **Test files removed** (medium)
+- **Scripts changed with no content change**, likely a permission change such as `chmod +x` (medium)
+- **Dependencies** added, removed or upgraded (low)
 
-R017 was dropped before release and its ID is retired.
-
-Rules and severities are defined in `lib/diff/util/risk-scoring.ts`.
+Each finding in the app shows a rule ID. The full rule table: [docs/RULES.md](docs/RULES.md).
 
 ## Language Scope
 
@@ -52,7 +40,7 @@ Files that aren't tied to one language are still analyzed:
 - **Configuration and infrastructure:** `.env*`, `Dockerfile`, `docker-compose*`, Terraform, Kubernetes, Helm
 - **CI/CD:** `.github/workflows/**`
 - **Database:** migrations and schema files
-- **Dependency manifests:** `package.json` (R005 also checks other ecosystems' manifests, but those checks aren't maintained)
+- **Dependency manifests:** `package.json` (other ecosystems' manifests are also checked, but those checks aren't maintained)
 - **Secrets:** keys, tokens and passwords added to any text file
 
 Files in other languages still count toward file and line statistics and path-based checks, such as a sensitive `auth/` folder.

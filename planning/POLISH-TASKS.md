@@ -64,8 +64,8 @@ Small fixes found by the user before Sprint 5's AI work. Branch from `origin/spr
 **Accepted risk (user):** an SSH secret under a name with none of the specific keywords (e.g. `sshSecret`) may be missed; rare, judged very low risk. Note it in KNOWN-LIMITATIONS.
 **Tester follow-up:** kimchi adds the acceptance cases.
 
-## P3. App subtitle still says "AI-powered analysis" (frontend, XS)
-Found in the Pages site PR #36. Two places: the landing subtitle in `app/page.tsx` and the page `description` metadata in `app/layout.tsx`. The landing subtitle reads "…surface relevant tests with AI-powered analysis". The app doesn't use AI and doesn't suggest tests (Key Decision 15). Suggested: "Automate PR review investigation. Understand what changed, where it spreads, and which changes deserve a closer look." Final wording to be confirmed with the user.
+## P3. App subtitle still says "AI-powered analysis" (frontend, XS) — approved
+Found in the Pages site PR #36. Two places: the landing subtitle in `app/page.tsx` and the page `description` metadata in `app/layout.tsx`. The landing subtitle reads "…surface relevant tests with AI-powered analysis". The app doesn't use AI and doesn't suggest tests (Key Decision 15). Suggested: "Automate PR review investigation. Understand what changed, where it spreads, and which changes deserve a closer look." Wording approved by the user. Change both places to exactly that sentence. Branch `polish-p3` from `origin/sprint-5`; title `[takoyaki] P3: subtitle no longer claims AI or test suggestions`.
 
 ## P4. Retake the README and site screenshots (frontend, XS)
 After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitle and PR #26's false R007 "password" finding, which P1 fixes. Replace them in the README and the Pages site.
@@ -75,8 +75,8 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 **Why:** found by banh-mi while reviewing #34, and it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could stall the analysis request.
 **Decision (user):** don't change the regex engine. RE2 was considered and rejected as too much complexity for this project. Instead, the secret scan (R007) skips added lines over a length limit, and the UI tells the user which lines weren't checked.
 **Scope**
-- Backend (boba): in `lib/diff/secret.ts`, skip any added line longer than **2,000 characters** for all secret checks. Measure the worst case at the limit (`a.a.a.…`, `password.password.…`) and lower the limit if one line takes more than about 50 ms. Return the skipped lines per file (file and line numbers) in the analysis response, through the Zod schema. Other rules are unchanged.
-- Frontend (takoyaki, after the backend PR merges): a neutral note, in the same style as "Not scanned", e.g. "2 lines in `dist/app.min.js` are over 2,000 characters and weren't checked for secrets." Not a finding, and it doesn't change severity.
+- Backend (boba): in `lib/diff/secret.ts`, skip any added line longer than **300 characters** for all secret checks (user decision: past 300 characters a line is beyond human readability on screen, which is a problem of its own). Return the skipped lines per file (file and line numbers) in the analysis response, through the Zod schema. Other rules are unchanged.
+- Frontend (takoyaki, after the backend PR merges): a neutral note, in the same style as "Not scanned", e.g. "2 lines in `dist/app.min.js` are over 300 characters and weren't checked for secrets." Not a finding, and it doesn't change severity.
 **Acceptance**
 - An 8 KB and a 100 KB single added line of `a.a.a.…`, and of `password.password.…`, are skipped quickly (under 50 ms in total) and listed as skipped.
 - A secret on a normal-length line is still flagged; all existing R007 tests pass.
