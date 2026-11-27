@@ -93,8 +93,12 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 **Acceptance**
 - Not flagged: `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` in `.github/workflows/ci.yml`; `const github_token = process.env.GITHUB_TOKEN;` and `const jwt_secret = getSecret();` in `src/a.ts`.
 - Flagged (critical): `jwt_secret = "abcd1234"` in code, `AWS_SECRET=abcd1234` in `.env`, `GITHUB_TOKEN: ghs_…` (value rule).
-- Existing R007 tests pass; if any pin the old over-matching, list them in the PR for kimchi.
-**Tester follow-up:** kimchi adds the acceptance cases.
+- Not flagged: an empty value, `SLACK_BOT_TOKEN=` (decided, consistent with P1's 4-character minimum).
+- Existing R007 tests pass, except these, which pin the old name-only behaviour (found by banh-mi at `1d4a856`). List them in the PR for kimchi:
+  - `rules.R007.formats.test.ts`: the `"SLACK_BOT_TOKEN with no value", "SLACK_BOT_TOKEN="` case expects an empty value to be flagged; it should expect no finding.
+  - `rules.R007.formats.test.ts` lines 22, 29, 36 and `rules.R007.skips.test.ts` line 74 (second finding) expect `const github_token = "abc";` to be flagged. `"abc"` is under the 4-character minimum; if those tests are about something else, use a 4+ character value.
+- Why the tests missed it: no R007 test gave a named rule a non-literal value (`process.env.X`, `${{ secrets.X }}`, a call), so the tests matched the name-only behaviour.
+**Tester follow-up:** kimchi updates the tests above and adds the acceptance cases, including the non-literal values.
 
 ## P7. Comment the secret regexes (backend, S) — approved for polish day
 **Order:** last of the R007 items, after P6, so the comments describe the final patterns. Comments only: no behaviour change. The user finds these regex sections hard to follow.
@@ -104,8 +108,8 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
   - **Value rules** recognise a secret by its format (`ghp_`, `AKIA`, a private key header, a JWT). They run first and skip the example/mock/test filter.
   - **Name rules** recognise a secret by the name it's assigned to: the named rules, the generic `*_secret` rule and the keyword rules.
   - **`ASSIGNED_LITERAL`** decides what counts as a hard-coded value per file kind: in `code` the value must be quoted; in `config` (`.env`, YAML and similar) and `shell` it may also be unquoted. `$VAR`, `${…}`, `process.env` and calls never count.
-- Keep the file under Biome's 10 KB limit; if comments push it over, split by topic (e.g. fragments vs rule tables) rather than raising the limit.
-**Acceptance:** every built regex is byte-identical before and after (banh-mi checks); `npm run check`, `npx tsc --noEmit` and tests pass.
+- **Split `secret.ts` by topic as part of this task (user decision)**, e.g. value fragments, rule builders, rule tables, each file under Biome's 10 KB limit. Update imports; no re-export shims unless needed.
+**Acceptance:** every built regex is byte-identical before and after the split and comments (banh-mi checks); `npm run check`, `npx tsc --noEmit` and tests pass.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
