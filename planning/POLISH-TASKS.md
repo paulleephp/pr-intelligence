@@ -45,12 +45,11 @@ Small fixes found by the user before Sprint 5's AI work. Branch from `origin/spr
 - Optional: interface members (`passwordMode: "plain" | "hashed"`) are still flagged; `["password"]: "…"` keys and `??=` / `||=` are no longer flagged.
 - Confirmed unchanged: quoted keys in JSON and JS, YAML `password: value`, unquoted values in `.env`, shell and config files are still flagged.
 
-**Docs (mochi):** update `docs/KNOWN-LIMITATIONS.md` (R007) once merged. Besides the decided list above, add these no-longer-flagged forms (lowest priority for the user, since the focus is JS/TS):
-- Dockerfile's legacy `ENV DB_PASSWORD value` (space, no `=`)
-- a hyphen after the keyword, e.g. YAML `password-prod: value` (plain `password: value` is still flagged)
-- an unquoted shell flag followed by more arguments, e.g. `mysql --password=hunter2xyz db` (an unquoted value must end the line so `x=foo bar` isn't read as a secret; a quoted value is still flagged)
-- if optional item 2 isn't done: `["password"]: "…"` keys and `??=` / `||=`
-- if the typed-declaration must-fix is somehow left out: typed declarations
+**Re-review (banh-mi, approved at `d6f0ee2`):** all four items fixed (typed declarations, the anchor fix, `["password"]` keys, `??=` / `||=`). The generic `*_secret` rule is slower on long lines repeating `_secret` (28 s per 8 KB line vs 7.8 s at base); P5's 300-character limit bounds it. Optional, not done: `export X="…" | tee` is no longer flagged.
+
+**Docs (mochi):** update `docs/KNOWN-LIMITATIONS.md` (R007) once merged. Besides the decided list above:
+- No longer flagged: Dockerfile's legacy `ENV DB_PASSWORD value` (space, no `=`); a hyphen after the keyword (YAML `password-prod: value`; plain `password: value` is still flagged); an unquoted shell flag followed by more arguments (`mysql --password=hunter2xyz db`; a quoted value is still flagged); `export X="…" | tee`; a union type in the annotation (`const password: string | undefined = "…"`).
+- Rare false alarms from the Go `name type =` form: `case "password": label = "Password";` and comments such as `// the password field = "…"`.
 
 **Tester follow-up:** kimchi adds the acceptance cases to the R007 tests.
 
@@ -73,7 +72,7 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 ## P5. Scan only the first 300 characters of very long lines, and say so (backend + frontend, S) — approved for polish day
 **Order:** after PR #34 merges (same files; #34 itself only takes banh-mi's one-token anchor fix). Separate PR from P2; whichever merges second rebases.
 **Why:** found by banh-mi while reviewing #34, and it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could stall the analysis request.
-**Decision (user):** don't change the regex engine. RE2 was considered and rejected as too much complexity for this project. Instead, the secret scan (R007) checks only the first 300 characters of each added line, and the UI tells the user which lines were cut. A secret near the start of a long line is still caught, e.g. a Google Cloud service-account key (`"private_key": "-----BEGIN PRIVATE KEY-----\nMIIE…`, about 1,700 characters on one line).
+**Decision (user):** don't change the regex engine. The 300-character limit applies to every secret check, known-token formats (`ghp_`, `AKIA`, private key header) included: "let's not bother with unreadable long lines". RE2 was considered and rejected as too much complexity for this project. Instead, the secret scan (R007) checks only the first 300 characters of each added line, and the UI tells the user which lines were cut. A secret near the start of a long line is still caught, e.g. a Google Cloud service-account key (`"private_key": "-----BEGIN PRIVATE KEY-----\nMIIE…`, about 1,700 characters on one line).
 **Scope**
 - Backend (boba): in `lib/diff/secret.ts`, run all secret checks on only the first **300 characters** of each added line (user decision: past 300 characters a line is beyond human readability on screen, which is a problem of its own). A quoted value cut off at 300 has no closing quote: it must still count as a literal, so `token = "eyJhbGciOi…` (a long JWT) is still flagged. Return the cut lines per file (file and line numbers) in the analysis response, through the Zod schema. Other rules are unchanged.
 - Frontend (takoyaki, after the backend PR merges): a neutral note, in the same style as "Not scanned", e.g. "2 lines in `dist/app.min.js` are over 300 characters; only their first 300 characters were checked for secrets." Not a finding, and it doesn't change severity.
