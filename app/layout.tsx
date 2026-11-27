@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PR Intelligence - GitHub Pull Request Analyzer",
   description:
-    "Automate PR review investigation with AI-powered analysis. Understand what changed, identify risks, and surface relevant tests.",
+    "Automate PR review investigation. Understand what changed, where it spreads, and which changes deserve a closer look.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
