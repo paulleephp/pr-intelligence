@@ -70,22 +70,19 @@ Found in the Pages site PR #36. Two places: the landing subtitle in `app/page.ts
 ## P4. Retake the README and site screenshots (frontend, XS)
 After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitle and PR #26's false R007 "password" finding, which P1 fixes. Replace them in the README and the Pages site.
 
-## P5. Run the R007 secret scan on RE2 (backend, M) — approved for polish day
+## P5. Skip the secret scan on very long lines, and say so (backend + frontend, S) — approved for polish day
 **Order:** after PR #34 merges (same files; #34 itself only takes banh-mi's one-token anchor fix). Separate PR from P2; whichever merges second rebases.
 **Why:** found by banh-mi while reviewing #34, and it predates that PR. The generic `*_secret` name rules in `SECRET_NAME_RULES` (`lib/diff/constants/secret.ts`) backtrack quadratically on long dotted lines: about 0.9 s per 8 KB line. A PR with many such lines could stall the analysis request.
-**Decision (user, via banh-mi):** move the secret scan to RE2, Google's linear-time regex engine, instead of capping line length.
+**Decision (user):** don't change the regex engine. RE2 was considered and rejected as too much complexity for this project. Instead, the secret scan (R007) skips added lines over a length limit, and the UI tells the user which lines weren't checked.
 **Scope**
-- Only the R007 secret scan (`lib/diff/secret.ts` and its constants). Path rules (R001, R011, R014) keep JS regex: they also use lookarounds, but run on short paths.
-- RE2 has no lookarounds and no backreferences, so this is a rework of the patterns, not a drop-in swap. To rewrite as plain alternation or as a second check in code:
-  - backreferences: `\1` closing quote in `QUOTED_VALUE` and `SHELL_QUOTED_VALUE`
-  - lookbehinds: `(?<!\btype\s+)`, and `(?<![\w.])` from #34's anchor fix
-  - lookaheads: `NON_LITERAL_WORDS`, `INTERPOLATION`, `CONFIG_VARIABLE`, `SHELL_REFERENCE`, the `(?=…)` in `BARE_VALUE`, and `=(?!=)`
-- **Package and deploy:** the npm `re2` package is a native C++ addon. Confirm it builds and runs on Vercel, and compare a WebAssembly build such as `re2-wasm`, which needs no native build. Say which one you picked and why in the PR. It's a new runtime dependency: tell mochi so README's tech stack can list it.
+- Backend (boba): in `lib/diff/secret.ts`, skip any added line longer than **2,000 characters** for all secret checks. Measure the worst case at the limit (`a.a.a.…`, `password.password.…`) and lower the limit if one line takes more than about 50 ms. Return the skipped lines per file (file and line numbers) in the analysis response, through the Zod schema. Other rules are unchanged.
+- Frontend (takoyaki, after the backend PR merges): a neutral note, in the same style as "Not scanned", e.g. "2 lines in `dist/app.min.js` are over 2,000 characters and weren't checked for secrets." Not a finding, and it doesn't change severity.
 **Acceptance**
-- An 8 KB and a 100 KB single added line of `a.a.a.…`, and of `password.password.…`, each scan in linear time (under 50 ms).
-- Every existing R007 test passes, plus kimchi's P1 cases if merged by then. No behaviour change otherwise; list any intended difference in the PR.
-- `npm run check`, `npx tsc --noEmit` and tests pass; the Vercel preview deploy succeeds.
-**Tester follow-up:** kimchi adds the long-line timing cases as a regression test.
+- An 8 KB and a 100 KB single added line of `a.a.a.…`, and of `password.password.…`, are skipped quickly (under 50 ms in total) and listed as skipped.
+- A secret on a normal-length line is still flagged; all existing R007 tests pass.
+- `npm run check`, `npx tsc --noEmit` and tests pass.
+**Docs (mochi):** add the limit to `docs/KNOWN-LIMITATIONS.md` (R007): secrets on lines over the limit, e.g. in minified files, aren't detected.
+**Tester follow-up:** kimchi adds the long-line cases as a regression test.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
