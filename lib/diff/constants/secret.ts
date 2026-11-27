@@ -9,7 +9,7 @@ const nameRule = (name: string, core: string): SecretScan => ({
 
 const valueRule = (name: string, regex: RegExp): SecretScan => ({ name, kind: "value", regex });
 
-const TYPE_ANNOTATION = String.raw`(?:\??\s*:\s*[\w.$<>[\]]+|\s+[\w.]+)?`;
+const TYPE_ANNOTATION = String.raw`(?:\??\s*:\s*[\w.$<>[\]]+)?`;
 const ASSIGNMENT = String.raw`["']?\]?\s*(?:${TYPE_ANNOTATION}\s*(?:\?\?|\|\||&&)?=(?!=)|:=?)\s*`;
 const NOT_UNION = String.raw`(?!\s*\|(?!\|))`;
 const SECRET_NAME = String.raw`\b(?:[\w.]*[_.])?secret(?:[_.][\w.]*)?${ASSIGNMENT}`;
