@@ -102,7 +102,7 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 **Tester follow-up:** kimchi updates the tests above and adds the acceptance cases, including the non-literal values.
 
 ## P7. Comment the secret regexes (backend, S) — approved for polish day
-**Order:** last of the R007 items, after P6, so the comments describe the final patterns. Comments only: no behaviour change. The user finds these regex sections hard to follow.
+**Order:** last of the R007 items, after P9, so the comments describe the final patterns. Comments only: no behaviour change. The user finds these regex sections hard to follow.
 **Scope:** in `lib/diff/constants/secret.ts`, one short comment per named piece: the fragments `QUOTED_VALUE`, `SHELL_QUOTED_VALUE`, `BARE_VALUE`, `DOTTED_REFERENCE`, `INTERPOLATION`, `CONFIG_VARIABLE`, `SHELL_REFERENCE`, `NON_LITERAL_WORDS`, `ASSIGNMENT`, `TYPE_ANNOTATION`, `NOT_UNION`, and the builders and tables `ASSIGNED_LITERAL`, `literalAfter`, `nameRule`, `valueRule`, `genericRule`, `keywordRules`, `SECRET_VALUE_RULES`, `SECRET_NAME_RULES`, `KEYWORD_RULES`, `LOW_RISK_LINE` (plus anything P5 or P6 adds, such as the JWT rule and the 300-character cut).
 - Each comment says what the piece matches, with one line it matches and one it doesn't, taken from the existing R007 tests (name the test file), so the examples are real and checked.
 - A short header comment on how the pieces fit together:
