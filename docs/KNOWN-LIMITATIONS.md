@@ -59,7 +59,10 @@ A password, API key or SSH keyword is reported only when it's part of a key or v
 - A hyphen right after the keyword, e.g. YAML `password-prod: value` (plain `password: value` is caught)
 - An unquoted shell flag followed by more arguments, e.g. `mysql --password=hunter2xyz db`. An unquoted value must end the line, so that `x=foo bar` isn't read as a secret. A quoted value is caught
 
-**Rare false alarms:** a keyword name followed by a word and `=` reads like Go's `var name type = …`, so `case "password": label = "Password";` and comments such as `// the password field = "…"` can be flagged.
+**False alarms:**
+- **UI text and other harmless strings under a keyword name.** A name plus a literal is exactly what the rule looks for, so these are flagged as critical: `const PASSWORD_TOO_SHORT = "Password must be at least 8 characters";`, `"passwordRequired": "Password is required"` in a translation file, `const passwordResetPath = "/account/reset";`, `passwordLabel: "Your password"`, and template strings that don't start with `${`, such as `` `Bearer ${apiKey}` ``. This is common in frontend code.
+- **A TypeScript member typed as a single string literal,** such as `passwordMode: "hashed";`, reads like an object value. A union of literals (`"plain" | "hashed"`) isn't flagged.
+- **Rare:** a keyword name followed by a word and `=` reads like Go's `var name type = …`, so `case "password": label = "Password";` and comments such as `// the password field = "…"` can be flagged.
 ### Path keywords (R001, R014) and infrastructure files (R011)
 
 - **R001 and R014 match keywords at the start of a path segment.** A keyword counts when it's followed by a separator (`/`, `.`, `-`, `_`), a digit (`oauth2/`), or a camelCase capital (`AuthProvider.tsx`). A lowercase letter doesn't count, so `author.ts` and `authority/` aren't flagged.

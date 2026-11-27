@@ -38,11 +38,11 @@ Sprint 5 (renumbered 2026-11-27: polish day grew into its own sprint). Small fix
 - A name right after `type ` is skipped, so type aliases such as `type PasswordMode = "plain" | "hashed"` aren't flagged.
 - Go's `:=` counts as an assignment.
 - No longer flagged (for KNOWN-LIMITATIONS): a bare public-key line (`ssh-rsa AAAA…`; private key blocks are still caught), unquoted numbers in code (`password = 12345678`), and values under 4 characters.
-- Bare `ssh` is too broad (`sshHost: "example.com"` is still critical): approved as P2.
+- Bare `ssh` is too broad (`sshHost: "build.acme.io"` is still critical): approved as P2.
 
 **Review (banh-mi, changes requested, approved by the user):**
 - Must fix: typed declarations (`const password: string = "…"`) are no longer flagged; a regex backtracking slowdown (one crafted 8 KB line: 8.2 s vs 0.2 s before; one-token fix verified by banh-mi).
-- Optional: interface members (`passwordMode: "plain" | "hashed"`) are still flagged; `["password"]: "…"` keys and `??=` / `||=` are no longer flagged.
+- Optional: interface members (`passwordMode: "plain" | "hashed"`) were flagged; `["password"]: "…"` keys and `??=` / `||=` were no longer flagged. All fixed in the merged PR: a union of literals is skipped by `NOT_UNION` (kimchi pins it in the P1 tests). A single-literal member (`passwordMode: "hashed";`) is still flagged, since a regex can't tell it from an object value.
 - Confirmed unchanged: quoted keys in JSON and JS, YAML `password: value`, unquoted values in `.env`, shell and config files are still flagged.
 
 **Re-review (banh-mi, approved at `d6f0ee2`):** all four items fixed (typed declarations, the anchor fix, `["password"]` keys, `??=` / `||=`). The generic `*_secret` rule is slower on long lines repeating `_secret` (28 s per 8 KB line vs 7.8 s at base); P5's 300-character limit bounds it. Optional, not done: `export X="…" | tee` is no longer flagged.
@@ -57,7 +57,8 @@ Sprint 5 (renumbered 2026-11-27: polish day grew into its own sprint). Small fix
 **Order:** after PR #34 merges (same files). boba may bundle it with P5 or do it right after; separate PRs are preferred.
 **Scope:** in `SSH_PATTERNS` (`lib/diff/constants/patterns.ts`), drop bare `ssh`, `ssh-rsa` and `ssh-ed25519` (public key prefixes); add `ssh_key`, `ssh_private_key`, `ssh_passphrase` and their joined camelCase forms `sshkey`, `sshprivatekey`, `sshpassphrase` (matched lowercased, as `apikey` already is, so `sshKey`, `sshPrivateKey`, `sshPassphrase` are flagged); keep `private_key`, `private.key`. Check whether `openssh` is still useful as a name keyword and say so in the PR. Private key blocks stay caught by the `PRIVATE_KEY` value rule.
 **Acceptance:**
-- Not flagged: `sshHost: "example.com"`, `sshPort: "2222"`, `sshUser = "deploy"`, `deployKey: "ssh-ed25519 AAAA…"`.
+- Not flagged (each is critical today): `sshHost: "build.acme.io"`, `sshPort: "2222"`, `sshUser = "deploy"`; a public-key line ending in a single `=` (ssh-keygen's default 3072-bit RSA) in YAML or `.env`: `  - ssh-rsa AAAAB3…Q= deploy@host` in `cloud-init.yml`, `DEPLOY_PUBKEY=ssh-rsa AAAA…Q= deploy@host` in `.env`. (`sshHost: "example.com"` isn't a test of P2: the low-risk filter already skips "example".)
+- Existing test that changes: `findings.ids.test.ts:23` uses `const deploy_ssh = "abcd1234efgh5678";` as its SSH finding. List it for kimchi, who switches it to `ssh_private_key`.
 - Flagged (critical): `ssh_private_key = "…"`, `sshKey: "…"`, `sshPrivateKey = "…"`, `SSH_PASSPHRASE=hunter2xyz` in `.env`, any `-----BEGIN OPENSSH PRIVATE KEY-----` line.
 - `npm run check`, `npx tsc --noEmit` and tests pass.
 **Accepted risk (user):** an SSH secret under a name with none of the specific keywords (e.g. `sshSecret`) may be missed; rare, judged very low risk. Note it in KNOWN-LIMITATIONS.
