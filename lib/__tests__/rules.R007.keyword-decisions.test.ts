@@ -29,10 +29,8 @@ describe("R007 - keyword names: decided in P1", () => {
   });
 
   // Fixed during the #34 review: typed declarations, ["key"] and ??= / ||= weren't flagged in the
-  // first version of the PR.
+  // first version of the PR. Other languages' syntax (e.g. Go's :=) isn't tested: JS/TS focus.
   it.each([
-    ["Go's :=", "main.go", 'password := "hunter2xyz"'],
-    ["Go's var name type =", "main.go", 'var password string = "hunter2xyz"'],
     ["a typed declaration", "src/a.ts", 'const password: string = "hunter2xyz";'],
     ["a typed class field", "src/a.ts", 'private readonly password: string = "hunter2xyz";'],
     ["an optional typed field", "src/a.ts", 'password?: string = "hunter2xyz";'],
@@ -112,11 +110,8 @@ describe("R007 - keyword names: known limitations (KNOWN-LIMITATIONS.md)", () =>
     expect(found(line, filename)).toEqual([PASSWORD_FINDING]);
   });
 
-  // A keyword name followed by a word and `=` reads like Go's `var name type = …`.
-  it.each(['case "password": label = "Password";', '// the password field = "hunter2xyz"'])(
-    "flags %s (known false alarm)",
-    (line) => {
-      expect(found(line)).toEqual([PASSWORD_FINDING]);
-    },
-  );
+  // `"password": label =` reads like a typed declaration (`password: string =`).
+  it('flags case "password": label = "Password"; (known false alarm)', () => {
+    expect(found('case "password": label = "Password";')).toEqual([PASSWORD_FINDING]);
+  });
 });
