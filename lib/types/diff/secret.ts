@@ -6,6 +6,8 @@ export type GetHandlerFn = ({ filename, pattern }: Arg) => Pattern;
 
 export type SecretScanType = "secret" | "apiKey" | "password" | "ssh";
 
+export type KeywordScanType = Exclude<SecretScanType, "secret">;
+
 export type DetectRiskyPatternsArg = {
   hunks: DiffHunks;
   filename: string;

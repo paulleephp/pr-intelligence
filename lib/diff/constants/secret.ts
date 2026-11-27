@@ -1,4 +1,5 @@
-import type { SecretFileKind, SecretScan } from "@/types/diff/secret";
+import type { KeywordScanType, SecretFileKind, SecretScan } from "@/types/diff/secret";
+import { API_KEY_PATTERNS, PASSWORD_PATTERNS, SSH_PATTERNS } from "./patterns";
 
 const nameRule = (name: string, core: string): SecretScan => ({
   name,
@@ -8,7 +9,10 @@ const nameRule = (name: string, core: string): SecretScan => ({
 
 const valueRule = (name: string, regex: RegExp): SecretScan => ({ name, kind: "value", regex });
 
-const SECRET_NAME = String.raw`\b(?:[\w.]*[_.])?secret(?:[_.][\w.]*)?["']?\s*(?::|=(?!=))\s*`;
+const TYPE_ANNOTATION = String.raw`(?:\??\s*:\s*[\w.$<>[\]]+|\s+[\w.]+)?`;
+const ASSIGNMENT = String.raw`["']?\]?\s*(?:${TYPE_ANNOTATION}\s*(?:\?\?|\|\||&&)?=(?!=)|:=?)\s*`;
+const NOT_UNION = String.raw`(?!\s*\|(?!\|))`;
+const SECRET_NAME = String.raw`\b(?:[\w.]*[_.])?secret(?:[_.][\w.]*)?${ASSIGNMENT}`;
 const NON_LITERAL_WORDS = String.raw`(?!(?:process\.env|env\(|true|false|null|undefined|string|number|boolean|await|new|yield|typeof|require|import)\b)`;
 const INTERPOLATION = String.raw`(?!["'\x60]?\$\{)`;
 const CONFIG_VARIABLE = String.raw`(?!["'\x60]?\$[{A-Za-z_])`;
@@ -18,12 +22,39 @@ const SHELL_QUOTED_VALUE = String.raw`(["'])[^"'\x60\n]{4,}\1`;
 const DOTTED_REFERENCE = String.raw`[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+(?:[\s,;#}]|$)`;
 const BARE_VALUE = String.raw`(?!${DOTTED_REFERENCE})[^\s"'\x60,;(){}]{4,}(?=\s*(?:$|[,;#}]|\/\/))`;
 
-const genericRule = (fileKind: SecretFileKind, value: string, reference: string): SecretScan => ({
+const ASSIGNED_LITERAL: Record<SecretFileKind, { value: string; reference: string }> = {
+  code: { value: QUOTED_VALUE, reference: INTERPOLATION },
+  config: { value: `${QUOTED_VALUE}|${BARE_VALUE}`, reference: CONFIG_VARIABLE },
+  shell: { value: `${SHELL_QUOTED_VALUE}|${BARE_VALUE}`, reference: SHELL_REFERENCE },
+};
+const SECRET_FILE_KINDS = Object.keys(ASSIGNED_LITERAL) as SecretFileKind[];
+
+const literalAfter = (fileKind: SecretFileKind): string => {
+  const { value, reference } = ASSIGNED_LITERAL[fileKind];
+  return `${reference}${NON_LITERAL_WORDS}(?:${value})${NOT_UNION}`;
+};
+
+const genericRule = (fileKind: SecretFileKind): SecretScan => ({
   name: "GENERIC_SECRET",
   kind: "name",
   fileKind,
-  regex: new RegExp(`${SECRET_NAME}${reference}${NON_LITERAL_WORDS}(?:${value})`, "i"),
+  regex: new RegExp(`${SECRET_NAME}${literalAfter(fileKind)}`, "i"),
 });
+
+const escapeKeyword = (keyword: string): string => keyword.replaceAll(".", String.raw`\.`);
+
+const keywordRules = (keywords: readonly string[]): SecretScan[] =>
+  keywords.flatMap((keyword) =>
+    SECRET_FILE_KINDS.map((fileKind) => ({
+      name: keyword,
+      kind: "name" as const,
+      fileKind,
+      regex: new RegExp(
+        String.raw`(?<!\btype\s+)(?<![\w.])[\w.]*${escapeKeyword(keyword)}[\w.]*${ASSIGNMENT}${literalAfter(fileKind)}`,
+        "i",
+      ),
+    })),
+  );
 
 export const CONFIG_FILE_PATTERNS: readonly RegExp[] = [
   /^\.env(?:\.[\w-]+)?$/,
@@ -50,9 +81,13 @@ export const SECRET_NAME_RULES: readonly SecretScan[] = [
   nameRule("STRIPE_SECRET", String.raw`stripe[_.](?:secret|api[_.]key)`),
   nameRule("SLACK_TOKEN", String.raw`slack[_.](?:\w+[_.])?token`),
   nameRule("JWT_SECRET", String.raw`jwt[_.]secret`),
-  genericRule("code", QUOTED_VALUE, INTERPOLATION),
-  genericRule("config", `${QUOTED_VALUE}|${BARE_VALUE}`, CONFIG_VARIABLE),
-  genericRule("shell", `${SHELL_QUOTED_VALUE}|${BARE_VALUE}`, SHELL_REFERENCE),
+  ...SECRET_FILE_KINDS.map(genericRule),
 ];
+
+export const KEYWORD_RULES: Record<KeywordScanType, readonly SecretScan[]> = {
+  ssh: keywordRules(SSH_PATTERNS),
+  password: keywordRules(PASSWORD_PATTERNS),
+  apiKey: keywordRules(API_KEY_PATTERNS),
+};
 
 export const LOW_RISK_LINE = /(?<![a-z])(?:todo|fixme|example|demo|mock|test)(?![a-z])/i;
