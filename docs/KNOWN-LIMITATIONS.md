@@ -62,7 +62,7 @@ A password, API key or SSH keyword is reported only when it's part of a key or v
 **False alarms:**
 - **UI text and other harmless strings under a keyword name.** A name plus a literal is exactly what the rule looks for, so these are flagged as critical: `const PASSWORD_TOO_SHORT = "Password must be at least 8 characters";`, `"passwordRequired": "Password is required"` in a translation file, `const passwordResetPath = "/account/reset";`, `passwordLabel: "Your password"`, and template strings that don't start with `${`, such as `` `Bearer ${apiKey}` ``. This is common in frontend code.
 - **A TypeScript member typed as a single string literal,** such as `passwordMode: "hashed";`, reads like an object value. A union of literals (`"plain" | "hashed"`) isn't flagged.
-- **Rare:** a keyword name followed by a word and `=` reads like Go's `var name type = …`, so `case "password": label = "Password";` and comments such as `// the password field = "…"` can be flagged.
+- **Rare:** `case "password": label = "Password";` reads like a TypeScript annotation (`password: string = …`) and is flagged. A comment such as `// the password field = "…"` is also flagged, because it reads like Go's `var name type = …`.
 ### Path keywords (R001, R014) and infrastructure files (R011)
 
 - **R001 and R014 match keywords at the start of a path segment.** A keyword counts when it's followed by a separator (`/`, `.`, `-`, `_`), a digit (`oauth2/`), or a camelCase capital (`AuthProvider.tsx`). A lowercase letter doesn't count, so `author.ts` and `authority/` aren't flagged.

@@ -36,7 +36,7 @@ Sprint 5 (renumbered 2026-11-27: polish day grew into its own sprint). Small fix
 
 **Decided in PR #34:**
 - A name right after `type ` is skipped, so type aliases such as `type PasswordMode = "plain" | "hashed"` aren't flagged.
-- Go's `:=` counts as an assignment.
+- Go's `:=` counts as an assignment. (Later, user decision: JS/TS syntax only, Go isn't a focus, so the Go cases aren't pinned in the P1 tests, #40.)
 - No longer flagged (for KNOWN-LIMITATIONS): a bare public-key line (`ssh-rsa AAAA…`; private key blocks are still caught), unquoted numbers in code (`password = 12345678`), and values under 4 characters.
 - Bare `ssh` is too broad (`sshHost: "build.acme.io"` is still critical): approved as P2.
 
@@ -111,6 +111,16 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
   - **`ASSIGNED_LITERAL`** decides what counts as a hard-coded value per file kind: in `code` the value must be quoted; in `config` (`.env`, YAML and similar) and `shell` it may also be unquoted. `$VAR`, `${…}`, `process.env` and calls never count.
 - **Split `secret.ts` by topic as part of this task (user decision)**, e.g. value fragments, rule builders, rule tables, each file under Biome's 10 KB limit. Update imports; no re-export shims unless needed.
 **Acceptance:** every built regex is byte-identical before and after the split and comments (banh-mi checks); `npm run check`, `npx tsc --noEmit` and tests pass.
+
+## P8. Drop the Go `name type =` form from R007 (backend, XS) — approved
+**Decision (user, via kimchi):** R007 targets JS/TS syntax; Go isn't a focus.
+**Order:** boba does it after P2 (#41), before P5. P8 changes `lib/diff/constants/secret.ts` and P2 changes `patterns.ts`, so they don't conflict; P5, P6 and P7 rebase on top.
+**Scope:** remove the Go `name type =` branch from `TYPE_ANNOTATION` (`|\s+[\w.]+`). Nothing else changes.
+**Effect:** fixes the comment false alarm `// the password field = "…"` (and the single-`=` public-key line, which P2 also fixes). Accepted cost: Go `var password string = "…"` is no longer flagged.
+**Acceptance:** kimchi ran the backend suite with the branch removed: 0 of 1187 tests fail, so no tests change. `npm run check`, `npx tsc --noEmit` and tests pass.
+**Docs (mochi):** drop the comment example from the R007 false alarms in KNOWN-LIMITATIONS; add that Go's `var name type = "…"` isn't flagged.
+
+**Also decided (user, via kimchi), no task:** UI text under a keyword name, the single-literal interface member and lines over 300 characters are accepted as known limitations.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
