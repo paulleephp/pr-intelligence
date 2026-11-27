@@ -49,7 +49,7 @@ Sprint progress and plans. Specs and task briefs for each sprint live next to th
 ## Planned
 
 **Sprint 5: polish** (`POLISH-TASKS.md`)
-- R007 (secrets): only keyword names assigned a literal are flagged (P1, done); narrower `ssh` keyword (P2); only the first 300 characters of a line are scanned, plus a JWT value rule (P5); named rules check the value (P6); the secret patterns commented and split by topic (P7)
+- R007 (secrets): only keyword names assigned a literal are flagged (P1, done); narrower `ssh` keyword (P2); only the first 300 characters of a line are scanned, plus a JWT value rule (P5); named rules check the value (P6); Go `name type =` form dropped (P8); camelCase names matched (P9); the secret patterns commented and split by topic (P7)
 - App subtitle no longer claims AI or test suggestions (P3, done); new screenshots (P4)
 - GitHub Pages site, served from main `/docs` (hotfixes #36, #37, #39)
 

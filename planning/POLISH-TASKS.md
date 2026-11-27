@@ -97,7 +97,7 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 - Not flagged: an empty value, `SLACK_BOT_TOKEN=` (decided, consistent with P1's 4-character minimum).
 - Existing R007 tests pass, except these, which pin the old name-only behaviour (found by banh-mi at `1d4a856`). List them in the PR for kimchi:
   - `rules.R007.formats.test.ts`: the `"SLACK_BOT_TOKEN with no value", "SLACK_BOT_TOKEN="` case expects an empty value to be flagged; it should expect no finding.
-  - `rules.R007.formats.test.ts` lines 22, 29, 36 expect `const github_token = "abc";` to be flagged. `rules.R007.skips.test.ts` line 74 keeps passing (it expects `[]` on a test path), but with `"abc"` it would no longer test the skip. `"abc"` is under the 4-character minimum; if those tests are about something else, use a 4+ character value.
+  - `rules.R007.formats.test.ts` lines 22, 29, 36 expect `const github_token = "abc";` to be flagged. `rules.R007.skips.test.ts` line 12 (`const latestToken = { github_token: 'abc' }`, expects 1 finding) fails for the same reason. Line 74 keeps passing (it expects `[]` on a test path), but with `"abc"` it would no longer test the skip. `"abc"` is under the 4-character minimum; if those tests are about something else, use a 4+ character value.
 - Why the tests missed it: no R007 test gave a named rule a non-literal value (`process.env.X`, `${{ secrets.X }}`, a call), so the tests matched the name-only behaviour.
 **Tester follow-up:** kimchi updates the tests above and adds the acceptance cases, including the non-literal values.
 
@@ -121,6 +121,20 @@ After P1 and P3 merge. The current screenshots show the old "AI-powered" subtitl
 **Docs (mochi):** drop the comment example from the R007 false alarms in KNOWN-LIMITATIONS; add that Go's `var name type = "…"` isn't flagged.
 
 **Also decided (user, via kimchi), no task:** UI text under a keyword name, the single-literal interface member and lines over 300 characters are accepted as known limitations.
+
+## P9. Match camelCase secret names in R007 (backend, S) — approved
+**Decision (user, via kimchi):** fix the "Secret names written in camelCase" limitation.
+**Order:** after P6, before P7 (P7 comments the final patterns). Same files as P5, P6 and P8. Boba's queue: P8, P5, P6, P9, P7.
+**Approach (probed by kimchi, no regex changes):** before the name rules and `LOW_RISK_LINE` run, split camelCase words with `_`: `line.replace(/([a-z0-9])([A-Z])/g, "$1_$2")`. Value rules (`ghp_`, `AKIA`, private key, JWT) keep running on the raw line. **Don't split inside quoted values:** otherwise `"abC"` becomes `"ab_C"` and passes the 4-character minimum.
+**Acceptance** (each `= "abcd1234efgh5678"` in `src/a.ts` unless stated)
+- Now flagged: `githubToken`, `clientSecret`, `jwtSecret`, `stripeSecretKey`, `slackBotToken`, `awsSecretAccessKey`
+- Now skipped as placeholders: `mockApiKey`, `testPassword`
+- Unchanged: `contestApiKey`, `latestPassword` still flagged; `type PasswordMode = "hashed"`, `passwordMode: "plain" | "hashed"`, `passwordHash = await …` still not flagged; `secretary`, `secretsManager` not matched; `SSOConfig` not split
+- Accepted new matches (same as snake_case today): `secretName = "db-credentials"`, `isSecret = "true"`
+- `const password = "abC";` still not flagged (no split inside the value)
+- kimchi applied the split temporarily and 0 of 1187 backend tests failed, so no tests change. `npm run check`, `npx tsc --noEmit` and tests pass.
+**Docs (mochi):** remove "Secret names written in camelCase" from KNOWN-LIMITATIONS once merged.
+**Tester follow-up:** kimchi adds the acceptance cases.
 
 ## Site: GitHub Pages (urgent, done outside the sprint flow)
 `docs/index.html`, `docs/site.css`, `docs/.nojekyll`, served from main `/docs` at https://paulleephp.github.io/pr-intelligence/ (PR #36 into main, takoyaki). Decisions: a light mode was designed for the site (the style guide is dark-only): the header band stays dark in both modes, and light-mode severity badges use the mark color for border and dot with neutral dark text. Add these values to STYLEGUIDE.md if the app gets a light mode.
