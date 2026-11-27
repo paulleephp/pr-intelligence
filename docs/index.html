@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR Intelligence</title>
+<meta name="description" content="Paste a GitHub PR URL and PR Intelligence analyzes the diff with deterministic rules, showing what changed, which areas it touches, and which changes deserve a closer look.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="brand/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div class="topbar">
+      <a class="lockup" href="./"><img src="brand/mark.svg" width="28" height="28" alt="">PR Intelligence</a>
+      <a class="repo-link" href="https://github.com/paulleephp/pr-intelligence">View on GitHub</a>
+    </div>
+    <div class="hero">
+      <h1>PR Intelligence</h1>
+      <p>Automates the first pass of a pull request review: what changed, which areas it touches, and which changes deserve a closer look. Deterministic rules, no AI.</p>
+      <nav class="toc" aria-label="Sections">
+        <a href="#problem">The problem</a>
+        <a href="#features">Features</a>
+        <a href="#rules">Rules</a>
+        <a href="#scope">Language scope</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#stack">Tech stack</a>
+        <a href="#principles">Principles</a>
+        <a href="#limitations">Limitations</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="problem">
+    <h2>The problem</h2>
+    <p>Reviewing a pull request requires understanding of what changed, which parts of the codebase are affected, what tests are relevant, and whether there are potential risks. This is especially challenging if the codebase has long history and/or a lot of inner dependencies.</p>
+    <p>This tool automates the initial investigation. Paste a GitHub PR URL and it fetches the PR, analyzes the diff with deterministic rules (no AI), and shows what changed, which areas it touches, and which changes deserve a closer look, with a severity for each finding.</p>
+    <div class="shots">
+      <img src="https://github.com/user-attachments/assets/6dbe69eb-49c6-4461-8e53-ae00fdddb22b" width="1258" height="856" alt="PR Intelligence report: PR overview, overall severity, findings and files by severity, and blast radius" loading="lazy">
+      <img src="https://github.com/user-attachments/assets/139219f1-4bd6-489f-a8c4-6388a39da90c" width="1268" height="883" alt="PR Intelligence report: changed files table, affected areas and findings grouped by severity" loading="lazy">
+    </div>
+  </section>
+
+  <section id="features">
+    <h2>Features</h2>
+    <ul class="cards">
+      <li class="card"><h3>PR overview</h3><p>Title, author, number and state (open, merged, closed), linked to GitHub, plus change statistics: files changed, lines added and removed, files added, modified and removed.</p></li>
+      <li class="card"><h3>Overall severity</h3><p>The PR gets the highest severity among its findings (critical, high, medium, low or none), with a distribution of findings and files by severity.</p></li>
+      <li class="card"><h3>Changed files table</h3><p>Every changed file with its type, status and severity. Binary files and files without a diff are marked "Not scanned", never shown as clean.</p></li>
+      <li class="card"><h3>Blast radius</h3><p>How widely the PR spreads, separate from severity: number of changed files, how many top-level modules they touch, and whether tests changed alongside JS/TS source. The file count and module spread are each rated contained, moderate or wide, and the PR gets the higher of the two. The tests signal says whether source changed without tests.</p></li>
+      <li class="card"><h3>Affected Areas</h3><p>Changed files grouped by area (Auth, Database, CI/CD, Configuration, Tests, Infrastructure, Security), with each file's severity within that area.</p></li>
+      <li class="card"><h3>Findings by severity</h3><p>Findings grouped into critical, high, medium and low, each showing the file and what was detected.</p></li>
+    </ul>
+  </section>
+
+  <section id="rules">
+    <h2>Rules</h2>
+    <p>Each rule has a fixed severity. A file's severity, and the PR's, is the highest severity among its findings. There is no numeric score.</p>
+    <table class="rules">
+      <thead><tr><th>Rule</th><th>Flags</th><th>Severity</th><th>Applies to</th></tr></thead>
+      <tbody>
+        <tr><td class="id">R001</td><td class="flags">Authentication files modified</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R002</td><td class="flags">Authentication check potentially removed</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R003</td><td class="flags">Database migration added or modified</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R004</td><td class="flags">Database migration deleted</td><td><span class="badge sev-high">High</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R005</td><td class="flags">Dependencies added, removed or upgraded</td><td><span class="badge sev-low">Low</span></td><td class="scope">Dependency manifests</td></tr>
+        <tr><td class="id">R006</td><td class="flags">CI/CD workflow modified</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R007</td><td class="flags">Private key, API key or password pattern</td><td><span class="badge sev-critical">Critical</span></td><td class="scope">Any text file</td></tr>
+        <tr class="muted-row"><td class="id">R008</td><td class="flags">More than 500 lines changed</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Not implemented</td></tr>
+        <tr><td class="id">R009</td><td class="flags">Production configuration modified</td><td><span class="badge sev-high">High</span></td><td class="scope">Any file</td></tr>
+        <tr><td class="id">R010</td><td class="flags">Test files removed</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R011</td><td class="flags">Infrastructure changes</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R012</td><td class="flags">Crypto algorithm changed</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R013</td><td class="flags">Password hashing changed</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R014</td><td class="flags">Security-sensitive path modified</td><td><span class="badge sev-high">High</span></td><td class="scope">Any file (path)</td></tr>
+        <tr><td class="id">R015</td><td class="flags">Unsafe navigation: <code>window.location</code> assigned from a dynamic value</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R016</td><td class="flags">Dangerous code execution or DOM sink introduced</td><td><span class="badge sev-high">High</span></td><td class="scope">JS/TS</td></tr>
+        <tr><td class="id">R018</td><td class="flags">Script changed with no content change: likely a permission change (e.g. <code>chmod +x</code>)</td><td><span class="badge sev-medium">Medium</span></td><td class="scope">Scripts (path)</td></tr>
+      </tbody>
+    </table>
+    <p>R017 was dropped before release and its ID is retired. Rules and severities are defined in <a href="https://github.com/paulleephp/pr-intelligence/blob/main/lib/diff/util/risk-scoring.ts"><code>lib/diff/util/risk-scoring.ts</code></a>.</p>
+  </section>
+
+  <section id="scope">
+    <h2>Language scope</h2>
+    <p>Source-code analysis covers <strong>JavaScript and TypeScript only</strong> (<code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>, <code>.mts</code>, <code>.cts</code>). Covering every programming language isn't realistic, so language-specific rules are written for JS/TS syntax and aren't expected to work for other languages. These include code-pattern detectors (removed auth checks, unsafe navigation, dangerous code execution, crypto and password hashing).</p>
+    <p>Files that aren't tied to one language are still analyzed:</p>
+    <ul>
+      <li><strong>Configuration and infrastructure:</strong> <code>.env*</code>, <code>Dockerfile</code>, <code>docker-compose*</code>, Terraform, Kubernetes, Helm</li>
+      <li><strong>CI/CD:</strong> <code>.github/workflows/**</code></li>
+      <li><strong>Database:</strong> migrations and schema files</li>
+      <li><strong>Dependency manifests:</strong> <code>package.json</code> (R005 also checks other ecosystems' manifests, but those checks aren't maintained)</li>
+      <li><strong>Secrets:</strong> keys, tokens and passwords added to any text file</li>
+    </ul>
+    <p>Files in other languages still count toward file and line statistics and path-based checks, such as a sensitive <code>auth/</code> folder.</p>
+  </section>
+
+  <section id="architecture">
+    <h2>Architecture</h2>
+    <p>PR URL → GitHub client (Octokit) → diff parser and deterministic rules engine → Next.js route handlers → React frontend (responses validated with Zod)</p>
+    <figure class="diagram"><img src="architecture.svg" width="720" height="714" alt="PR Intelligence architecture: PR URL, GitHub API, deterministic analysis engine, route handlers, React frontend"></figure>
+    <p>Rules and severity are fully deterministic; no AI is involved in detection or severity.</p>
+  </section>
+
+  <section id="stack">
+    <h2>Tech stack</h2>
+    <table>
+      <thead><tr><th>Component</th><th>Technology</th></tr></thead>
+      <tbody>
+        <tr><td>Frontend framework</td><td>Next.js App Router</td></tr>
+        <tr><td>UI library</td><td>React + TypeScript</td></tr>
+        <tr><td>Styling</td><td>Tailwind CSS</td></tr>
+        <tr><td>Backend runtime</td><td>Node.js</td></tr>
+        <tr><td>API layer</td><td>Next.js Route Handlers</td></tr>
+        <tr><td>Analysis engine</td><td>TypeScript</td></tr>
+        <tr><td>GitHub integration</td><td>Octokit</td></tr>
+        <tr><td>Severity rules</td><td>Deterministic rule table (<code>lib/diff/util/risk-scoring.ts</code>)</td></tr>
+        <tr><td>Validation</td><td>Zod v4 schemas (<code>lib/schemas/</code>) for API responses and the <code>url</code> query param</td></tr>
+        <tr><td>Testing</td><td>Vitest</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="principles">
+    <h2>Core principles</h2>
+    <ol>
+      <li><strong>Deterministic first:</strong> all detection, parsing and severity assignment use explicit rules. Results are reproducible and don't depend on an AI's interpretation.</li>
+      <li><strong>Label-based categorization:</strong> files are categorized by labels, with fallback categories (frontend, backend, tests, docs) when no label exists.</li>
+      <li><strong>Severity, not scores:</strong> each rule has a fixed severity, and findings are shown as labelled severity groups. A numeric risk score was tried and removed as arbitrary.</li>
+    </ol>
+  </section>
+
+  <section id="limitations">
+    <h2>Known limitations</h2>
+    <p>The analysis works from the PR diff only, with no repository download, so some changes are missed or flagged wrongly. The main ones: source-code rules cover JavaScript and TypeScript only, only the first 3,000 files of a PR are analyzed, and path-based rules match by folder and file-name conventions.</p>
+    <p>Full list, rule by rule: <a href="https://github.com/paulleephp/pr-intelligence/blob/main/docs/KNOWN-LIMITATIONS.md">docs/KNOWN-LIMITATIONS.md</a>.</p>
+  </section>
+
+  <section id="decisions">
+    <h2>Design decisions</h2>
+    <p>Deterministic rules with fixed severities and no score, no AI in the core analysis, and no repository download. The reasons behind these and other choices: <a href="https://github.com/paulleephp/pr-intelligence/blob/main/docs/DESIGN-DECISIONS.md">docs/DESIGN-DECISIONS.md</a>.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>PR Intelligence · <a href="https://github.com/paulleephp/pr-intelligence">GitHub</a> · <a href="https://github.com/paulleephp/pr-intelligence/blob/main/README.md">README</a></span>
+    <a href="style-guide.html">Style guide</a>
+  </div>
+</footer>
+</body>
+</html>
