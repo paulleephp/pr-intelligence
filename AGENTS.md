@@ -55,7 +55,7 @@ Rules and severity are fully deterministic; no AI is involved in detection or se
 
 ## Project Roadmap
 
-Sprint status, delivered work and plans: `planning/ROADMAP.md`. Specs and task briefs: `planning/SPRINT<n>.md` and `planning/SPRINT<n>-TASKS.md`. Keep sprint and planning detail out of README.md; README is a reader-facing summary of what the app does today. Known limitations, rule by rule, live in `docs/KNOWN-LIMITATIONS.md`; README links to it with a short summary. The full rule table (IDs, severities, scope) lives in `docs/RULES.md`; README lists what is checked in plain words, without rule IDs. Add or change a rule in both. When a shipped rule changes what it misses or wrongly flags, update that file.
+Sprint status, delivered work and plans: `planning/ROADMAP.md`. Specs and task briefs: `planning/SPRINT<n>.md` and `planning/SPRINT<n>-TASKS.md`. Keep sprint and planning detail out of README.md; README is a reader-facing summary of what the app does today. Known limitations, rule by rule, live in `docs/KNOWN-LIMITATIONS.md`; README links to it with a short summary. When a shipped rule changes what it misses or wrongly flags, update that file.
 
 ## Agent Workflow
 
