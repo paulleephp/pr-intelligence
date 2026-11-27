@@ -29,10 +29,13 @@ export const PASSWORD_PATTERNS = [
 ];
 
 export const SSH_PATTERNS = [
-  "ssh",
+  "ssh_private_key",
+  "sshprivatekey",
+  "ssh_key",
+  "sshkey",
+  "ssh_passphrase",
+  "sshpassphrase",
   "private_key",
   "private.key",
   "openssh",
-  "ssh-rsa",
-  "ssh-ed25519",
 ];
