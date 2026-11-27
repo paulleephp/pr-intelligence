@@ -13,8 +13,8 @@ export default function Home() {
             Analyze GitHub Pull Requests
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-zinc-400">
-            Automate PR review investigation. Understand what changed, identify risks, and surface
-            relevant tests with AI-powered analysis.
+            Automate PR review investigation. Understand what changed, where it spreads, and which
+            changes deserve a closer look.
           </p>
         </div>
 
